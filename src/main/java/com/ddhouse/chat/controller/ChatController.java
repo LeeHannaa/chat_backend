@@ -20,8 +20,8 @@ public class ChatController {
         return ResponseEntity.ok().build();
     }
     @GetMapping
-    public ResponseEntity<List<ChatRoomDto>> getChatRoomList() {
-        List<ChatRoomDto> responses = chatService.findChatRoomList();
+    public ResponseEntity<List<ChatRoomDto>> getMyChatRoomList() {
+        List<ChatRoomDto> responses = chatService.findMyChatRoomList();
         for (ChatRoomDto chatRoom : responses) {
             String lastMessage = chatService.getLastMessage(chatRoom.getId()).block();
             chatRoom.setLastMsg(lastMessage);

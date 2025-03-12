@@ -18,15 +18,18 @@ public class ChatRoomDto {
     private Long id;
     private String name;
     private int memberNum;
-    // 마지막 메시지와 그 시간 넘겨주기
+    private Long counselId;
+    private Long consultId;
     private LocalDateTime regDate;
     private String lastMsg;
 
     public static ChatRoomDto from(ChatRoom chatRoom) {
         return ChatRoomDto.builder()
                 .id(chatRoom.getId())
-                .name(chatRoom.getName())
+                .name(chatRoom.getApt().getName()) // 매물 이름
                 .memberNum(chatRoom.getMemberNum())
+                .counselId(chatRoom.getUser().getId()) // 매물 문의자
+                .consultId(chatRoom.getApt().getUser().getId()) // 매물 소유자
                 .regDate(chatRoom.getRegDate())
                 .build();
     }

@@ -17,4 +17,5 @@ public class User extends BaseEntity {
     @Id
     private Long id;
     private String name;
+
 }
