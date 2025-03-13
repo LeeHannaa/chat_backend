@@ -4,7 +4,7 @@ import com.ddhouse.chat.domain.Apt;
 import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.dto.ChatMessageDto;
-import com.ddhouse.chat.exception.UserNotFoundException;
+import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.AptRepository;
 import com.ddhouse.chat.repository.ChatMessageRepository;
 import com.ddhouse.chat.repository.ChatRoomRepository;
@@ -39,7 +39,7 @@ public class ChatMessageService {
                                 dto.setWriterName(user.getName());
                                 return Mono.just(dto);
                             })
-                            .switchIfEmpty(Mono.error(new UserNotFoundException("해당 유저와의 채팅이 없습니다.")));
+                            .switchIfEmpty(Mono.error(new NotFoundException("해당 유저와의 채팅이 없습니다.")));
                 })
                 .collectList()
                 .flatMapMany(chatMessagesList -> {
@@ -49,10 +49,7 @@ public class ChatMessageService {
                 });
     }
 
-    public Flux<List<ChatMessageDto>> getChatRoomByAptIdAndUserId(Long aptId) {
-        // TODO : 프론트에서 받아와서 확인하기
-        Long myId = 1L; // 임시 id
-
+    public Flux<List<ChatMessageDto>> getChatRoomByAptIdAndUserId(Long aptId, Long myId) {
         // 1. 기존에 채팅하던 방이 있는 경우
         Optional<ChatRoom> chatRoom = chatRoomRepository.findByAptIdAndUserId(aptId, myId);
         if (chatRoom.isPresent()) {

@@ -44,8 +44,8 @@ public class ChatMessageController {
     }
 
     @GetMapping("/apt/find/list/{aptId}")
-    // TODO : 프론트에서 나의 id 받아와서 확인하기
-    public Flux<ResponseEntity<List<ChatMessageDto>>> findMessageByAptId(@PathVariable("aptId") Long id) {
+    // CHECK : 프론트에서 임시로 myId 받아와서 확인 (병합시 토큰으로 처리)ㄹ
+    public Flux<ResponseEntity<List<ChatMessageDto>>> findMessageByAptId(@PathVariable("aptId") Long id, @RequestParam("myId") Long myId) {
         /*
         1. aptId로 chatRoom에 동일한 aptId가 있는지 확인
             1-1. 만약 동일한 id가 있는데 해당 aptId에 userId가 나의 id와 동일하다면 (나와의 채팅)
@@ -54,7 +54,7 @@ public class ChatMessageController {
         3. 일치하는 chatRoomId가 없다면 새로운 방 생성
         */
         System.out.println("매물id로 채팅 내역 불러오기");
-        return chatMessageService.getChatRoomByAptIdAndUserId(id)
+        return chatMessageService.getChatRoomByAptIdAndUserId(id, myId)
                 .map(messages -> {
                     System.out.println("해당 채팅방의 메시지들 가져오기 결과 : " + messages);
                     return ResponseEntity.ok(messages);

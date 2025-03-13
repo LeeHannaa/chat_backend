@@ -30,10 +30,7 @@ public class ChatService {
         return chatRooms.stream().map(ChatRoomDto::from).collect(Collectors.toList());
     }
 
-    // TODO : apt에 등록했거나 문의한 id가 나의 id와 동일한 아이디를 다 전달 (아파트 등록자인 경우 아직 안함)
-    public List<ChatRoomDto> findMyChatRoomList() {
-        // TODO : 프론트에서 나의 id 받아와서 확인하기
-        Long myId = 1L;
+    public List<ChatRoomDto> findMyChatRoomList(Long myId) {
         List<ChatRoom> chatRooms = chatRoomRepository.findByUserId(myId);
         return chatRooms.stream().map(ChatRoomDto::from).collect(Collectors.toList());
     }
