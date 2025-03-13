@@ -23,13 +23,13 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception{ // 사용자가 웹소켓 서버에 접속하면 동작
-        log.info("웹소켓 연결됨: {}", session.getId());
+        System.out.print("웹소켓 연결됨: {}" +  session.getId());
         CLIENTS.put(session.getId(), session);
     }
 
     @Override
     public void afterConnectionClosed(WebSocketSession session, CloseStatus status) throws Exception { // 웹소켓 서버에 접속이 끝난 경우
-        log.info("웹소켓 연결 종료: {}", session.getId());
+        System.out.println("웹소켓 연결 종료: {}" + session.getId());
         CLIENTS.remove(session.getId());
     }
 

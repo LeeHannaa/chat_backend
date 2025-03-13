@@ -18,7 +18,7 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry){
-        registry.addEndpoint( "/websocket")
+        registry.addEndpoint( "/chatting") // 초기 핸드셰이크에서 사용할 endpoint
                 .setAllowedOrigins("*")
                 .withSockJS();
     }
