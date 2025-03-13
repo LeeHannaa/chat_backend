@@ -15,6 +15,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class ChatRoom extends BaseEntity {
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     private String name; // 임시 -> 현재는 매물 이름으로 채팅방 이름이라서 무쓸모
@@ -33,6 +34,8 @@ public class ChatRoom extends BaseEntity {
         return ChatRoom.builder()
                 .name(dto.getName())
                 .memberNum(dto.getMemberNum())
+                .user(dto.getUser())
+                .apt(dto.getApt())
                 .build();
     }
 }

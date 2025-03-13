@@ -3,7 +3,10 @@ package com.ddhouse.chat.service;
 import com.ddhouse.chat.domain.Apt;
 import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.domain.ChatRoom;
+import com.ddhouse.chat.domain.User;
 import com.ddhouse.chat.dto.ChatMessageDto;
+import com.ddhouse.chat.dto.ChatRoomDto;
+import com.ddhouse.chat.exception.NotFlowException;
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.AptRepository;
 import com.ddhouse.chat.repository.ChatMessageRepository;
@@ -27,6 +30,7 @@ public class ChatMessageService {
     private final ChatMessageRepository chatMessageRepository;
     private final UserRepository userRepository;
     private final AptRepository aptRepository;
+    private final ChatService chatService;
 
     public Flux<List<ChatMessageDto>> findChatMessages(Long id) {
         Flux<ChatMessage> chatMessages = chatMessageRepository.findAllByRoomId(id);
@@ -56,22 +60,23 @@ public class ChatMessageService {
             return findChatMessages(chatRoom.get().getId());
         }
 
-        // 2. 나와의 채팅을 고려한 경우 / 방을 생성해야하는 경우
+        // 2. 방을 생성해야하는 경우
         Optional<Apt> aptOptional = aptRepository.findById(aptId);
         if (aptOptional.isPresent()) {
             Apt apt = aptOptional.get();
             if (apt.getUser().getId().equals(myId)) {
                 // 내가 올린 매물 내가 문의하기 누른 경우
-                System.out.println("내가 올린 매물에 내가 문의하기 누른 것");
-                return Flux.empty();
+                return Flux.error(new NotFlowException("비정상 플로우 : 내가 올린 매물 내가 문의하게 된 경우"));
             } else {
-                // 새로운 방을 생성해야하는 경우
+                // 새로운 방을 생성해야하는 경우 (1:1)
                 System.out.println("새로운 방 생성");
-                return Flux.empty();
+                User user = userRepository.findById(myId).orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+                ChatRoom createdChatRoom = chatService.createChatRoom(ChatRoomDto.createChatRoomDto(apt, user));
+                return findChatMessages(createdChatRoom.getId());
             }
         }
-        // aptId가 존재하지 않으면 Optional.empty() 반환
-        return Flux.empty();
+        // aptId가 존재하지 않는 경우
+        return Flux.error(new NotFoundException("해당 매물 정보를 찾을 수 없습니다."));
     }
 
     public Mono<ChatMessage> saveChatMessage(ChatMessageDto chat) {

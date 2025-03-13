@@ -20,8 +20,8 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
 
-    public void createChatRoom(ChatRoomDto chatRoomDto) {
-        chatRoomRepository.save(ChatRoom.from(chatRoomDto));
+    public ChatRoom createChatRoom(ChatRoomDto chatRoomDto) {
+        return chatRoomRepository.save(ChatRoom.from(chatRoomDto));
     }
 
     // 채팅 전체 리스트

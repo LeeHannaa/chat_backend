@@ -1,6 +1,8 @@
 package com.ddhouse.chat.dto;
 
+import com.ddhouse.chat.domain.Apt;
 import com.ddhouse.chat.domain.ChatRoom;
+import com.ddhouse.chat.domain.User;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -18,6 +20,8 @@ public class ChatRoomDto {
     private Long consultId;
     private LocalDateTime regDate;
     private String lastMsg;
+    private Apt apt;
+    private User user;
 
     public static ChatRoomDto from(ChatRoom chatRoom) {
         return ChatRoomDto.builder()
@@ -27,6 +31,17 @@ public class ChatRoomDto {
                 .counselId(chatRoom.getUser().getId()) // 매물 문의자
                 .consultId(chatRoom.getApt().getUser().getId()) // 매물 소유자
                 .regDate(chatRoom.getRegDate())
+                .build();
+    }
+
+    public static ChatRoomDto createChatRoomDto(Apt apt, User user) {
+        return ChatRoomDto.builder()
+                .name(apt.getName())
+                .memberNum(2)
+                .apt(apt)
+                .user(user)
+                .regDate(LocalDateTime.now())
+                .lastMsg("")
                 .build();
     }
 
