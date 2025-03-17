@@ -5,6 +5,7 @@ import org.springframework.data.cassandra.repository.AllowFiltering;
 import org.springframework.data.cassandra.repository.ReactiveCassandraRepository;
 import org.springframework.stereotype.Repository;
 import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.UUID;
 
@@ -12,4 +13,7 @@ import java.util.UUID;
 public interface ChatMessageRepository extends ReactiveCassandraRepository<ChatMessage, UUID> {
     @AllowFiltering
     Flux<ChatMessage> findAllByRoomId(Long roomId);
+
+    @AllowFiltering
+    Mono<Void> deleteByRoomId(Long roomId);
 }

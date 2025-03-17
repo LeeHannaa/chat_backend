@@ -81,6 +81,6 @@ public class ChatMessageService {
 
     public Mono<ChatMessage> saveChatMessage(ChatMessageDto chat) {
         return chatMessageRepository.save(
-                new ChatMessage(chat.getRoomId(), chat.getMsg(), chat.getWriterId()));
+                new ChatMessage(chat.getRoomId(), chat.getMsg(), chat.getWriterId(), chat.getCreatedDate()));
     }
 }

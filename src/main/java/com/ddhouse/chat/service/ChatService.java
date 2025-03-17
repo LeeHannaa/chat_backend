@@ -43,5 +43,10 @@ public class ChatService {
                 .map(chatMessage -> chatMessage.getMsg());  // 메시지 내용만 반환
     }
 
-
+    public void deleteChatRoom(Long roomId){
+        // 해당 채팅방 데이터들을 먼저 다 지우기
+        chatMessageRepository.deleteByRoomId(roomId);
+        // 해당 채팅방 지우기
+        chatRoomRepository.deleteById(roomId);
+    }
 }

@@ -20,9 +20,11 @@ public class ChatMessage {
     private Long writerId;
     private Date createdDate;
 
-    public ChatMessage(Long roomId, String msg, Long writerId) {
+    public ChatMessage(Long roomId, String msg, Long writerId, Date createdDate) {
+        this.id = UUID.randomUUID();
         this.roomId = roomId;
         this.msg = msg;
         this.writerId = writerId;
+        this.createdDate = createdDate;
     }
 }

@@ -34,6 +34,13 @@ public class ChatMessageController {
         });
     }
 
+    @MessageMapping("/greeting")
+    public String handle(String greeting) {
+        return greeting;
+    }
+
+
+
     @GetMapping("/find/list/{chatRoomId}")
     public Flux<ResponseEntity<List<ChatMessageDto>>> findMessageByChatRoomId(@PathVariable("chatRoomId") Long id) {
         System.out.println("채팅방 리스트 확인하기");

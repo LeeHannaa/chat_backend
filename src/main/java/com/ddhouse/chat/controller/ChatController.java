@@ -28,4 +28,10 @@ public class ChatController {
         }
         return ResponseEntity.ok().body(responses);
     }
+
+    @DeleteMapping("/delete/{chatRoomId}")
+    public ResponseEntity<Void> deleteChatRoom(@PathVariable("chatRoomId") Long id){
+        chatService.deleteChatRoom(id);
+        return ResponseEntity.ok().build();
+    }
 }
