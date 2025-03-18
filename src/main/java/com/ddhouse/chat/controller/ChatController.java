@@ -19,6 +19,7 @@ public class ChatController {
         chatService.createChatRoom(chatRoomDto);
         return ResponseEntity.ok().build();
     }
+
     @GetMapping
     public ResponseEntity<List<ChatRoomDto>> getMyChatRoomList(@RequestParam("myId") Long myId) {
         List<ChatRoomDto> responses = chatService.findMyChatRoomList(myId);

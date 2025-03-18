@@ -22,10 +22,6 @@ public class ChatRoom extends BaseEntity {
     private int memberNum;
 
     @ManyToOne
-    @JoinColumn(name = "userId", nullable = false) // 매물 문의 고객
-    private User user;
-
-    @ManyToOne
     @JoinColumn(name = "aptId", nullable = false) // 매물 가진 고객
     private Apt apt;
 
@@ -34,7 +30,6 @@ public class ChatRoom extends BaseEntity {
         return ChatRoom.builder()
                 .name(dto.getName())
                 .memberNum(dto.getMemberNum())
-                .user(dto.getUser())
                 .apt(dto.getApt())
                 .build();
     }

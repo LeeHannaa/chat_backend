@@ -1,10 +1,14 @@
 package com.ddhouse.chat.service;
 
 
+import com.ddhouse.chat.domain.Apt;
 import com.ddhouse.chat.domain.ChatRoom;
+import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.ChatRoomDto;
+import com.ddhouse.chat.repository.AptRepository;
 import com.ddhouse.chat.repository.ChatMessageRepository;
 import com.ddhouse.chat.repository.ChatRoomRepository;
+import com.ddhouse.chat.repository.UserChatRoomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -19,8 +23,11 @@ import java.util.stream.Collectors;
 public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final UserChatRoomRepository userChatRoomRepository;
+    private final AptRepository aptRepository;
 
     public ChatRoom createChatRoom(ChatRoomDto chatRoomDto) {
+        userChatRoomRepository.save(UserChatRoom.from(chatRoomDto));
         return chatRoomRepository.save(ChatRoom.from(chatRoomDto));
     }
 
@@ -31,8 +38,12 @@ public class ChatService {
     }
 
     public List<ChatRoomDto> findMyChatRoomList(Long myId) {
-        List<ChatRoom> chatRooms = chatRoomRepository.findByUserId(myId);
-        return chatRooms.stream().map(ChatRoomDto::from).collect(Collectors.toList());
+        // 내가 문의자로 들어간 채팅방 or 내가 관리자로 있는 채팅방
+        List<UserChatRoom> chatRooms = userChatRoomRepository.findByUserIdOrConsultId(myId);
+        return chatRooms.stream()
+                .map(UserChatRoom::getChatRoom)
+                .map(ChatRoomDto::from)
+                .collect(Collectors.toList());
     }
 
 

@@ -1,17 +1,11 @@
 package com.ddhouse.chat.service;
 
-import com.ddhouse.chat.domain.Apt;
-import com.ddhouse.chat.domain.ChatMessage;
-import com.ddhouse.chat.domain.ChatRoom;
-import com.ddhouse.chat.domain.User;
+import com.ddhouse.chat.domain.*;
 import com.ddhouse.chat.dto.ChatMessageDto;
 import com.ddhouse.chat.dto.ChatRoomDto;
 import com.ddhouse.chat.exception.NotFlowException;
 import com.ddhouse.chat.exception.NotFoundException;
-import com.ddhouse.chat.repository.AptRepository;
-import com.ddhouse.chat.repository.ChatMessageRepository;
-import com.ddhouse.chat.repository.ChatRoomRepository;
-import com.ddhouse.chat.repository.UserRepository;
+import com.ddhouse.chat.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,6 +22,7 @@ import java.util.Optional;
 public class ChatMessageService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
+    private final UserChatRoomRepository userChatRoomRepository;
     private final UserRepository userRepository;
     private final AptRepository aptRepository;
     private final ChatService chatService;
@@ -55,7 +50,8 @@ public class ChatMessageService {
 
     public Flux<List<ChatMessageDto>> getChatRoomByAptIdAndUserId(Long aptId, Long myId) {
         // 1. 기존에 채팅하던 방이 있는 경우
-        Optional<ChatRoom> chatRoom = chatRoomRepository.findByAptIdAndUserId(aptId, myId);
+        Long consultId = aptRepository.getReferenceById(aptId).getUser().getId();
+        Optional<UserChatRoom> chatRoom = userChatRoomRepository.findByUserIdAndConsultId(myId, consultId);
         if (chatRoom.isPresent()) {
             return findChatMessages(chatRoom.get().getId());
         }

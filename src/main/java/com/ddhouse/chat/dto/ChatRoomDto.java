@@ -16,20 +16,21 @@ public class ChatRoomDto {
     private Long id;
     private String name;
     private int memberNum;
-    private Long counselId;
-    private Long consultId;
+//    private Long counselId;
+//    private Long consultId;
     private LocalDateTime regDate;
     private String lastMsg;
     private Apt apt;
     private User user;
+    private ChatRoom chatRoom;
 
     public static ChatRoomDto from(ChatRoom chatRoom) {
         return ChatRoomDto.builder()
                 .id(chatRoom.getId())
                 .name(chatRoom.getApt().getName()) // 매물 이름
                 .memberNum(chatRoom.getMemberNum())
-                .counselId(chatRoom.getUser().getId()) // 매물 문의자
-                .consultId(chatRoom.getApt().getUser().getId()) // 매물 소유자
+//                .counselId(myId) // 매물 문의자
+//                .consultId(chatRoom.getApt().getUser().getId()) // 매물 소유자
                 .regDate(chatRoom.getRegDate())
                 .build();
     }
