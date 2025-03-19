@@ -13,6 +13,7 @@ import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -75,8 +76,9 @@ public class ChatMessageService {
         return Flux.error(new NotFoundException("해당 매물 정보를 찾을 수 없습니다."));
     }
 
+    // TODO : 채팅 입력 날짜 재설정 필요
     public Mono<ChatMessage> saveChatMessage(ChatMessageDto chat) {
         return chatMessageRepository.save(
-                new ChatMessage(chat.getRoomId(), chat.getMsg(), chat.getWriterId(), chat.getCreatedDate()));
+                new ChatMessage(chat.getRoomId(), chat.getMsg(), chat.getWriterId(), new Date()));
     }
 }

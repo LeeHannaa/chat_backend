@@ -31,7 +31,7 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 
  @Override
  public void configureMessageBroker(MessageBrokerRegistry registry) {
-  registry.enableSimpleBroker("/topic"); // 구독할 경로 설정
-  registry.setApplicationDestinationPrefixes("/app"); // 클라이언트에서 보낼 경로
+  registry.enableSimpleBroker("/topic"); // 메시지를 받을 때 경, “/queue”, “/topic”가 api에 prefix로 붙은 경우, messageBroker가 해당 경로를 가로챔
+  registry.setApplicationDestinationPrefixes("/app"); // 메시지를 보낼 경로, 경로 앞에 “/app”이 붙어있으면 Broker로 보내짐.
  }
 }

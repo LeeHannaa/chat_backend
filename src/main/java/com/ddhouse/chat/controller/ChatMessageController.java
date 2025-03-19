@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
+import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -24,12 +25,15 @@ public class ChatMessageController {
 
     //메세지 송신 및 수신
     @MessageMapping("/message")
+    @SendTo("/topic/message")
     public Mono<ResponseEntity<Void>> receiveMessage(@Payload ChatMessageDto chat) {
-        System.out.println("메시지 수신 : " + chat.getMsg());
+        System.out.println("메시지 수신 : " + chat.getCreatedDate());
         return chatMessageService.saveChatMessage(chat).flatMap(message -> {
             // 메시지를 해당 채팅방 구독자들에게 전송
             template.convertAndSend("/sub/chatroom/" + chat.getRoomId(),
                     ChatMessageDto.from(message));
+            // TODO : 채팅방 구독자들에게 전송하는 메시지 타입 형태 일치시키기
+            System.out.println("전송되는 메시지: " + ChatMessageDto.from(message).getMsg());  // 확인용
             return Mono.just(ResponseEntity.ok().build());
         });
     }
