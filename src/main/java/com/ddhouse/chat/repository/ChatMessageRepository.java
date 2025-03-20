@@ -14,6 +14,4 @@ public interface ChatMessageRepository extends ReactiveCassandraRepository<ChatM
     @AllowFiltering
     Flux<ChatMessage> findAllByRoomId(Long roomId);
 
-    @AllowFiltering
-    Mono<Void> deleteByRoomId(Long roomId);
 }

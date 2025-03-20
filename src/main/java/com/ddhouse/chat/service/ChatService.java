@@ -2,6 +2,7 @@ package com.ddhouse.chat.service;
 
 
 import com.ddhouse.chat.domain.Apt;
+import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.ChatRoomDto;
@@ -12,6 +13,8 @@ import com.ddhouse.chat.repository.UserChatRoomRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.util.*;
@@ -54,9 +57,19 @@ public class ChatService {
                 .map(chatMessage -> chatMessage.getMsg());  // 메시지 내용만 반환
     }
 
+    public Flux<ChatMessage> findMessagesByRoomId(Long roomId) {
+        return chatMessageRepository.findAllByRoomId(roomId);
+    }
+    @Transactional
     public void deleteChatRoom(Long roomId){
-        // 해당 채팅방 데이터들을 먼저 다 지우기
-        chatMessageRepository.deleteByRoomId(roomId);
+        // TODO : 카산드라 db 내용 해당 채팅방 데이터들을 먼저 다 지우기
+        findMessagesByRoomId(roomId)
+                .flatMap(chatMessage -> {
+                    System.out.println(chatMessage.getId());  // 아이디 출력
+                    return chatMessageRepository.deleteById(chatMessage.getId());  // 삭제 작업
+                })
+                .then();
+        userChatRoomRepository.deleteByChatRoomId(roomId);
         // 해당 채팅방 지우기
         chatRoomRepository.deleteById(roomId);
     }
