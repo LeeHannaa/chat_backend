@@ -1,9 +1,13 @@
 package com.ddhouse.chat.domain;
 
+import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
 import jakarta.persistence.Table;
 import lombok.*;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -20,11 +24,13 @@ public class ChatMessage {
     private Long writerId;
     private Date createdDate;
 
-    public ChatMessage(Long roomId, String msg, Long writerId, Date createdDate) {
+    public ChatMessage(ChatMessageRequestDto chatMessageRequestDto) {
         this.id = UUID.randomUUID();
-        this.roomId = roomId;
-        this.msg = msg;
-        this.writerId = writerId;
-        this.createdDate = createdDate;
+        this.roomId = chatMessageRequestDto.getRoomId();
+        this.msg = chatMessageRequestDto.getMsg();
+        this.writerId = chatMessageRequestDto.getWriterId();
+        this.createdDate = new Date();
     }
+
+
 }

@@ -1,12 +1,11 @@
-package com.ddhouse.chat.dto;
+package com.ddhouse.chat.dto.response;
 
 import com.ddhouse.chat.domain.ChatMessage;
-import com.ddhouse.chat.domain.ChatRoom;
+import com.ddhouse.chat.domain.UserChatRoom;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -14,7 +13,7 @@ import java.util.UUID;
 @Getter
 @Setter
 @Builder
-public class ChatMessageDto {
+public class ChatMessageResponseDto {
     private UUID id;
     private Long roomId;
     private String writerName;
@@ -22,13 +21,19 @@ public class ChatMessageDto {
     private String msg;
     private Date createdDate;
 
-    public static ChatMessageDto from (ChatMessage chatMessage) {
-        return ChatMessageDto.builder()
+    public static ChatMessageResponseDto from (ChatMessage chatMessage) {
+        return ChatMessageResponseDto.builder()
                 .id(chatMessage.getId())
                 .roomId(chatMessage.getRoomId())
                 .writerId(chatMessage.getWriterId())
                 .msg(chatMessage.getMsg())
                 .createdDate(chatMessage.getCreatedDate())
+                .build();
+    }
+
+    public static ChatMessageResponseDto create (UserChatRoom userChatRoom) {
+        return ChatMessageResponseDto.builder()
+                .roomId(userChatRoom.getChatRoom().getId())
                 .build();
     }
 }

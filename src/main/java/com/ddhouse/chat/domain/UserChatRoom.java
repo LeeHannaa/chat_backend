@@ -29,11 +29,11 @@ public class UserChatRoom extends BaseEntity {
     @JoinColumn(name = "chatRoomId", nullable = false)
     private ChatRoom chatRoom;
 
-    public static UserChatRoom from(ChatRoomDto dto) {
+    public static UserChatRoom from(ChatRoomDto dto, ChatRoom chatRoom) {
         return UserChatRoom.builder()
                 .consultId(dto.getApt().getUser().getId())
                 .user(dto.getUser())
-                .chatRoom(ChatRoom.builder().build())
+                .chatRoom(chatRoom)
                 .build();
     }
 }

@@ -1,7 +1,8 @@
 package com.ddhouse.chat.service;
 
 import com.ddhouse.chat.domain.*;
-import com.ddhouse.chat.dto.ChatMessageDto;
+import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
+import com.ddhouse.chat.dto.response.ChatMessageResponseDto;
 import com.ddhouse.chat.dto.ChatRoomDto;
 import com.ddhouse.chat.exception.NotFlowException;
 import com.ddhouse.chat.exception.NotFoundException;
@@ -12,8 +13,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Collections;
 import java.util.Comparator;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -28,11 +29,11 @@ public class ChatMessageService {
     private final AptRepository aptRepository;
     private final ChatService chatService;
 
-    public Flux<List<ChatMessageDto>> findChatMessages(Long id) {
+    public Flux<List<ChatMessageResponseDto>> findChatMessages(Long id) {
         Flux<ChatMessage> chatMessages = chatMessageRepository.findAllByRoomId(id);
         return chatMessages
                 .flatMap(chatMessage -> {
-                    ChatMessageDto dto = ChatMessageDto.from(chatMessage);
+                    ChatMessageResponseDto dto = ChatMessageResponseDto.from(chatMessage);
 
                     return Mono.justOrEmpty(userRepository.findById(dto.getWriterId()))
                             .flatMap(user -> {
@@ -43,13 +44,13 @@ public class ChatMessageService {
                 })
                 .collectList()
                 .flatMapMany(chatMessagesList -> {
-                    chatMessagesList.sort(Comparator.comparing(ChatMessageDto::getCreatedDate));
+                    chatMessagesList.sort(Comparator.comparing(ChatMessageResponseDto::getCreatedDate));
                     return Flux.fromIterable(chatMessagesList)
                             .buffer(50);
                 });
     }
 
-    public Flux<List<ChatMessageDto>> getChatRoomByAptIdAndUserId(Long aptId, Long myId) {
+    public Flux<List<ChatMessageResponseDto>> getChatRoomByAptIdAndUserId(Long aptId, Long myId) {
         // 1. 기존에 채팅하던 방이 있는 경우
         Long consultId = aptRepository.getReferenceById(aptId).getUser().getId();
         Optional<UserChatRoom> chatRoom = userChatRoomRepository.findByUserIdAndConsultId(myId, consultId);
@@ -68,17 +69,17 @@ public class ChatMessageService {
                 // 새로운 방을 생성해야하는 경우 (1:1)
                 System.out.println("새로운 방 생성");
                 User user = userRepository.findById(myId).orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
-                ChatRoom createdChatRoom = chatService.createChatRoom(ChatRoomDto.createChatRoomDto(apt, user));
-                return findChatMessages(createdChatRoom.getId());
+                UserChatRoom createdChatRoom = chatService.createChatRoom(ChatRoomDto.createChatRoomDto(apt, user));
+                ChatMessageResponseDto newRoomInfo = ChatMessageResponseDto.create(createdChatRoom);
+                return Flux.just(Collections.singletonList(newRoomInfo));
             }
         }
         // aptId가 존재하지 않는 경우
         return Flux.error(new NotFoundException("해당 매물 정보를 찾을 수 없습니다."));
     }
 
-    // TODO : 채팅 입력 날짜 재설정 필요
-    public Mono<ChatMessage> saveChatMessage(ChatMessageDto chat) {
+    public Mono<ChatMessage> saveChatMessage(ChatMessageRequestDto chatMessageRequestDto) {
         return chatMessageRepository.save(
-                new ChatMessage(chat.getRoomId(), chat.getMsg(), chat.getWriterId(), new Date()));
+                new ChatMessage(chatMessageRequestDto));
     }
 }

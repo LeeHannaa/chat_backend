@@ -1,8 +1,8 @@
 package com.ddhouse.chat.controller;
 
-import com.ddhouse.chat.dto.ChatMessageDto;
+import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
+import com.ddhouse.chat.dto.response.ChatMessageResponseDto;
 import com.ddhouse.chat.service.ChatMessageService;
-import com.ddhouse.chat.service.ChatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -26,27 +26,22 @@ public class ChatMessageController {
     //메세지 송신 및 수신
     @MessageMapping("/message")
     @SendTo("/topic/message")
-    public Mono<ResponseEntity<Void>> receiveMessage(@Payload ChatMessageDto chat) {
-        System.out.println("메시지 수신 : " + chat.getCreatedDate());
+    public Mono<ResponseEntity<Void>> receiveMessage(@Payload ChatMessageRequestDto chat) {
+        System.out.println("메시지 수신 : " + chat.getMsg());
         return chatMessageService.saveChatMessage(chat).flatMap(message -> {
             // 메시지를 해당 채팅방 구독자들에게 전송
             template.convertAndSend("/sub/chatroom/" + chat.getRoomId(),
-                    ChatMessageDto.from(message));
+                    ChatMessageResponseDto.from(message));
             // TODO : 채팅방 구독자들에게 전송하는 메시지 타입 형태 일치시키기
-            System.out.println("전송되는 메시지: " + ChatMessageDto.from(message).getMsg());  // 확인용
+            System.out.println("전송되는 메시지: " + ChatMessageResponseDto.from(message).getMsg());  // 확인용
             return Mono.just(ResponseEntity.ok().build());
         });
-    }
-
-    @MessageMapping("/greeting")
-    public String handle(String greeting) {
-        return greeting;
     }
 
 
 
     @GetMapping("/find/list/{chatRoomId}")
-    public Flux<ResponseEntity<List<ChatMessageDto>>> findMessageByChatRoomId(@PathVariable("chatRoomId") Long id) {
+    public Flux<ResponseEntity<List<ChatMessageResponseDto>>> findMessageByChatRoomId(@PathVariable("chatRoomId") Long id) {
         System.out.println("채팅방 리스트 확인하기");
         return chatMessageService.findChatMessages(id)
                 .map(messages -> {
@@ -58,7 +53,7 @@ public class ChatMessageController {
 
     @GetMapping("/apt/find/list/{aptId}")
     // CHECK : 프론트에서 임시로 myId 받아와서 확인 (병합시 토큰으로 처리)
-    public Flux<ResponseEntity<List<ChatMessageDto>>> findMessageByAptId(@PathVariable("aptId") Long id, @RequestParam("myId") Long myId) {
+    public Flux<ResponseEntity<List<ChatMessageResponseDto>>> findMessageByAptId(@PathVariable("aptId") Long id, @RequestParam("myId") Long myId) {
         System.out.println("매물id로 채팅 내역 불러오기");
         return chatMessageService.getChatRoomByAptIdAndUserId(id, myId)
                 .map(messages -> {

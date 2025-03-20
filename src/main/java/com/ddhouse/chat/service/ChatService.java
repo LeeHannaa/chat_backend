@@ -26,9 +26,9 @@ public class ChatService {
     private final UserChatRoomRepository userChatRoomRepository;
     private final AptRepository aptRepository;
 
-    public ChatRoom createChatRoom(ChatRoomDto chatRoomDto) {
-        userChatRoomRepository.save(UserChatRoom.from(chatRoomDto));
-        return chatRoomRepository.save(ChatRoom.from(chatRoomDto));
+    public UserChatRoom createChatRoom(ChatRoomDto chatRoomDto) {
+        ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.from(chatRoomDto));
+        return userChatRoomRepository.save(UserChatRoom.from(chatRoomDto, chatRoom));
     }
 
     // 채팅 전체 리스트
