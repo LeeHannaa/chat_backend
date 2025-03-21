@@ -31,8 +31,8 @@ public class ChatController {
     }
 
     @DeleteMapping("/delete/{chatRoomId}")
-    public ResponseEntity<Void> deleteChatRoom(@PathVariable("chatRoomId") Long id){
-        chatService.deleteChatRoom(id);
+    public ResponseEntity<Void> deleteChatRoom(@PathVariable("chatRoomId") Long id, @RequestParam("myId") Long myId){
+        chatService.deleteChatRoom(id, myId);
         return ResponseEntity.ok().build();
     }
 }

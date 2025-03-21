@@ -29,8 +29,9 @@ public class ChatMessageService {
     private final AptRepository aptRepository;
     private final ChatService chatService;
 
-    public Flux<List<ChatMessageResponseDto>> findChatMessages(Long id) {
-        Flux<ChatMessage> chatMessages = chatMessageRepository.findAllByRoomId(id);
+    public Flux<List<ChatMessageResponseDto>> findChatMessages(Long roomId) {
+        Flux<ChatMessage> chatMessages = chatMessageRepository.findAllByRoomId(roomId);
+        // TODO : 메시지가 없다면 (길이가 0) -> 방의 정보를 담아서 넘기기
         return chatMessages
                 .flatMap(chatMessage -> {
                     ChatMessageResponseDto dto = ChatMessageResponseDto.from(chatMessage);
@@ -44,6 +45,16 @@ public class ChatMessageService {
                 })
                 .collectList()
                 .flatMapMany(chatMessagesList -> {
+                    if (chatMessagesList.isEmpty()) {
+                        // 메시지가 없다면 방 정보를 반환
+                        System.out.println("채팅방만 있는 경우 -> 채팅방의 정보만 보내기! ");
+                        ChatMessageResponseDto defaultChatRoom = ChatMessageResponseDto.create(
+                                userChatRoomRepository.findByChatRoomId(roomId)
+                                        .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."))
+                        );
+                        return Flux.just(Collections.singletonList(defaultChatRoom));
+                    }
+                    // 메시지가 있으면 날짜 정렬 후 반환
                     chatMessagesList.sort(Comparator.comparing(ChatMessageResponseDto::getCreatedDate));
                     return Flux.fromIterable(chatMessagesList)
                             .buffer(50);

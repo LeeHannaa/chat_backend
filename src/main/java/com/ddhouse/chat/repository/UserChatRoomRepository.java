@@ -2,6 +2,7 @@ package com.ddhouse.chat.repository;
 
 import com.ddhouse.chat.domain.UserChatRoom;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -14,4 +15,5 @@ public interface UserChatRoomRepository extends JpaRepository<UserChatRoom, Long
     List<UserChatRoom> findByUserIdOrConsultId(@Param("id") Long id);
     Optional<UserChatRoom> findByUserIdAndConsultId(Long userId, Long consultId);
     void deleteByChatRoomId(Long roomId);
+    Optional<UserChatRoom> findByChatRoomId(Long roomId);
 }

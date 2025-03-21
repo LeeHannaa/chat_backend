@@ -23,12 +23,14 @@ public class ChatMessage {
     private String msg;
     private Long writerId;
     private Date createdDate;
+    private String writerName;
 
     public ChatMessage(ChatMessageRequestDto chatMessageRequestDto) {
         this.id = UUID.randomUUID();
         this.roomId = chatMessageRequestDto.getRoomId();
         this.msg = chatMessageRequestDto.getMsg();
         this.writerId = chatMessageRequestDto.getWriterId();
+        this.writerName = chatMessageRequestDto.getWriterName();
         this.createdDate = new Date();
     }
 

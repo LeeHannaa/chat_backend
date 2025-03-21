@@ -33,4 +33,10 @@ public class ChatRoom extends BaseEntity {
                 .apt(dto.getApt())
                 .build();
     }
+
+    public void decreaseMemberNum() {
+        if (this.memberNum > 0) {
+            this.memberNum--;
+        }
+    }
 }

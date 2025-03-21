@@ -26,6 +26,7 @@ public class ChatMessageResponseDto {
                 .id(chatMessage.getId())
                 .roomId(chatMessage.getRoomId())
                 .writerId(chatMessage.getWriterId())
+                .writerName(chatMessage.getWriterName())
                 .msg(chatMessage.getMsg())
                 .createdDate(chatMessage.getCreatedDate())
                 .build();
