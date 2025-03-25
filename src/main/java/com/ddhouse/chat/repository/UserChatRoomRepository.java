@@ -1,10 +1,13 @@
 package com.ddhouse.chat.repository;
 
+import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.domain.UserChatRoom;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 
 import java.util.List;
 import java.util.Optional;

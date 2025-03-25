@@ -29,8 +29,7 @@ public class ChatRoomDto {
                 .id(chatRoom.getId())
                 .name(chatRoom.getApt().getName()) // 매물 이름
                 .memberNum(chatRoom.getMemberNum())
-//                .counselId(myId) // 매물 문의자
-//                .consultId(chatRoom.getApt().getUser().getId()) // 매물 소유자
+                .apt(chatRoom.getApt())
                 .regDate(chatRoom.getRegDate())
                 .build();
     }

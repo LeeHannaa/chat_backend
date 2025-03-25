@@ -50,7 +50,7 @@ public class ChatMessageService {
                         System.out.println("채팅방만 있는 경우 -> 채팅방의 정보만 보내기! ");
                         ChatMessageResponseDto defaultChatRoom = ChatMessageResponseDto.create(
                                 userChatRoomRepository.findByChatRoomId(roomId)
-                                        .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."))
+                                        .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다." + roomId))
                         );
                         return Flux.just(Collections.singletonList(defaultChatRoom));
                     }
@@ -61,12 +61,19 @@ public class ChatMessageService {
                 });
     }
 
+
     public Flux<List<ChatMessageResponseDto>> getChatRoomByAptIdAndUserId(Long aptId, Long myId) {
+        // TODO : 매물 목록에서 채팅 문의하기 할 경우 나의 아이디와 해당 매물 아이디로 기존 방이 있는지 잘 못찾아내고 있음
         // 1. 기존에 채팅하던 방이 있는 경우
-        Long consultId = aptRepository.getReferenceById(aptId).getUser().getId();
-        Optional<UserChatRoom> chatRoom = userChatRoomRepository.findByUserIdAndConsultId(myId, consultId);
-        if (chatRoom.isPresent()) {
-            return findChatMessages(chatRoom.get().getId());
+        // 1-1. 내 아이디로 나의 채팅방 불러오기
+        List<ChatRoomDto> chatRooms = chatService.findMyChatRoomList(myId);
+        // 1-2. chatRooms에서 aptId랑 파라미터 aptId랑 비교해서 동일한 데이터가 있으면 채팅방이 있는 경우!
+        if (!chatRooms.isEmpty()) {
+            for (ChatRoomDto chatRoom : chatRooms) {
+                if (chatRoom.getApt().getId().equals(aptId)) {
+                    return findChatMessages(chatRoom.getId());
+                }
+            }
         }
 
         // 2. 방을 생성해야하는 경우
