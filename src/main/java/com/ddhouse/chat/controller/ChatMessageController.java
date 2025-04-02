@@ -1,6 +1,9 @@
 package com.ddhouse.chat.controller;
 
+import com.ddhouse.chat.domain.ChatMessage;
+import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
+import com.ddhouse.chat.dto.request.ChatRoomUpdateDto;
 import com.ddhouse.chat.dto.response.ChatMessageResponseDto;
 import com.ddhouse.chat.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;
@@ -27,10 +30,14 @@ public class ChatMessageController {
     @MessageMapping("/message")
     public Mono<ResponseEntity<Void>> receiveMessage(@Payload ChatMessageRequestDto chatMessageRequestDto) {
         System.out.println("메시지 수신 : " + chatMessageRequestDto.getMsg());
+        Long receiverId = chatMessageService.findReceiverId(chatMessageRequestDto);
         return chatMessageService.saveChatMessage(chatMessageRequestDto).flatMap(message -> {
             // 메시지를 해당 채팅방 구독자들에게 전송
             template.convertAndSend("/topic/chatroom/" + chatMessageRequestDto.getRoomId(),
                     ChatMessageResponseDto.from(message));
+            // 상대방이 채팅방 목록을 보고 있다면, 실시간으로 목록 갱신 알림 전송
+            template.convertAndSend("/topic/chatlist/" + receiverId,
+                    ChatRoomUpdateDto.from(chatMessageRequestDto));
             // TODO : 채팅방 구독자들에게 전송하는 메시지 타입 형태 일치시키기
             System.out.println("전송되는 메시지: " + ChatMessageResponseDto.from(message).getMsg());  // 확인용
             return Mono.just(ResponseEntity.ok().build());

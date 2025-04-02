@@ -6,6 +6,7 @@ import com.ddhouse.chat.dto.response.ChatMessageResponseDto;
 import com.ddhouse.chat.dto.ChatRoomDto;
 import com.ddhouse.chat.exception.NotFlowException;
 import com.ddhouse.chat.exception.NotFoundException;
+import com.ddhouse.chat.fcm.dto.FcmMessage;
 import com.ddhouse.chat.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -100,4 +101,13 @@ public class ChatMessageService {
         return chatMessageRepository.save(
                 new ChatMessage(chatMessageRequestDto));
     }
+
+    public Long findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기
+        UserChatRoom userChatRoom = userChatRoomRepository.findByChatRoomId(chatMessageRequestDto.getRoomId())
+                .orElseThrow(() -> new NotFoundException("해당 채팅방이 존재하지 않습니다."));
+        if(userChatRoom.getUser().getId() == chatMessageRequestDto.getWriterId())
+            return userChatRoom.getConsultId();
+        else return userChatRoom.getUser().getId();
+    }
+
 }

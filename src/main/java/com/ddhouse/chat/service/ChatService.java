@@ -61,7 +61,7 @@ public class ChatService {
         return chatMessageRepository.findAllByRoomId(roomId);
     }
     @Transactional
-    public void deleteChatRoom(Long roomId, Long myId){
+    public void deleteChatRoom(Long roomId){
         // 채팅 이용자가 0명인 경우 전체 대화 삭제
         Optional<ChatRoom> chatRoomOptional = chatRoomRepository.findById(roomId);
 
@@ -69,21 +69,19 @@ public class ChatService {
             chatRoom.decreaseMemberNum(); // memberNum 감소
 
             if (chatRoom.getMemberNum() == 0) {
-                // TODO : 카산드라 db 내용 해당 채팅방 데이터들을 먼저 다 지우기
-                findMessagesByRoomId(roomId)
-                        .flatMap(chatMessage -> {
-                            System.out.println(chatMessage.getId());  // 아이디 출력
-                            return chatMessageRepository.deleteById(chatMessage.getId());  // 삭제 작업
-                        })
-                        .then();
-                userChatRoomRepository.deleteByChatRoomId(roomId);
+                // TODO : 카산드라 db 내용 해당 채팅방 데이터들을 먼저 다 지우기 -> 아이디로 지워야함... 고민....
+                // TODO : 인원 줄여도 채팅방을 보내줄 때 다시 채팅방이 넘어감....
+//                findMessagesByRoomId(roomId)
+//                        .flatMap(chatMessage -> {
+//                            System.out.println(chatMessage.getId());  // 아이디 출력
+//                            return chatMessageRepository.deleteById(chatMessage.getId());  // 삭제 작업
+//                        })
+//                        .then();
                 // 해당 채팅방 지우기
+                userChatRoomRepository.deleteByChatRoomId(roomId);
                 chatRoomRepository.deleteById(roomId);
-            } else {
-                // TODO : 채팅방 나가기 한 사용자에게는 해당 채팅방이 보이지 않아야함.
             }
-
-            chatRoomRepository.save(chatRoom); // 변경사항 저장
+            else chatRoomRepository.save(chatRoom); // 변경사항 저장
         });
 
 
