@@ -17,7 +17,9 @@ public class ChatRoomUpdateDto {
     private String msg;
     private String writerName;
     private LocalDateTime regDate;
-    // TODO : 나중에 업데이트 시간도 추가할 것
+    private LocalDateTime updateLastMsgTime;
+
+
 
 
     public static ChatRoomUpdateDto from (ChatMessageRequestDto chatMessageRequestDto) {
@@ -25,7 +27,8 @@ public class ChatRoomUpdateDto {
                 .roomId(chatMessageRequestDto.getRoomId())
                 .msg(chatMessageRequestDto.getMsg())
                 .writerName(chatMessageRequestDto.getWriterName())
-                .regDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .regDate(chatMessageRequestDto.getRegDate())
+                .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .build();
     }
 

@@ -16,7 +16,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple2;
+import reactor.util.function.Tuples;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,11 +53,11 @@ public class ChatService {
     }
 
 
-    public Mono<String> getLastMessage(Long roomId) {
+    public Mono<Tuple2<String, LocalDateTime>> getLastMessage(Long roomId) {
         return chatMessageRepository.findAllByRoomId(roomId)
                 .sort((m1, m2) -> m2.getCreatedDate().compareTo(m1.getCreatedDate()))  // 날짜 내림차순 정렬
                 .next()  // 가장 첫 번째 (최신) 메시지를 가져옴
-                .map(chatMessage -> chatMessage.getMsg());  // 메시지 내용만 반환
+                .map(chatMessage -> Tuples.of(chatMessage.getMsg(), chatMessage.getCreatedDate()));  // 메시지와 날짜 함께 반환
     }
 
     public Flux<ChatMessage> findMessagesByRoomId(Long roomId) {

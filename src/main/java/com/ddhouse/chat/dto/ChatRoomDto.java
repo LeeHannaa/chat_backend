@@ -16,9 +16,8 @@ public class ChatRoomDto {
     private Long id;
     private String name;
     private int memberNum;
-//    private Long counselId;
-//    private Long consultId;
-    private LocalDateTime regDate;
+    private LocalDateTime regDate; // 채팅방 생성일
+    private LocalDateTime updateLastMsgTime;
     private String lastMsg;
     private Apt apt;
     private User user;
@@ -41,6 +40,7 @@ public class ChatRoomDto {
                 .apt(apt)
                 .user(user)
                 .regDate(LocalDateTime.now())
+                .updateLastMsgTime(LocalDateTime.now()) // 처음 생성 할 때
                 .lastMsg("")
                 .build();
     }

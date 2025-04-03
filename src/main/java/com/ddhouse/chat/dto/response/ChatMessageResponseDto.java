@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
@@ -21,7 +22,7 @@ public class ChatMessageResponseDto {
     private Long writerId;
     private String msg;
     // TODO : 날짜 타입 전체적으로 통일시키기
-    private Date createdDate;
+    private LocalDateTime createdDate;
 
     // 처음 방 생성한 경우
     private String roomName;

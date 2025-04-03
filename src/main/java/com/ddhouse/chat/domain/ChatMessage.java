@@ -5,9 +5,7 @@ import jakarta.persistence.Table;
 import lombok.*;
 import org.springframework.data.cassandra.core.mapping.PrimaryKey;
 
-import java.time.Instant;
-import java.time.ZoneId;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.Date;
 import java.util.UUID;
 
@@ -22,7 +20,7 @@ public class ChatMessage {
     private Long roomId;
     private String msg;
     private Long writerId;
-    private Date createdDate;
+    private LocalDateTime createdDate;
     private String writerName;
 
     public ChatMessage(ChatMessageRequestDto chatMessageRequestDto) {
@@ -31,7 +29,7 @@ public class ChatMessage {
         this.msg = chatMessageRequestDto.getMsg();
         this.writerId = chatMessageRequestDto.getWriterId();
         this.writerName = chatMessageRequestDto.getWriterName();
-        this.createdDate = new Date();
+        this.createdDate = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
 
 
