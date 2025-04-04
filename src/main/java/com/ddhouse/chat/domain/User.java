@@ -20,5 +20,9 @@ public class User extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     private String name;
+    private String fcmToken;
 
+    public void setUpdateFcmToken(String fcmToken) {
+        this.fcmToken = fcmToken;
+    }
 }

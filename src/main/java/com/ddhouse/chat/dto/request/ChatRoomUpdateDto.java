@@ -7,7 +7,6 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Date;
 
 @Getter
 @Setter
@@ -18,9 +17,6 @@ public class ChatRoomUpdateDto {
     private String writerName;
     private LocalDateTime regDate;
     private LocalDateTime updateLastMsgTime;
-
-
-
 
     public static ChatRoomUpdateDto from (ChatMessageRequestDto chatMessageRequestDto) {
         return ChatRoomUpdateDto.builder()

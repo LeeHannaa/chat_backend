@@ -5,7 +5,9 @@ import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.request.ChatRoomUpdateDto;
 import com.ddhouse.chat.dto.response.ChatMessageResponseDto;
+import com.ddhouse.chat.fcm.service.FcmService;
 import com.ddhouse.chat.service.ChatMessageService;
+import com.ddhouse.chat.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.util.List;
 
 @RestController
@@ -23,8 +26,11 @@ import java.util.List;
 @RequestMapping("/chatmsg")
 public class ChatMessageController {
     private final ChatMessageService chatMessageService;
+    private final UserService userService;
+    private final FcmService fcmService;
 
     private final SimpMessageSendingOperations template;
+
 
     //메세지 송신 및 수신
     @MessageMapping("/message")
@@ -35,6 +41,17 @@ public class ChatMessageController {
             // 메시지를 해당 채팅방 구독자들에게 전송
             template.convertAndSend("/topic/chatroom/" + chatMessageRequestDto.getRoomId(),
                     ChatMessageResponseDto.from(message));
+            // fcm 알림 전송
+            String fcmToken = userService.findFcmTokenByUserId(receiverId);
+            String title = "새 메시지 도착!";
+            try {
+                fcmService.sendMessageTo(
+                        fcmToken,
+                        title,
+                        userService.findNameByUserId(chatMessageRequestDto.getWriterId()) + " : " + chatMessageRequestDto.getMsg());
+            } catch (IOException e) {
+                return Mono.error(new RuntimeException(e));
+            }
             // 상대방이 채팅방 목록을 보고 있다면, 실시간으로 목록 갱신 알림 전송
             template.convertAndSend("/topic/chatlist/" + receiverId,
                     ChatRoomUpdateDto.from(chatMessageRequestDto));
