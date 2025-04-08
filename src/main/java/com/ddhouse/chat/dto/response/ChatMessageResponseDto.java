@@ -23,6 +23,7 @@ public class ChatMessageResponseDto {
     private String msg;
     // TODO : 날짜 타입 전체적으로 통일시키기
     private LocalDateTime createdDate;
+    private int count;
 
     // 처음 방 생성한 경우
     private String roomName;
@@ -37,6 +38,18 @@ public class ChatMessageResponseDto {
                 .writerName(chatMessage.getWriterName())
                 .msg(chatMessage.getMsg())
                 .createdDate(chatMessage.getCreatedDate())
+                .build();
+    }
+
+    public static ChatMessageResponseDto fromAddCount (ChatMessage chatMessage, int count) {
+        return ChatMessageResponseDto.builder()
+                .id(chatMessage.getId())
+                .roomId(chatMessage.getRoomId())
+                .writerId(chatMessage.getWriterId())
+                .writerName(chatMessage.getWriterName())
+                .msg(chatMessage.getMsg())
+                .createdDate(chatMessage.getCreatedDate())
+                .count(count)
                 .build();
     }
 

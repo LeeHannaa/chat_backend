@@ -17,14 +17,16 @@ public class ChatRoomUpdateDto {
     private String writerName;
     private LocalDateTime regDate;
     private LocalDateTime updateLastMsgTime;
+    private Long unreadCount;
 
-    public static ChatRoomUpdateDto from (ChatMessageRequestDto chatMessageRequestDto) {
+    public static ChatRoomUpdateDto from (ChatMessageRequestDto chatMessageRequestDto, Long count) {
         return ChatRoomUpdateDto.builder()
                 .roomId(chatMessageRequestDto.getRoomId())
                 .msg(chatMessageRequestDto.getMsg())
                 .writerName(chatMessageRequestDto.getWriterName())
                 .regDate(chatMessageRequestDto.getRegDate())
                 .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .unreadCount(count)
                 .build();
     }
 

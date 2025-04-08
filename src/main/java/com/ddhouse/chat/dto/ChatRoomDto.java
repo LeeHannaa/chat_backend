@@ -22,6 +22,7 @@ public class ChatRoomDto {
     private Apt apt;
     private User user;
     private ChatRoom chatRoom;
+    private Long unreadCount;
 
     public static ChatRoomDto from(ChatRoom chatRoom) {
         return ChatRoomDto.builder()

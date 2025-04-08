@@ -1,18 +1,17 @@
 package com.ddhouse.chat.controller;
 
-import com.ddhouse.chat.domain.ChatMessage;
-import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.request.ChatRoomUpdateDto;
 import com.ddhouse.chat.dto.response.ChatMessageResponseDto;
 import com.ddhouse.chat.fcm.service.FcmService;
 import com.ddhouse.chat.service.ChatMessageService;
+import com.ddhouse.chat.service.MessageUnreadService;
+import com.ddhouse.chat.service.RoomUserCountService;
 import com.ddhouse.chat.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.messaging.handler.annotation.SendTo;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
@@ -20,6 +19,7 @@ import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -28,6 +28,9 @@ public class ChatMessageController {
     private final ChatMessageService chatMessageService;
     private final UserService userService;
     private final FcmService fcmService;
+    private final RoomUserCountService roomUserCountService;
+    private final MessageUnreadService messageUnreadService;
+
 
     private final SimpMessageSendingOperations template;
 
@@ -37,24 +40,42 @@ public class ChatMessageController {
     public Mono<ResponseEntity<Void>> receiveMessage(@Payload ChatMessageRequestDto chatMessageRequestDto) {
         System.out.println("메시지 수신 : " + chatMessageRequestDto.getMsg());
         Long receiverId = chatMessageService.findReceiverId(chatMessageRequestDto);
+        int countInRoom = roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId());
+        /*
+        * 3. 채팅 리스트에 들어가는 경우
+        *   3-1. 각 방의 라스트 채팅 내용 불러오면서 redis에 각 방의 안읽은 채팅 개수들 같이 넣어서 보내주기
+        * 4. 채팅방으로 이동이 가능한 페이지에 있는 경우
+        *   4-1. redis에서 unread에 메시지가 한개 이상이라도 있다면 알림처리된 아이콘으로 변경할 수 있도록 api 내용 보내주기
+        * */
+        if(countInRoom < 2){
+            messageUnreadService.addUnreadChat(chatMessageRequestDto.getRoomId().toString(), receiverId.toString(), chatMessageRequestDto.getMsg());
+        }
+
         return chatMessageService.saveChatMessage(chatMessageRequestDto).flatMap(message -> {
             // 메시지를 해당 채팅방 구독자들에게 전송
-            template.convertAndSend("/topic/chatroom/" + chatMessageRequestDto.getRoomId(),
-                    ChatMessageResponseDto.from(message));
+            Map<String, Object> chatMessage = Map.of(
+                    "type", "CHAT",
+                    "message", ChatMessageResponseDto.fromAddCount(message, countInRoom)
+            );
+            template.convertAndSend("/topic/chatroom/" + chatMessageRequestDto.getRoomId(), chatMessage);
             // fcm 알림 전송
             String fcmToken = userService.findFcmTokenByUserId(receiverId);
             String title = "새 메시지 도착!";
-            try {
-                fcmService.sendMessageTo(
-                        fcmToken,
-                        title,
-                        userService.findNameByUserId(chatMessageRequestDto.getWriterId()) + " : " + chatMessageRequestDto.getMsg());
-            } catch (IOException e) {
-                return Mono.error(new RuntimeException(e));
+            // 내가 해당 방에 있는 경우 알림 처리 하지 않음
+            if(roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId()) < 2){
+                try {
+                    fcmService.sendMessageTo(
+                            fcmToken,
+                            title,
+                            userService.findNameByUserId(chatMessageRequestDto.getWriterId()) + " : " + chatMessageRequestDto.getMsg());
+                } catch (IOException e) {
+                    return Mono.error(new RuntimeException(e));
+                }
             }
-            // 상대방이 채팅방 목록을 보고 있다면, 실시간으로 목록 갱신 알림 전송
+            // 상대방이 채팅방 목록을 보고 있다면, 실시간으로 목록 갱신 알림 전송 + 안읽은 메시지 수 같이 보내기
+            Long unreadCount = messageUnreadService.getUnreadMessageCount(chatMessageRequestDto.getRoomId().toString(), receiverId.toString());
             template.convertAndSend("/topic/chatlist/" + receiverId,
-                    ChatRoomUpdateDto.from(chatMessageRequestDto));
+                    ChatRoomUpdateDto.from(chatMessageRequestDto, unreadCount));
             // TODO : 채팅방 구독자들에게 전송하는 메시지 타입 형태 일치시키기
             System.out.println("전송되는 메시지: " + ChatMessageResponseDto.from(message).getMsg());  // 확인용
             return Mono.just(ResponseEntity.ok().build());

@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -26,9 +27,11 @@ public class ChatController {
     public ResponseEntity<List<ChatRoomDto>> getMyChatRoomList(@RequestParam("myId") Long myId) {
         List<ChatRoomDto> responses = chatService.findMyChatRoomList(myId);
         for (ChatRoomDto chatRoom : responses) {
-            Tuple2<String, LocalDateTime> lastMessageData = chatService.getLastMessage(chatRoom.getId()).block();
+//            Tuple2<String, LocalDateTime> lastMessageData = chatService.getLastMessage(chatRoom.getId()).block();
+            Tuple3<String, LocalDateTime, Long> lastMessageData = chatService.getLastMessageWithUnreadCount(chatRoom.getId(), myId).block();
             chatRoom.setLastMsg(lastMessageData.getT1());
             chatRoom.setUpdateLastMsgTime(lastMessageData.getT2());
+            chatRoom.setUnreadCount(lastMessageData.getT3());
         }
         return ResponseEntity.ok().body(responses);
     }

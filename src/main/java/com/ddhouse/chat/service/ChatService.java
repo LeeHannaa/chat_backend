@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
+import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 import java.time.LocalDateTime;
@@ -31,6 +32,7 @@ public class ChatService {
     private final ChatMessageRepository chatMessageRepository;
     private final UserChatRoomRepository userChatRoomRepository;
     private final AptRepository aptRepository;
+    private final MessageUnreadService messageUnreadService;
 
     public UserChatRoom createChatRoom(ChatRoomDto chatRoomDto) {
         ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.from(chatRoomDto));
@@ -59,6 +61,28 @@ public class ChatService {
                 .next()  // 가장 첫 번째 (최신) 메시지를 가져옴
                 .map(chatMessage -> Tuples.of(chatMessage.getMsg(), chatMessage.getCreatedDate()));  // 메시지와 날짜 함께 반환
     }
+
+
+    public Mono<Tuple3<String, LocalDateTime, Long>> getLastMessageWithUnreadCount(Long roomId, Long myId) {
+        Mono<Tuple2<String, LocalDateTime>> lastMessageMono = chatMessageRepository.findAllByRoomId(roomId)
+                .sort((m1, m2) -> m2.getCreatedDate().compareTo(m1.getCreatedDate()))
+                .next()
+                .map(msg -> Tuples.of(msg.getMsg(), msg.getCreatedDate()));
+
+        Long unreadCount = messageUnreadService.getUnreadMessageCount(roomId.toString(), myId.toString());
+        Mono<Long> unreadCountMono = Mono.just(unreadCount);
+
+        return Mono.zip(lastMessageMono, unreadCountMono)
+                .map(tuple -> Tuples.of(
+                        tuple.getT1().getT1(), // msg
+                        tuple.getT1().getT2(), // createdDate
+                        tuple.getT2()          // unreadCount
+                ));
+    }
+
+
+
+
 
     public Flux<ChatMessage> findMessagesByRoomId(Long roomId) {
         return chatMessageRepository.findAllByRoomId(roomId);
