@@ -73,8 +73,13 @@ public class WebSocketEventListener {
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String roomId = (String) accessor.getSessionAttributes().get("roomId");
+        Map<String, Object> outMessage = Map.of(
+                "type", "OUT",
+                "message", "상대방 퇴장"
+        );
         if (roomId != null) {
             roomUserCountService.decreaseUserCount(roomId);
+            messagingTemplate.convertAndSend("/topic/chatroom/" + roomId, outMessage);
             System.out.println("👋 사용자 퇴장: " + roomId + ", count 감소");
         }
     }

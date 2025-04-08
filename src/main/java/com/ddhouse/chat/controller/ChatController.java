@@ -2,6 +2,7 @@ package com.ddhouse.chat.controller;
 
 import com.ddhouse.chat.dto.ChatRoomDto;
 import com.ddhouse.chat.service.ChatService;
+import com.ddhouse.chat.service.MessageUnreadService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.util.List;
 @RequestMapping("/chat")
 public class ChatController {
     private final ChatService chatService;
+    private final MessageUnreadService messageUnreadService;
 
     @PostMapping("/create")
     public ResponseEntity<Void> createChatRoom(@RequestBody ChatRoomDto chatRoomDto) {
@@ -40,5 +42,11 @@ public class ChatController {
     public ResponseEntity<Void> deleteChatRoom(@PathVariable("chatRoomId") Long id){
         chatService.deleteChatRoom(id);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/unread/count")
+    public ResponseEntity<Long> getUnreadCountByRoom(@RequestParam("roomId") Long roomId){
+        Long unreadCount = messageUnreadService.getOtherUserUnreadCount(roomId.toString());
+        return ResponseEntity.ok().body(unreadCount);
     }
 }

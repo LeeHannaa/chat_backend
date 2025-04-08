@@ -57,8 +57,7 @@ public class ChatMessageService {
                     }
                     // 메시지가 있으면 날짜 정렬 후 반환
                     chatMessagesList.sort(Comparator.comparing(ChatMessageResponseDto::getCreatedDate));
-                    return Flux.fromIterable(chatMessagesList)
-                            .buffer(50);
+                    return Flux.just(chatMessagesList);
                 });
     }
 
