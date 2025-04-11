@@ -22,17 +22,18 @@ public class FcmController {
         return userService.addFcmToken(fcmTokenSaveRequest);
     }
 
-    @PostMapping("/message") // 수동버전
-    public ResponseEntity pushMessage(@RequestParam Long myId, @RequestBody FcmTokenRequestDto fcmRequestDto) throws IOException {
-        String fcmToken = userService.findFcmTokenByUserId(myId);
-        System.out.println(fcmToken + " "
-                +fcmRequestDto.getTitle() + " " + fcmRequestDto.getBody());
-
-        fcmService.sendMessageTo(
-                fcmToken,
-                fcmRequestDto.getTitle(),
-                fcmRequestDto.getBody());
-        return ResponseEntity.ok().build();
-    }
+//    @PostMapping("/message") // 수동버전
+//    public ResponseEntity pushMessage(@RequestParam Long myId, @RequestBody FcmTokenRequestDto fcmRequestDto) throws IOException {
+//        String fcmToken = userService.findFcmTokenByUserId(myId);
+//        System.out.println(fcmToken + " "
+//                +fcmRequestDto.getTitle() + " " + fcmRequestDto.getBody());
+//
+//        fcmService.sendMessageTo(
+//                fcmToken,
+//                fcmRequestDto.getTitle(),
+//                fcmRequestDto.getBody(),
+//                roomId);
+//        return ResponseEntity.ok().build();
+//    }
 
 }

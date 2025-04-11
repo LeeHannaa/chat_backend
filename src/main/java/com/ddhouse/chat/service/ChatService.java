@@ -6,6 +6,7 @@ import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.ChatRoomDto;
+import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.AptRepository;
 import com.ddhouse.chat.repository.ChatMessageRepository;
 import com.ddhouse.chat.repository.ChatRoomRepository;
@@ -81,6 +82,11 @@ public class ChatService {
                 ));
     }
 
+    public String findRoomName(Long roomId) {
+        return chatRoomRepository.findById(roomId)
+                .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."))
+                .getName();
+    }
 
 
 

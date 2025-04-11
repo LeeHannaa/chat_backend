@@ -4,10 +4,7 @@ import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.request.ChatRoomUpdateDto;
 import com.ddhouse.chat.dto.response.ChatMessageResponseDto;
 import com.ddhouse.chat.fcm.service.FcmService;
-import com.ddhouse.chat.service.ChatMessageService;
-import com.ddhouse.chat.service.MessageUnreadService;
-import com.ddhouse.chat.service.RoomUserCountService;
-import com.ddhouse.chat.service.UserService;
+import com.ddhouse.chat.service.*;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -30,6 +27,7 @@ public class ChatMessageController {
     private final FcmService fcmService;
     private final RoomUserCountService roomUserCountService;
     private final MessageUnreadService messageUnreadService;
+    private final ChatService chatService;
 
 
     private final SimpMessageSendingOperations template;
@@ -41,6 +39,7 @@ public class ChatMessageController {
         System.out.println("메시지 수신 : " + chatMessageRequestDto.getMsg());
         Long receiverId = chatMessageService.findReceiverId(chatMessageRequestDto);
         int countInRoom = roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId());
+        String roomName = chatService.findRoomName(chatMessageRequestDto.getRoomId());
         /*
         * 3. 채팅 리스트에 들어가는 경우
         *   3-1. 각 방의 라스트 채팅 내용 불러오면서 redis에 각 방의 안읽은 채팅 개수들 같이 넣어서 보내주기
@@ -74,7 +73,10 @@ public class ChatMessageController {
                     fcmService.sendMessageTo(
                             fcmToken,
                             title,
-                            userService.findNameByUserId(chatMessageRequestDto.getWriterId()) + " : " + chatMessageRequestDto.getMsg());
+                            userService.findNameByUserId(chatMessageRequestDto.getWriterId()) + " : " + chatMessageRequestDto.getMsg(),
+                            chatMessageRequestDto.getRoomId().toString(),
+                            roomName
+                    );
                 } catch (IOException e) {
                     return Mono.error(new RuntimeException(e));
                 }

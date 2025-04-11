@@ -12,7 +12,9 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Component
 @RequiredArgsConstructor
@@ -21,8 +23,8 @@ public class FcmService {
             "ddhouse-chat/messages:send";
     private final ObjectMapper objectMapper;
 
-    public void sendMessageTo(String targetToken, String title, String body) throws IOException {
-        String message = makeMessage(targetToken, title, body);
+    public void sendMessageTo(String targetToken, String title, String body, String roomId, String roomName) throws IOException {
+        String message = makeMessage(targetToken, title, body, roomId, roomName);
 
         OkHttpClient client = new OkHttpClient();
         RequestBody requestBody = RequestBody.create(message,
@@ -39,15 +41,22 @@ public class FcmService {
         System.out.println(response.body().string());
     }
 
-    private String makeMessage(String targetToken, String title, String body) throws JsonParseException, JsonProcessingException {
+    private String makeMessage(String targetToken, String title, String body, String roomId, String roomName) throws JsonParseException, JsonProcessingException {
+        Map<String, String> data = new HashMap<>();
+        data.put("roomId", roomId);
+        data.put("roomName", roomName);
+
         FcmMessage fcmMessage = FcmMessage.builder()
                 .message(FcmMessage.Message.builder()
                         .token(targetToken)
                         .notification(FcmMessage.Notification.builder()
                                 .title(title)
                                 .body(body)
-                                .build()
-                        ).build()).validateOnly(false).build();
+                                .build())
+                        .data(data)
+                        .build())
+                .validateOnly(false)
+                .build();
 
         return objectMapper.writeValueAsString(fcmMessage);
     }
