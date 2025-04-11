@@ -58,11 +58,18 @@ public class ChatMessageController {
                     "message", ChatMessageResponseDto.fromAddCount(message, countInRoom)
             );
             template.convertAndSend("/topic/chatroom/" + chatMessageRequestDto.getRoomId(), chatMessage);
+            // 상대방이 채팅방 목록을 보고 있다면, 실시간으로 목록 갱신 알림 전송 + 안읽은 메시지 수 같이 보내기
+            Long unreadCount = messageUnreadService.getUnreadMessageCount(chatMessageRequestDto.getRoomId().toString(), receiverId.toString());
+            System.out.println("보내는 대상: /topic/chatlist/" + receiverId);
+            template.convertAndSend("/topic/chatlist/" + receiverId,
+                    ChatRoomUpdateDto.from(chatMessageRequestDto, unreadCount));
+            // TODO : 채팅방 구독자들에게 전송하는 메시지 타입 형태 일치시키기
+            System.out.println("전송되는 메시지: " + ChatMessageResponseDto.from(message).getMsg());  // 확인용
             // fcm 알림 전송
             String fcmToken = userService.findFcmTokenByUserId(receiverId);
             String title = "새 메시지 도착!";
             // 내가 해당 방에 있는 경우 알림 처리 하지 않음
-            if(roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId()) < 2){
+            if (roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId()) < 2 && fcmToken != null) {
                 try {
                     fcmService.sendMessageTo(
                             fcmToken,
@@ -72,12 +79,6 @@ public class ChatMessageController {
                     return Mono.error(new RuntimeException(e));
                 }
             }
-            // 상대방이 채팅방 목록을 보고 있다면, 실시간으로 목록 갱신 알림 전송 + 안읽은 메시지 수 같이 보내기
-            Long unreadCount = messageUnreadService.getUnreadMessageCount(chatMessageRequestDto.getRoomId().toString(), receiverId.toString());
-            template.convertAndSend("/topic/chatlist/" + receiverId,
-                    ChatRoomUpdateDto.from(chatMessageRequestDto, unreadCount));
-            // TODO : 채팅방 구독자들에게 전송하는 메시지 타입 형태 일치시키기
-            System.out.println("전송되는 메시지: " + ChatMessageResponseDto.from(message).getMsg());  // 확인용
             return Mono.just(ResponseEntity.ok().build());
         });
     }

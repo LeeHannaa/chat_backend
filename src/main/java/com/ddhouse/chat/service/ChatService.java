@@ -70,6 +70,7 @@ public class ChatService {
                 .map(msg -> Tuples.of(msg.getMsg(), msg.getCreatedDate()));
 
         Long unreadCount = messageUnreadService.getUnreadMessageCount(roomId.toString(), myId.toString());
+        System.out.println("안읽은 메시지 수 확인해보기 :" + unreadCount);
         Mono<Long> unreadCountMono = Mono.just(unreadCount);
 
         return Mono.zip(lastMessageMono, unreadCountMono)

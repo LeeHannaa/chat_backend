@@ -30,6 +30,7 @@ public class ChatRoomDto {
                 .name(chatRoom.getApt().getName()) // 매물 이름
                 .memberNum(chatRoom.getMemberNum())
                 .apt(chatRoom.getApt())
+                .chatRoom(chatRoom)
                 .regDate(chatRoom.getRegDate())
                 .build();
     }
