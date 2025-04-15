@@ -17,20 +17,15 @@ import java.util.UUID;
 public class ChatMessage {
     @PrimaryKey
     private UUID id;
-    private Long roomId;
     private String msg;
-    private Long writerId;
-    private LocalDateTime createdDate;
-    private String writerName;
+//    private Long roomId;
+//    private Long writerId;
+//    private LocalDateTime createdDate;
+//    private String writerName;
 
     public ChatMessage(ChatMessageRequestDto chatMessageRequestDto) {
         this.id = UUID.randomUUID();
-        this.roomId = chatMessageRequestDto.getRoomId();
         this.msg = chatMessageRequestDto.getMsg();
-        this.writerId = chatMessageRequestDto.getWriterId();
-        this.writerName = chatMessageRequestDto.getWriterName();
-        this.createdDate = LocalDateTime.now(ZoneId.of("Asia/Seoul"));
     }
-
 
 }

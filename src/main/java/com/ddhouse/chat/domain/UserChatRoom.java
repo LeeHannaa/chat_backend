@@ -22,7 +22,7 @@ public class UserChatRoom extends BaseEntity {
     private Long consultId; // 매물 등록자 id
 
     @ManyToOne
-    @JoinColumn(name = "userId", nullable = false) // 매물 문의자
+    @JoinColumn(name = "userId", nullable = true) // 매물 문의자
     private User user;
 
     @ManyToOne
@@ -35,5 +35,16 @@ public class UserChatRoom extends BaseEntity {
                 .user(dto.getUser())
                 .chatRoom(chatRoom)
                 .build();
+    }
+
+    public void deleteChatRoomConsultId() {
+        if (this.consultId != 0) {
+            this.consultId = Long.valueOf(0);
+        }
+    }
+    public void deleteChatRoomUserId() {
+        if (this.user.getId() != 0) {
+            this.user = null;
+        }
     }
 }

@@ -12,6 +12,5 @@ import java.util.UUID;
 @Repository
 public interface ChatMessageRepository extends ReactiveCassandraRepository<ChatMessage, UUID> {
     @AllowFiltering
-    Flux<ChatMessage> findAllByRoomId(Long roomId);
-
+    Mono<ChatMessage> findById(UUID id);
 }

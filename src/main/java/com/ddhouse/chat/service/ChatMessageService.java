@@ -2,8 +2,10 @@ package com.ddhouse.chat.service;
 
 import com.ddhouse.chat.domain.*;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
+import com.ddhouse.chat.dto.response.ChatMessageResponseCreateDto;
 import com.ddhouse.chat.dto.response.ChatMessageResponseDto;
 import com.ddhouse.chat.dto.ChatRoomDto;
+import com.ddhouse.chat.dto.response.ChatMessageResponseToFindMsgDto;
 import com.ddhouse.chat.exception.NotFlowException;
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.fcm.dto.FcmMessage;
@@ -14,10 +16,8 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -29,40 +29,52 @@ public class ChatMessageService {
     private final UserRepository userRepository;
     private final AptRepository aptRepository;
     private final ChatService chatService;
+    private final ChatRoomMessageRepository chatRoomMessageRepository;
+    private final ChatRoomMessageService chatRoomMessageService;
+    public int getRoomMemberNum(Long roomId){
+        return chatRoomRepository.findById(roomId).get().getMemberNum();
+    }
 
-    public Flux<List<ChatMessageResponseDto>> findChatMessages(Long roomId) {
-        Flux<ChatMessage> chatMessages = chatMessageRepository.findAllByRoomId(roomId);
-        // TODO : 메시지가 없다면 (길이가 0) -> 방의 정보를 담아서 넘기기
-        return chatMessages
-                .flatMap(chatMessage -> {
-                    ChatMessageResponseDto dto = ChatMessageResponseDto.from(chatMessage);
-
-                    return Mono.justOrEmpty(userRepository.findById(dto.getWriterId()))
-                            .flatMap(user -> {
-                                dto.setWriterName(user.getName());
-                                return Mono.just(dto);
-                            })
-                            .switchIfEmpty(Mono.error(new NotFoundException("해당 유저와의 채팅이 없습니다.")));
+    public Mono<List<ChatMessageResponseDto>> findChatMessages(Long roomId) {
+        /* TODO
+        1. 해당 방에 메시지 내역이 잇는지 확인
+            1-1. ChatRoomMessage에서 해당 roomId가 존재하는 지 확인
+                1-1-1. 있다면 2번으로 이동
+                1-1-2. 없다면 방의 정보를 담아서 넘기기
+        2. 메시지가 있다면 해당 roomId에 해당하는 모든 ChatRoomMessage 리스트 반환
+            2-1. 각각의 messageId를 가지고 msg를 받아와서 dto에 저장
+            2-2. ChatRoomMessage에 createTime을 기준으로 정렬 후 넘기기
+        */
+        List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findAllByChatRoomId(roomId);
+        if(chatRoomMessages.isEmpty()){
+            System.out.println("채팅 내역이 없는 경우 (채팅방만 존재) -> 채팅방의 정보만 보내기! ");
+            ChatMessageResponseCreateDto chatMessageResponseCreateDto = ChatMessageResponseCreateDto.create(
+                    userChatRoomRepository.findByChatRoomId(roomId).orElseThrow(() -> new NotFoundException("해당 채팅방의 정보를 찾을 수 없습니다."))
+            );
+            return Mono.just(Collections.singletonList(chatMessageResponseCreateDto));
+        }
+        Mono<List<ChatMessageResponseDto>> chatRoomMessagesMono = Flux.fromIterable(chatRoomMessages)
+                .flatMap(chatRoomMessage -> {
+                    UUID msgId = chatRoomMessage.getMessageId();
+                    return chatMessageRepository.findById(msgId)
+                            .flatMap(chatMessage ->
+                                    Mono.just(ChatMessageResponseToFindMsgDto.from(chatMessage, chatRoomMessage))
+                            );
                 })
                 .collectList()
-                .flatMapMany(chatMessagesList -> {
-                    if (chatMessagesList.isEmpty()) {
-                        // 메시지가 없다면 방 정보를 반환
-                        System.out.println("채팅방만 있는 경우 -> 채팅방의 정보만 보내기! ");
-                        ChatMessageResponseDto defaultChatRoom = ChatMessageResponseDto.create(
-                                userChatRoomRepository.findByChatRoomId(roomId)
-                                        .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다." + roomId))
-                        );
-                        return Flux.just(Collections.singletonList(defaultChatRoom));
-                    }
-                    // 메시지가 있으면 날짜 정렬 후 반환
-                    chatMessagesList.sort(Comparator.comparing(ChatMessageResponseDto::getCreatedDate));
-                    return Flux.just(chatMessagesList);
-                });
+                .map(chatMessages -> {
+                    // 오래된 날짜 순서대로
+                    chatMessages.sort(Comparator.comparing(ChatMessageResponseToFindMsgDto::getCreatedDate));
+                    List<ChatMessageResponseDto> result = chatMessages.stream()
+                            .map(msg -> (ChatMessageResponseDto) msg)  // 상속 관계를 이용한 형 변환
+                            .collect(Collectors.toList());
+                    return result;
+            });
+        return chatRoomMessagesMono;
     }
 
 
-    public Flux<List<ChatMessageResponseDto>> getChatRoomByAptIdAndUserId(Long aptId, Long myId) {
+    public Mono<List<ChatMessageResponseDto>> getChatRoomByAptIdAndUserId(Long aptId, Long myId) {
         // TODO : 매물 목록에서 채팅 문의하기 할 경우 나의 아이디와 해당 매물 아이디로 기존 방이 있는지 잘 못찾아내고 있음
         // 1. 기존에 채팅하던 방이 있는 경우
         // 1-1. 내 아이디로 나의 채팅방 불러오기
@@ -82,23 +94,28 @@ public class ChatMessageService {
             Apt apt = aptOptional.get();
             if (apt.getUser().getId().equals(myId)) {
                 // 내가 올린 매물 내가 문의하기 누른 경우
-                return Flux.error(new NotFlowException("비정상 플로우 : 내가 올린 매물 내가 문의하게 된 경우"));
+                return Mono.error(new NotFlowException("비정상 플로우 : 내가 올린 매물 내가 문의하게 된 경우"));
             } else {
                 // 새로운 방을 생성해야하는 경우 (1:1)
                 System.out.println("새로운 방 생성");
                 User user = userRepository.findById(myId).orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
                 UserChatRoom createdChatRoom = chatService.createChatRoom(ChatRoomDto.createChatRoomDto(apt, user));
-                ChatMessageResponseDto newRoomInfo = ChatMessageResponseDto.create(createdChatRoom);
-                return Flux.just(Collections.singletonList(newRoomInfo));
+                ChatMessageResponseCreateDto newRoomInfo = ChatMessageResponseCreateDto.create(createdChatRoom);
+                return Mono.just(Collections.singletonList(newRoomInfo));
             }
         }
         // aptId가 존재하지 않는 경우
-        return Flux.error(new NotFoundException("해당 매물 정보를 찾을 수 없습니다."));
+        return Mono.error(new NotFoundException("해당 매물 정보를 찾을 수 없습니다."));
     }
 
     public Mono<ChatMessage> saveChatMessage(ChatMessageRequestDto chatMessageRequestDto) {
-        return chatMessageRepository.save(
-                new ChatMessage(chatMessageRequestDto));
+        // TODO : 메시지 저장할 때 DTO 정리 및 ChatRoomMessage도 저장
+        return chatMessageRepository.save(new ChatMessage(chatMessageRequestDto))
+                .flatMap(savedMessage -> {
+                    UUID msgId = savedMessage.getId();
+                    return chatRoomMessageService.saveChatRoomMessage(chatMessageRequestDto, msgId)
+                            .thenReturn(savedMessage);
+                });
     }
 
     public Long findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기

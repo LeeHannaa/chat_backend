@@ -12,20 +12,10 @@ import java.time.ZoneId;
 @Getter
 @Setter
 @Builder
-public class ChatMessageRequestDto{
+public class ChatMessageRequestDto{ // 프론트가 백으로 주는 정보
     private Long roomId;
     private Long writerId;
     private String writerName;
     private String msg;
     private LocalDateTime regDate;
-
-    public static ChatMessageRequestDto from (ChatMessage chatMessage) {
-        return ChatMessageRequestDto.builder()
-                .roomId(chatMessage.getRoomId())
-                .writerId(chatMessage.getWriterId())
-                .writerName(chatMessage.getWriterName())
-                .msg(chatMessage.getMsg())
-                .regDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
-                .build();
-    }
 }

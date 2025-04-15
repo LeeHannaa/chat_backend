@@ -8,10 +8,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
-import reactor.util.function.Tuple2;
-import reactor.util.function.Tuple3;
 
-import java.time.LocalDateTime;
+import java.util.Collections;
 import java.util.List;
 
 @RestController
@@ -21,7 +19,7 @@ public class ChatController {
     private final ChatService chatService;
     private final MessageUnreadService messageUnreadService;
 
-    @PostMapping("/create")
+    @PostMapping("/create") // 직접적으로 사용하지 않음
     public ResponseEntity<Void> createChatRoom(@RequestBody ChatRoomDto chatRoomDto) {
         chatService.createChatRoom(chatRoomDto);
         return ResponseEntity.ok().build();
@@ -30,6 +28,10 @@ public class ChatController {
     @GetMapping
     public Mono<ResponseEntity<List<ChatRoomDto>>> getMyChatRoomList(@RequestParam("myId") Long myId) {
         List<ChatRoomDto> responses = chatService.findMyChatRoomList(myId);
+        if (responses.isEmpty()) {
+            System.out.println("현재 내가 들어가있는 채팅방 없음!!!!");
+            return Mono.just(ResponseEntity.ok(Collections.emptyList()));
+        }
         return Flux.fromIterable(responses)
                 .flatMap(chatRoomDto ->
                         chatService.getLastMessageWithUnreadCount(chatRoomDto.getId(), myId)
@@ -45,8 +47,8 @@ public class ChatController {
     }
 
     @DeleteMapping("/delete/{chatRoomId}")
-    public ResponseEntity<Void> deleteChatRoom(@PathVariable("chatRoomId") Long id){
-        chatService.deleteChatRoom(id);
+    public ResponseEntity<Void> deleteChatRoom(@PathVariable("chatRoomId") Long id, @RequestParam("myId") Long myId){
+        chatService.deleteChatRoom(id, myId);
         return ResponseEntity.ok().build();
     }
 
