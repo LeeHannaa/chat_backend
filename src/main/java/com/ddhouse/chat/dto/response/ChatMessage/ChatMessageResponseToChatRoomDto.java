@@ -1,8 +1,7 @@
-package com.ddhouse.chat.dto.response;
+package com.ddhouse.chat.dto.response.ChatMessage;
 
 import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;

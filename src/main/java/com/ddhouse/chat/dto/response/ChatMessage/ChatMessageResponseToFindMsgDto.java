@@ -1,9 +1,7 @@
-package com.ddhouse.chat.dto.response;
+package com.ddhouse.chat.dto.response.ChatMessage;
 
 import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.domain.ChatRoomMessage;
-import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
-import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
@@ -28,6 +26,17 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
                 .writerId(chatRoomMessage.getUser().getId())
                 .writerName(chatRoomMessage.getUser().getName())
                 .msg(chatMessage.getMsg())
+                .createdDate(chatRoomMessage.getRegDate())
+                .build();
+    }
+
+    public static ChatMessageResponseToFindMsgDto fromAllDelete (ChatMessage chatMessage, ChatRoomMessage chatRoomMessage) {
+        return ChatMessageResponseToFindMsgDto.builder()
+                .id(chatMessage.getId())
+                .roomId(chatRoomMessage.getChatRoom().getId())
+                .writerId(chatRoomMessage.getUser().getId())
+                .writerName(chatRoomMessage.getUser().getName())
+                .msg("삭제된 메시지입니다.")
                 .createdDate(chatRoomMessage.getRegDate())
                 .build();
     }

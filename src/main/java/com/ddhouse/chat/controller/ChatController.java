@@ -1,6 +1,8 @@
 package com.ddhouse.chat.controller;
 
-import com.ddhouse.chat.dto.ChatRoomDto;
+import com.ddhouse.chat.dto.info.ChatRoomDto;
+import com.ddhouse.chat.dto.response.ChatRoomInfoResponseDto;
+import com.ddhouse.chat.service.ChatRoomMessageService;
 import com.ddhouse.chat.service.ChatService;
 import com.ddhouse.chat.service.MessageUnreadService;
 import lombok.RequiredArgsConstructor;
@@ -11,6 +13,7 @@ import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -26,15 +29,15 @@ public class ChatController {
     }
 
     @GetMapping
-    public Mono<ResponseEntity<List<ChatRoomDto>>> getMyChatRoomList(@RequestParam("myId") Long myId) {
-        List<ChatRoomDto> responses = chatService.findMyChatRoomList(myId);
+    public Mono<ResponseEntity<List<ChatRoomInfoResponseDto>>> getMyChatRoomList(@RequestParam("myId") Long myId) {
+        List<ChatRoomInfoResponseDto> responses = chatService.findMyChatRoomList(myId);
         if (responses.isEmpty()) {
             System.out.println("현재 내가 들어가있는 채팅방 없음!!!!");
             return Mono.just(ResponseEntity.ok(Collections.emptyList()));
         }
         return Flux.fromIterable(responses)
                 .flatMap(chatRoomDto ->
-                        chatService.getLastMessageWithUnreadCount(chatRoomDto.getId(), myId)
+                        chatService.getLastMessageWithUnreadCount(chatRoomDto.getRoomId(), myId)
                                 .map(tuple -> {
                                     chatRoomDto.setLastMsg(tuple.getT1());
                                     chatRoomDto.setUpdateLastMsgTime(tuple.getT2());
@@ -46,15 +49,16 @@ public class ChatController {
                 .map(ResponseEntity::ok);
     }
 
-    @DeleteMapping("/delete/{chatRoomId}")
-    public ResponseEntity<Void> deleteChatRoom(@PathVariable("chatRoomId") Long id, @RequestParam("myId") Long myId){
-        chatService.deleteChatRoom(id, myId);
-        return ResponseEntity.ok().build();
-    }
-
     @GetMapping("/unread/count")
     public ResponseEntity<Long> getUnreadCountByRoom(@RequestParam("roomId") Long roomId){
         Long unreadCount = messageUnreadService.getOtherUserUnreadCount(roomId.toString());
         return ResponseEntity.ok().body(unreadCount);
     }
+
+    @DeleteMapping("/delete/{chatRoomId}")
+    public ResponseEntity<Void> deleteChatRoom(@PathVariable("chatRoomId") Long roomId, @RequestParam("myId") Long myId){
+        chatService.deleteChatRoom(roomId, myId);
+        return ResponseEntity.ok().build();
+    }
+
 }

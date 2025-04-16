@@ -1,25 +1,16 @@
 package com.ddhouse.chat.config;
 
-import com.ddhouse.chat.dto.response.ChatMessageResponseDto;
 import com.ddhouse.chat.service.MessageUnreadService;
 import com.ddhouse.chat.service.RoomUserCountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
-import org.springframework.http.ResponseEntity;
-import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.socket.messaging.SessionConnectEvent;
 import org.springframework.web.socket.messaging.SessionDisconnectEvent;
-import reactor.core.publisher.Flux;
 
-import java.util.List;
 import java.util.Map;
 
 @Component

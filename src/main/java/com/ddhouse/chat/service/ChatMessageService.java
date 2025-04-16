@@ -1,14 +1,14 @@
 package com.ddhouse.chat.service;
 
 import com.ddhouse.chat.domain.*;
+import com.ddhouse.chat.dto.info.ChatRoomForAptDto;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
-import com.ddhouse.chat.dto.response.ChatMessageResponseCreateDto;
-import com.ddhouse.chat.dto.response.ChatMessageResponseDto;
-import com.ddhouse.chat.dto.ChatRoomDto;
-import com.ddhouse.chat.dto.response.ChatMessageResponseToFindMsgDto;
+import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseCreateDto;
+import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseDto;
+import com.ddhouse.chat.dto.info.ChatRoomDto;
+import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseToFindMsgDto;
 import com.ddhouse.chat.exception.NotFlowException;
 import com.ddhouse.chat.exception.NotFoundException;
-import com.ddhouse.chat.fcm.dto.FcmMessage;
 import com.ddhouse.chat.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -35,13 +36,14 @@ public class ChatMessageService {
         return chatRoomRepository.findById(roomId).get().getMemberNum();
     }
 
-    public Mono<List<ChatMessageResponseDto>> findChatMessages(Long roomId) {
+    public Mono<List<ChatMessageResponseDto>> findChatMessages(Long roomId, Long myId) {
         /* TODO
         1. 해당 방에 메시지 내역이 잇는지 확인
             1-1. ChatRoomMessage에서 해당 roomId가 존재하는 지 확인
                 1-1-1. 있다면 2번으로 이동
                 1-1-2. 없다면 방의 정보를 담아서 넘기기
         2. 메시지가 있다면 해당 roomId에 해당하는 모든 ChatRoomMessage 리스트 반환
+        ** entryTime을 기준으로 이후의 메시지만 반환 **
             2-1. 각각의 messageId를 가지고 msg를 받아와서 dto에 저장
             2-2. ChatRoomMessage에 createTime을 기준으로 정렬 후 넘기기
         */
@@ -53,13 +55,29 @@ public class ChatMessageService {
             );
             return Mono.just(Collections.singletonList(chatMessageResponseCreateDto));
         }
+        // UserChatRoom에서 해당 userId를 통해 entryTime을 가져오기
+        // entryTime을 가지고 ChatRoomMessage에서 regDate가 해당 entryTime 이후의 내용들만 메시지를 담아서 보내기
+        LocalDateTime standardTime = userChatRoomRepository
+                .findByUserIdAndChatRoomId(myId, roomId)
+                .orElseThrow(() -> new NotFoundException("채팅방 정보가 없습니다."))
+                .getEntryTime();
+
         Mono<List<ChatMessageResponseDto>> chatRoomMessagesMono = Flux.fromIterable(chatRoomMessages)
+                .filter(chatRoomMessage -> chatRoomMessage.getRegDate().isAfter(standardTime)) // standardTime 이후만
+                // TODO : 내 기기에서 삭제된 메시지는 제외하긴 하는데 그 경우 userId가 나의 id와 동일한 경우에만 제외 / 나의 기기에서 삭제된 메시지가 아닌 경우는 다 가능
+                .filter(chatRoomMessage -> (chatRoomMessage.getIsDelete().isNo() || chatRoomMessage.getIsDelete().isAll()) ||
+                        (chatRoomMessage.getIsDelete().isMe() && chatRoomMessage.getUser().getId() != myId))
                 .flatMap(chatRoomMessage -> {
                     UUID msgId = chatRoomMessage.getMessageId();
                     return chatMessageRepository.findById(msgId)
-                            .flatMap(chatMessage ->
-                                    Mono.just(ChatMessageResponseToFindMsgDto.from(chatMessage, chatRoomMessage))
-                            );
+                            .flatMap(chatMessage -> {
+                                if (chatRoomMessage.getIsDelete().isAll()) {
+                                    // 전체 삭제된 메시지 처리
+                                    return Mono.just(ChatMessageResponseToFindMsgDto.fromAllDelete(chatMessage, chatRoomMessage));
+                                } else {
+                                    return Mono.just(ChatMessageResponseToFindMsgDto.from(chatMessage, chatRoomMessage));
+                                }
+                            });
                 })
                 .collectList()
                 .map(chatMessages -> {
@@ -75,15 +93,14 @@ public class ChatMessageService {
 
 
     public Mono<List<ChatMessageResponseDto>> getChatRoomByAptIdAndUserId(Long aptId, Long myId) {
-        // TODO : 매물 목록에서 채팅 문의하기 할 경우 나의 아이디와 해당 매물 아이디로 기존 방이 있는지 잘 못찾아내고 있음
         // 1. 기존에 채팅하던 방이 있는 경우
         // 1-1. 내 아이디로 나의 채팅방 불러오기
-        List<ChatRoomDto> chatRooms = chatService.findMyChatRoomList(myId);
+        List<ChatRoomForAptDto> chatRooms = chatService.findMyChatRoomListForApt(myId);
         // 1-2. chatRooms에서 aptId랑 파라미터 aptId랑 비교해서 동일한 데이터가 있으면 채팅방이 있는 경우!
         if (!chatRooms.isEmpty()) {
-            for (ChatRoomDto chatRoom : chatRooms) {
-                if (chatRoom.getApt().getId().equals(aptId)) {
-                    return findChatMessages(chatRoom.getId());
+            for (ChatRoomForAptDto chatRoomForAptDto : chatRooms) {
+                if (chatRoomForAptDto.getApt().getId().equals(aptId)) {
+                    return findChatMessages(chatRoomForAptDto.getRoomId(), myId);
                 }
             }
         }
@@ -119,11 +136,26 @@ public class ChatMessageService {
     }
 
     public Long findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기
-        UserChatRoom userChatRoom = userChatRoomRepository.findByChatRoomId(chatMessageRequestDto.getRoomId())
-                .orElseThrow(() -> new NotFoundException("해당 채팅방이 존재하지 않습니다."));
-        if(userChatRoom.getUser().getId() == chatMessageRequestDto.getWriterId())
-            return userChatRoom.getConsultId();
-        else return userChatRoom.getUser().getId();
+        /*
+        1. 채팅방 id가 같은 userChatRoom을 다 가지고 오기
+        2. 가져온 데이터를 확인하면서 writerId랑 다른 id가 receiverId.
+        3. 찾은 receiverId를 반환하기 -> 단체 채팅으로 넘어간다면 리스트로 반환? 음 이건 고민해보기
+        */
+        return userChatRoomRepository.findAllByChatRoomId(chatMessageRequestDto.getRoomId())
+                .stream()
+                .map(userChatRoom -> userChatRoom.getUser().getId())
+                .filter(userId -> !userId.equals(chatMessageRequestDto.getWriterId()))
+                .findFirst()
+                .orElseThrow(() -> new NotFoundException("수신자를 찾을 수 없습니다."));
     }
 
+    public UserChatRoom getUserInChatRoom(Long userId, Long roomId){
+        return userChatRoomRepository.findByUserIdAndChatRoomId(userId, roomId)
+                .orElseThrow(() -> new NotFoundException("채팅방에 해당 유저가 존재하지 않습니다."));
+    }
+
+    public void saveReEntryUserInChatRoom(UserChatRoom userChatRoom){
+        userChatRoom.reEntryInChatRoom();
+        userChatRoomRepository.save(userChatRoom);
+    }
 }

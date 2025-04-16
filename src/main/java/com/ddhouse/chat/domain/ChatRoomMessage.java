@@ -1,10 +1,6 @@
 package com.ddhouse.chat.domain;
 
 import com.ddhouse.chat.BaseEntity;
-import com.ddhouse.chat.dto.ChatRoomDto;
-import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
-import com.ddhouse.chat.dto.request.ChatRoomMessageRequestDto;
-import com.ddhouse.chat.dto.response.ChatMessageResponseToChatRoomDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,6 +21,9 @@ public class ChatRoomMessage extends BaseEntity {
 
     private UUID messageId; // Cassandra
 
+    @Enumerated(EnumType.STRING)
+    private DeleteRange isDelete;
+
     @ManyToOne
     @JoinColumn(name = "chatRoomId", nullable = false)
     private ChatRoom chatRoom;
@@ -37,7 +36,12 @@ public class ChatRoomMessage extends BaseEntity {
         return ChatRoomMessage.builder()
                 .messageId(msgId)
                 .chatRoom(chatRoom)
+                .isDelete(DeleteRange.NO)
                 .user(user)
                 .build();
+    }
+
+    public void changeDeleteRange(DeleteRange deleteRange) {
+        this.isDelete = deleteRange;
     }
 }

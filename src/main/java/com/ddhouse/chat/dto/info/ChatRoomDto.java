@@ -1,4 +1,4 @@
-package com.ddhouse.chat.dto;
+package com.ddhouse.chat.dto.info;
 
 import com.ddhouse.chat.domain.Apt;
 import com.ddhouse.chat.domain.ChatRoom;
@@ -23,17 +23,6 @@ public class ChatRoomDto {
     private User user;
     private ChatRoom chatRoom;
     private Long unreadCount;
-
-    public static ChatRoomDto from(ChatRoom chatRoom) {
-        return ChatRoomDto.builder()
-                .id(chatRoom.getId())
-                .name(chatRoom.getApt().getName()) // 매물 이름
-                .memberNum(chatRoom.getMemberNum())
-                .apt(chatRoom.getApt())
-                .chatRoom(chatRoom)
-                .regDate(chatRoom.getRegDate())
-                .build();
-    }
 
     public static ChatRoomDto createChatRoomDto(Apt apt, User user) {
         return ChatRoomDto.builder()

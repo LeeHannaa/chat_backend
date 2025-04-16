@@ -1,9 +1,10 @@
 package com.ddhouse.chat.controller;
 
+import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.request.ChatRoomUpdateDto;
-import com.ddhouse.chat.dto.response.ChatMessageResponseDto;
-import com.ddhouse.chat.dto.response.ChatMessageResponseToChatRoomDto;
+import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseDto;
+import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseToChatRoomDto;
 import com.ddhouse.chat.fcm.service.FcmService;
 import com.ddhouse.chat.service.*;
 import lombok.RequiredArgsConstructor;
@@ -12,18 +13,20 @@ import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/chatmsg")
 public class ChatMessageController {
     private final ChatMessageService chatMessageService;
+    private final ChatRoomMessageService chatRoomMessageService;
+
     private final UserService userService;
     private final FcmService fcmService;
     private final RoomUserCountService roomUserCountService;
@@ -53,6 +56,15 @@ public class ChatMessageController {
 
         return chatMessageService.saveChatMessage(chatMessageRequestDto).flatMap(message -> {
             // 메시지를 해당 채팅방 구독자들에게 전송
+            // UserChatRoom 테이블에서 receiverId에 해당하는 user가 방을 나갔는지 확인 (isInRoom이 False인 경우 2-2)
+            UserChatRoom userChatRoom = chatMessageService.getUserInChatRoom(receiverId, chatMessageRequestDto.getRoomId());
+            if(!userChatRoom.getIsInRoom()){ // 방을 나갔으면
+                // 1. isInRoom을 True로 변경
+                chatMessageService.saveReEntryUserInChatRoom(userChatRoom);
+                // 2. ChatRoom에 memberNum 증가
+                chatService.increaseNumberInChatRoom(chatMessageRequestDto.getRoomId());
+            }
+            // 방을 안나갔으면 그대로 유지
             Map<String, Object> chatMessage = Map.of(
                     "type", "CHAT",
                     "message", ChatMessageResponseToChatRoomDto.from(message, chatMessageRequestDto, countInRoom)
@@ -88,9 +100,9 @@ public class ChatMessageController {
 
 
     @GetMapping("/find/list/{chatRoomId}")
-    public Mono<ResponseEntity<List<ChatMessageResponseDto>>> findMessageByChatRoomId(@PathVariable("chatRoomId") Long id) {
+    public Mono<ResponseEntity<List<ChatMessageResponseDto>>> findMessageByChatRoomId(@PathVariable("chatRoomId") Long roomId, @RequestParam("myId") Long myId) {
         System.out.println("채팅방 채팅 내역 확인하기");
-        return chatMessageService.findChatMessages(id)
+        return chatMessageService.findChatMessages(roomId, myId)
                 .map(messages -> {
                     System.out.println("해당 채팅방의 메시지들 가져오기 결과 : " + messages);
                     return ResponseEntity.ok(messages);
@@ -100,13 +112,25 @@ public class ChatMessageController {
 
     @GetMapping("/apt/find/list/{aptId}")
     // CHECK : 프론트에서 임시로 myId 받아와서 확인 (병합시 토큰으로 처리)
-    public Mono<ResponseEntity<List<ChatMessageResponseDto>>> findMessageByAptId(@PathVariable("aptId") Long id, @RequestParam("myId") Long myId) {
+    public Mono<ResponseEntity<List<ChatMessageResponseDto>>> findMessageByAptId(@PathVariable("aptId") Long roomId, @RequestParam("myId") Long myId) {
         System.out.println("매물id로 채팅 내역 불러오기");
-        return chatMessageService.getChatRoomByAptIdAndUserId(id, myId)
+        return chatMessageService.getChatRoomByAptIdAndUserId(roomId, myId)
                 .map(messages -> {
                     System.out.println("해당 채팅방의 메시지들 가져오기 결과 : " + messages);
                     return ResponseEntity.ok(messages);
                 })
                 .defaultIfEmpty(ResponseEntity.notFound().build());
+    }
+
+    @DeleteMapping("/delete/me/{msgId}")
+    public ResponseEntity<Void> deleteChatMessageMe(@PathVariable("msgId") UUID msgId){
+        chatRoomMessageService.deleteChatMessageOnlyMe(msgId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/delete/all/{msgId}")
+    public ResponseEntity<Void> deleteChatMessageAll(@PathVariable("msgId") UUID msgId, @RequestParam("myId") Long myId){
+        chatRoomMessageService.deleteChatMessageAll(msgId, myId);
+        return ResponseEntity.ok().build();
     }
 }
