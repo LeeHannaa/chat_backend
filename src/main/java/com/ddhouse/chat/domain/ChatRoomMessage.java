@@ -7,7 +7,8 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Entity
 @Getter
@@ -20,28 +21,47 @@ public class ChatRoomMessage extends BaseEntity {
     private Long id;
 
     private UUID messageId; // Cassandra
-
-    @Enumerated(EnumType.STRING)
-    private DeleteRange isDelete;
+    private Boolean isDelete; // 전체 삭제 여부
+    private String deleteUsers; // ,를 기준으로 유저 아이디 저장
 
     @ManyToOne
     @JoinColumn(name = "chatRoomId", nullable = false)
     private ChatRoom chatRoom;
 
     @ManyToOne
-    @JoinColumn(name = "userId", nullable = false) // 매물 가진 고객
+    @JoinColumn(name = "userId", nullable = false) // 채팅 작성자
     private User user;
 
     public static ChatRoomMessage save(UUID msgId, User user, ChatRoom chatRoom) {
         return ChatRoomMessage.builder()
                 .messageId(msgId)
                 .chatRoom(chatRoom)
-                .isDelete(DeleteRange.NO)
+                .isDelete(false)
                 .user(user)
                 .build();
     }
 
-    public void changeDeleteRange(DeleteRange deleteRange) {
-        this.isDelete = deleteRange;
+    public void deleteMessageAll() {
+        if (!this.isDelete) {
+            this.isDelete = true;
+        }
     }
+
+    public String addDeleteMssUser(Long myId){
+        if (this.deleteUsers == null){
+            deleteUsers = myId.toString();
+        } else {
+            deleteUsers = "," + myId.toString();
+        }
+        return deleteUsers;
+    }
+
+    public List<Long> getDeleteUserList() {
+        if (deleteUsers == null || deleteUsers.isBlank()) return Collections.emptyList();
+        return Arrays.stream(deleteUsers.split(","))
+                .filter(s -> !s.isBlank())
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+    }
+
 }

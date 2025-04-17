@@ -123,8 +123,8 @@ public class ChatMessageController {
     }
 
     @DeleteMapping("/delete/me/{msgId}")
-    public ResponseEntity<Void> deleteChatMessageMe(@PathVariable("msgId") UUID msgId){
-        chatRoomMessageService.deleteChatMessageOnlyMe(msgId);
+    public ResponseEntity<Void> deleteChatMessageMe(@PathVariable("msgId") UUID msgId, @RequestParam("myId") Long myId){
+        chatRoomMessageService.deleteChatMessageOnlyMe(msgId, myId);
         return ResponseEntity.ok().build();
     }
 

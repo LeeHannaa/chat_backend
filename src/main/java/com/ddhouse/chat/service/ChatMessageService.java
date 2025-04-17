@@ -64,14 +64,13 @@ public class ChatMessageService {
 
         Mono<List<ChatMessageResponseDto>> chatRoomMessagesMono = Flux.fromIterable(chatRoomMessages)
                 .filter(chatRoomMessage -> chatRoomMessage.getRegDate().isAfter(standardTime)) // standardTime 이후만
-                // TODO : 내 기기에서 삭제된 메시지는 제외하긴 하는데 그 경우 userId가 나의 id와 동일한 경우에만 제외 / 나의 기기에서 삭제된 메시지가 아닌 경우는 다 가능
-                .filter(chatRoomMessage -> (chatRoomMessage.getIsDelete().isNo() || chatRoomMessage.getIsDelete().isAll()) ||
-                        (chatRoomMessage.getIsDelete().isMe() && chatRoomMessage.getUser().getId() != myId))
+                // 내 기기에서 삭제된 메시지는 제외하긴 하는데 그 경우 userId가 나의 id와 동일한 경우에만 제외
+                .filter(chatRoomMessage -> !chatRoomMessage.getDeleteUserList().contains(myId))
                 .flatMap(chatRoomMessage -> {
                     UUID msgId = chatRoomMessage.getMessageId();
                     return chatMessageRepository.findById(msgId)
                             .flatMap(chatMessage -> {
-                                if (chatRoomMessage.getIsDelete().isAll()) {
+                                if (chatRoomMessage.getIsDelete()) {
                                     // 전체 삭제된 메시지 처리
                                     return Mono.just(ChatMessageResponseToFindMsgDto.fromAllDelete(chatMessage, chatRoomMessage));
                                 } else {

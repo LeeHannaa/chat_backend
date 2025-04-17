@@ -66,21 +66,36 @@ public class ChatService {
 
 
     public Mono<Tuple3<String, LocalDateTime, Long>> getLastMessageWithUnreadCount(Long roomId, Long myId) {
-        // chatRoomMessage에서 해당 roomId에서 createTime을 보고 가장 최신의 (+ isDelete가 ME이면서 myId랑 writerId가 같은 경우를 제외) messageId를 가져와서 ChatMessage 테이블에서 msg 가져오기
+        // chatRoomMessage에서 해당 roomId에서 createTime을 보고 가장 최신의 (+ isDelete가 ME -> MeswsageDeletePersonal에서 정보 확인) messageId를 가져와서 ChatMessage 테이블에서 msg 가져오기
         // chatRoomMessage에서 마지막 메시지의 isDelete가 ALL이면 "삭제된 메시지 입니다."로 설정
-        ChatRoomMessage chatRoomMessage = chatRoomMessageRepository.findTopByChatRoomIdOrderByRegDateDesc(roomId);
-        ChatRoomMessage chatRoomMessageNotMe = chatRoomMessageRepository.findTopByChatRoomIdAndIsDeleteNotOrderByRegDateDesc(roomId, DeleteRange.ME);
+        List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findTop20ByChatRoomIdOrderByRegDateDesc(roomId);
+        Optional<ChatRoomMessage> lastMessageOpt = Optional.empty();
+        for (ChatRoomMessage message : chatRoomMessages) {
+            String deleteUsers = message.getDeleteUsers();
 
-        if(chatRoomMessageNotMe == null){
-            // 전체를 빈값으로 전달, 날짜는 받아옴
-            return Mono.just(Tuples.of("", chatRoomMessage.getRegDate(), 0L));
+            // deleteUsers가 null이거나 비어있으면 바로 리턴
+            if (deleteUsers == null || deleteUsers.isBlank()) {
+                lastMessageOpt = Optional.of(message);
+                break;
+            }
+
+            List<Long> deleteUserList = message.getDeleteUserList();
+            if (deleteUserList!= null && !deleteUserList.contains(myId)) {
+                lastMessageOpt = Optional.of(message);
+                break;
+            }
         }
-        Mono<Tuple2<String, LocalDateTime>> lastMessageMono = chatMessageRepository.findById(chatRoomMessageNotMe.getMessageId())
+        ChatRoomMessage lastMessage = lastMessageOpt.orElse(null);
+        if(lastMessage == null){
+            // 전체를 빈값으로 전달, 날짜는 받아옴
+            return Mono.just(Tuples.of("", null, 0L));
+        }
+        Mono<Tuple2<String, LocalDateTime>> lastMessageMono = chatMessageRepository.findById(lastMessage.getMessageId())
                 .map(chatMessage -> {
-                    String msgContent = chatRoomMessageNotMe.getIsDelete() == DeleteRange.ALL
+                    String msgContent = lastMessage.getIsDelete()
                             ? "삭제된 메시지입니다."
                             : chatMessage.getMsg();
-                    return Tuples.of(msgContent, chatRoomMessageNotMe.getRegDate());
+                    return Tuples.of(msgContent, lastMessage.getRegDate());
                 });
 
         Long unreadCount = messageUnreadService.getUnreadMessageCount(roomId.toString(), myId.toString());
