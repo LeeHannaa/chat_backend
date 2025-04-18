@@ -13,6 +13,7 @@ import java.time.ZoneId;
 @Builder
 public class ChatRoomUpdateDto {
     private Long roomId;
+    private String chatName;
     private String msg;
     private String writerName;
     private LocalDateTime regDate;
@@ -22,6 +23,7 @@ public class ChatRoomUpdateDto {
     public static ChatRoomUpdateDto from (ChatMessageRequestDto chatMessageRequestDto, Long count) {
         return ChatRoomUpdateDto.builder()
                 .roomId(chatMessageRequestDto.getRoomId())
+                .chatName(chatMessageRequestDto.getChatName())
                 .msg(chatMessageRequestDto.getMsg())
                 .writerName(chatMessageRequestDto.getWriterName())
                 .regDate(chatMessageRequestDto.getRegDate())

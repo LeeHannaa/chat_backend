@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Entity
 @Getter
@@ -35,7 +36,8 @@ public class UserChatRoom extends BaseEntity {
         return UserChatRoom.builder()
 //                .consultId(dto.getApt().getUser().getId())
                 .isInRoom(Boolean.TRUE)
-                .entryTime(LocalDateTime.now())
+                // TODO : TIMEERROR
+                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .user(dto.getUser())
                 .chatRoom(chatRoom)
                 .build();
@@ -44,7 +46,8 @@ public class UserChatRoom extends BaseEntity {
         return UserChatRoom.builder()
 //                .consultId(dto.getApt().getUser().getId())
                 .isInRoom(Boolean.TRUE)
-                .entryTime(LocalDateTime.now())
+                // TODO : TIMEERROR
+                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .user(dto.getApt().getUser())
                 .chatRoom(chatRoom)
                 .build();
@@ -64,7 +67,8 @@ public class UserChatRoom extends BaseEntity {
     public void leaveTheChatRoom(){
         if(this.isInRoom) {
             this.isInRoom = Boolean.FALSE;
-            this.entryTime = LocalDateTime.now(); // 채팅방 나가는 기점을 시작으로 시간 업데이트
+            // TODO : TIMEERROR
+            this.entryTime = LocalDateTime.now(ZoneId.of("Asia/Seoul")); // 채팅방 나가는 기점을 시작으로 시간 업데이트
         }
     }
 
@@ -74,3 +78,4 @@ public class UserChatRoom extends BaseEntity {
         }
     }
 }
+

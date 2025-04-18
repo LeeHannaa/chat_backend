@@ -48,14 +48,15 @@ public class ChatRoomMessageService {
     }
 
     @Transactional
-    public void deleteChatMessageAll(UUID msgId, Long myId){
+    public Long deleteChatMessageAll(UUID msgId, Long myId){
         ChatRoomMessage chatRoomMessage = chatRoomMessageRepository.findByMessageId(msgId)
                 .orElseThrow(() -> new NotFoundException("해당 채팅 메시지를 찾을 수 없습니다."));
-        if(chatRoomMessage.getUser().getId() != myId) {
-            new Error("사용자가 작성한 메시지가 아니므로 지울 수 없습니다.");
+        if (!chatRoomMessage.getUser().getId().equals(myId)) {
+            throw new IllegalArgumentException("사용자가 작성한 메시지가 아니므로 지울 수 없습니다.");
         } else{
             chatRoomMessage.deleteMessageAll();
             chatRoomMessageRepository.save(chatRoomMessage);
+            return chatRoomMessage.getChatRoom().getId();
         }
     }
 

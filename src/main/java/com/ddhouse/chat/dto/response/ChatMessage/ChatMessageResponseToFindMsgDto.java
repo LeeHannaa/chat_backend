@@ -18,6 +18,7 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
     private Long writerId;
     private String msg;
     private LocalDateTime createdDate;
+    private boolean isDelete;
 
     public static ChatMessageResponseToFindMsgDto from (ChatMessage chatMessage, ChatRoomMessage chatRoomMessage) {
         return ChatMessageResponseToFindMsgDto.builder()
@@ -26,6 +27,7 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
                 .writerId(chatRoomMessage.getUser().getId())
                 .writerName(chatRoomMessage.getUser().getName())
                 .msg(chatMessage.getMsg())
+                .isDelete(chatRoomMessage.getIsDelete())
                 .createdDate(chatRoomMessage.getRegDate())
                 .build();
     }
@@ -37,6 +39,7 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
                 .writerId(chatRoomMessage.getUser().getId())
                 .writerName(chatRoomMessage.getUser().getName())
                 .msg("삭제된 메시지입니다.")
+                .isDelete(chatRoomMessage.getIsDelete())
                 .createdDate(chatRoomMessage.getRegDate())
                 .build();
     }

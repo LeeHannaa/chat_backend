@@ -14,6 +14,7 @@ import java.util.UUID;
 @SuperBuilder
 public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
     private UUID id;
+    private String chatName;
     private String writerName;
     private Long writerId;
     private String msg;
@@ -23,6 +24,7 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
     public static ChatMessageResponseToChatRoomDto from (ChatMessage chatMessage, ChatMessageRequestDto chatMessageRequestDto, int count) {
         return ChatMessageResponseToChatRoomDto.builder()
                 .id(chatMessage.getId())
+                .chatName(chatMessageRequestDto.getChatName())
                 .roomId(chatMessageRequestDto.getRoomId())
                 .writerId(chatMessageRequestDto.getWriterId())
                 .writerName(chatMessageRequestDto.getWriterName())

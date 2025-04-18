@@ -14,6 +14,7 @@ import java.time.ZoneId;
 @Builder
 public class ChatMessageRequestDto{ // 프론트가 백으로 주는 정보
     private Long roomId;
+    private String chatName;
     private Long writerId;
     private String writerName;
     private String msg;

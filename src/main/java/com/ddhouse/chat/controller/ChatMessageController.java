@@ -130,7 +130,15 @@ public class ChatMessageController {
 
     @DeleteMapping("/delete/all/{msgId}")
     public ResponseEntity<Void> deleteChatMessageAll(@PathVariable("msgId") UUID msgId, @RequestParam("myId") Long myId){
-        chatRoomMessageService.deleteChatMessageAll(msgId, myId);
+        Long roomIdToDeleteMsg = chatRoomMessageService.deleteChatMessageAll(msgId, myId);
+        // 전체 삭제 시 해당 메시지 실시간 채팅방에서 삭제 처리
+        Map<String, Object> deleteMessage = Map.of(
+                "type", "DELETE",
+                "messageId", msgId.toString()
+        );
+
+        // 3. 해당 채팅방 topic으로 전송
+        template.convertAndSend("/topic/chatroom/" + roomIdToDeleteMsg, deleteMessage);
         return ResponseEntity.ok().build();
     }
 }

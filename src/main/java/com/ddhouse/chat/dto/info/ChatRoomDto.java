@@ -8,6 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 
 @Getter
 @Setter
@@ -30,8 +31,9 @@ public class ChatRoomDto {
                 .memberNum(2)
                 .apt(apt)
                 .user(user)
-                .regDate(LocalDateTime.now())
-                .updateLastMsgTime(LocalDateTime.now()) // 처음 생성 할 때
+                // TODO : TIMEERROR
+//                .regDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul"))) // 처음 생성 할 때
                 .lastMsg("")
                 .build();
     }
