@@ -4,11 +4,13 @@ package com.ddhouse.chat.service;
 import com.ddhouse.chat.domain.*;
 import com.ddhouse.chat.dto.info.ChatRoomDto;
 import com.ddhouse.chat.dto.info.ChatRoomForAptDto;
+import com.ddhouse.chat.dto.request.GroupChatRoomCreateDto;
 import com.ddhouse.chat.dto.response.ChatRoomInfoResponseDto;
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.weaver.ast.Not;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
@@ -17,6 +19,7 @@ import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,6 +30,7 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final UserChatRoomRepository userChatRoomRepository;
+    private final UserRepository userRepository;
     private final MessageUnreadService messageUnreadService;
     private final ChatRoomMessageRepository chatRoomMessageRepository;
 
@@ -34,6 +38,19 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.from(chatRoomDto));
         userChatRoomRepository.save(UserChatRoom.otherFrom(chatRoomDto, chatRoom));
         return userChatRoomRepository.save(UserChatRoom.from(chatRoomDto, chatRoom));
+    }
+
+    public ChatRoom createGroupChatRoom(GroupChatRoomCreateDto groupChatRoomCreateDto){
+        // 채팅방 저장
+        ChatRoom chatRoom = ChatRoom.group(groupChatRoomCreateDto.getChatRoomName(), groupChatRoomCreateDto.getUserIds().size());
+        chatRoomRepository.save(chatRoom);
+
+        List<UserChatRoom> userChatRooms = groupChatRoomCreateDto.getUserIds().stream()
+                .map(userId -> UserChatRoom.group(chatRoom, userRepository.findById(userId)
+                        .orElseThrow(() -> new NotFoundException("해당 아이디를 가진 유저를 찾지 못했습니다."))))
+                .collect(Collectors.toList());
+        userChatRoomRepository.saveAll(userChatRooms);
+        return chatRoom;
     }
 
     // 채팅 전체 리스트
@@ -88,7 +105,11 @@ public class ChatService {
         ChatRoomMessage lastMessage = lastMessageOpt.orElse(null);
         if(lastMessage == null){
             // 전체를 빈값으로 전달, 날짜는 받아옴
-            return Mono.just(Tuples.of("", null, 0L));
+            Date currentDate = new Date();  // 현재 시간
+            LocalDateTime currentDateTime = currentDate.toInstant()
+                    .atZone(ZoneId.systemDefault())  // 시스템 기본 시간대
+                    .toLocalDateTime();
+            return Mono.just(Tuples.of("", currentDateTime, 0L));
         }
         Mono<Tuple2<String, LocalDateTime>> lastMessageMono = chatMessageRepository.findById(lastMessage.getMessageId())
                 .map(chatMessage -> {

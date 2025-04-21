@@ -2,6 +2,7 @@ package com.ddhouse.chat.domain;
 
 import com.ddhouse.chat.BaseEntity;
 import com.ddhouse.chat.dto.info.ChatRoomDto;
+import com.ddhouse.chat.dto.request.GroupChatRoomCreateDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -22,7 +23,7 @@ public class ChatRoom extends BaseEntity {
     private int memberNum;
 
     @ManyToOne
-    @JoinColumn(name = "aptId", nullable = false) // 매물 가진 고객
+    @JoinColumn(name = "aptId", nullable = true) // 매물 가진 고객 -> 단체 채팅 때문에 null 설정
     private Apt apt;
 
 
@@ -34,6 +35,13 @@ public class ChatRoom extends BaseEntity {
                 .build();
     }
 
+    public static ChatRoom group(String name, int count){
+        return ChatRoom.builder()
+                .name(name)
+                .memberNum(count)
+                .build();
+    }
+
     public void decreaseMemberNum() {
         if (this.memberNum > 0) {
             this.memberNum--;
@@ -42,5 +50,9 @@ public class ChatRoom extends BaseEntity {
 
     public void increaseMemberNum() {
         this.memberNum++;
+    }
+
+    public void increaseMemberNums(int addCount) {
+        this.memberNum += addCount;
     }
 }

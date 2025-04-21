@@ -1,6 +1,10 @@
 package com.ddhouse.chat.controller;
 
+import com.ddhouse.chat.domain.ChatRoom;
+import com.ddhouse.chat.domain.User;
 import com.ddhouse.chat.dto.info.ChatRoomDto;
+import com.ddhouse.chat.dto.request.GroupChatRoomCreateDto;
+import com.ddhouse.chat.dto.request.UserChatRoomAddDto;
 import com.ddhouse.chat.dto.response.ChatRoomInfoResponseDto;
 import com.ddhouse.chat.service.ChatRoomMessageService;
 import com.ddhouse.chat.service.ChatService;
@@ -11,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.UUID;
@@ -27,6 +32,14 @@ public class ChatController {
         chatService.createChatRoom(chatRoomDto);
         return ResponseEntity.ok().build();
     }
+
+    @PostMapping("/create/group") // 단체 채팅방 생성
+    // TODO : 단체 채팅방 만들기 객체 설정해서 진행하면 됨!!!!
+    public ResponseEntity<ChatRoom> createGroupChatRoom(@RequestBody GroupChatRoomCreateDto groupChatRoomCreateDto) {
+        ChatRoom newChatRoom = chatService.createGroupChatRoom(groupChatRoomCreateDto);
+        return ResponseEntity.ok().body(newChatRoom);
+    }
+
 
     @GetMapping
     public Mono<ResponseEntity<List<ChatRoomInfoResponseDto>>> getMyChatRoomList(@RequestParam("myId") Long myId) {

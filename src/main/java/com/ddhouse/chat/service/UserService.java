@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -18,6 +20,11 @@ public class UserService {
         User userInfo = userRepository.findById(myId)
                 .orElseThrow(() -> new NotFoundException("해당 유저의 정보를 찾을 수 없습니다."));
         return userInfo;
+    }
+
+    public List<User> findUserAll(){
+        List<User> users = userRepository.findAll();
+        return users;
     }
 
     public String findFcmTokenByUserId(Long myId){
