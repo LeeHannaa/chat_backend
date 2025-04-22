@@ -55,6 +55,7 @@ public class MessageUnreadService {
 
     // 내가 상대방의 메시지를 안읽은 개수
     public Long getUnreadMessageCount(String roomId, String myId) {
+        // G : 각 메시지 당 내가 안읽은 메시지가 있었다면 Set에서 myId 제거
         String key = PREFIX + ":" + roomId + ":" + myId;
         return redisTemplate.opsForSet().size(key);
     }
@@ -64,26 +65,46 @@ public class MessageUnreadService {
         String key = "unreadUsers:" + roomId;
         if(Boolean.TRUE.equals(redisTemplate.opsForSet().size(key) == 0)) return false;
         else return true;
-
-//        Set<String> userIds = redisTemplate.opsForSet().members("unreadUsers:" + roomId);
-//        if (userIds == null || userIds.isEmpty()) return 0L;
-
-//        long total = 0L;
-//        for (String userId : userIds) {
-//            String key = PREFIX + ":" + roomId + ":" + userId;
-//            Long size = redisTemplate.opsForSet().size(key);
-//            if (size != null) total += size;
-//        }
-//        return total;
     }
 
     public void removeUnread(String roomId, String myId) {
         // 내가 해당 방의 채팅을 다 읽은 경우 - 삭제
-        String key = PREFIX + ":" + roomId + ":" + myId;
-        redisTemplate.delete(key);
-        // unreadUsers 삭제
-        redisTemplate.opsForSet().remove("unreadUsers:" + roomId, myId);
-        System.out.println("채팅방에 unread 삭제 완료! myId = " + myId);
+        // G : 해당 메시지에 안읽은 userIds에 myId가 포함된건 다 지우기 + value가 비어진다면 해당 key 지우기
+//        String key = PREFIX + ":" + roomId + ":" + myId;
+//        redisTemplate.delete(key);
+//        // unreadUsers 삭제
+//        redisTemplate.opsForSet().remove("unreadUsers:" + roomId, myId);
+//        System.out.println("채팅방에 unread 삭제 완료! myId = " + myId);
+
+
+
+        ScanOptions options = ScanOptions.scanOptions()
+                .match(PREFIX + ":" + roomId + ":*") // 해당 채팅방에 있는 메시지들
+                .count(500) // 한 번에 얼마나 스캔할지 (튜닝 가능)
+                .build();
+
+        try (Cursor<byte[]> cursor = redisTemplate.getConnectionFactory()
+                .getConnection()
+                .scan(options)) {
+
+            while (cursor.hasNext()) {
+                String key = new String(cursor.next());
+
+                // myId 제거 -> 지웠으면 1, 아니면 0 (없었던 경우)
+                Long removed = redisTemplate.opsForSet().remove(key, myId);
+
+                if (removed != null && removed > 0) {
+                    // Set이 비었으면 key 삭제
+                    Long size = redisTemplate.opsForSet().size(key);
+                    if (size != null && size == 0) {
+                        redisTemplate.delete(key);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 }

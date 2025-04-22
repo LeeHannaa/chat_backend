@@ -125,7 +125,6 @@ public class ChatMessageService {
     }
 
     public Mono<ChatMessage> saveChatMessage(ChatMessageRequestDto chatMessageRequestDto) {
-        // TODO : 메시지 저장할 때 DTO 정리 및 ChatRoomMessage도 저장
         return chatMessageRepository.save(new ChatMessage(chatMessageRequestDto))
                 .flatMap(savedMessage -> {
                     UUID msgId = savedMessage.getId();
@@ -135,6 +134,7 @@ public class ChatMessageService {
     }
 
     public Long findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기
+        // TODO G : 채팅방에 있는 모든 userId를 담은 List를 반환
         /*
         1. 채팅방 id가 같은 userChatRoom을 다 가지고 오기
         2. 가져온 데이터를 확인하면서 writerId랑 다른 id가 receiverId.

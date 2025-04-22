@@ -29,8 +29,8 @@ public class WebSocketEventListener {
         String userId = accessor.getFirstNativeHeader("myId");
         System.out.println("userId : " + userId + "roomId : " + roomId);
         if (roomId != null) {
-            roomUserCountService.increaseUserCount(roomId);
-            System.out.println("✅ 사용자 입장: " + roomId + ", count 증가");
+            roomUserCountService.increaseUserCount(roomId, userId);
+            System.out.println("✅ 사용자 입장: " + roomId + ", 접속자 id 추 썌");
             int userCount = roomUserCountService.getUserCount(Long.valueOf(roomId));
             if (userCount >= 2) {
                 Map<String, Object> infoMessage = Map.of(
@@ -48,20 +48,21 @@ public class WebSocketEventListener {
                  *   2-2. 해당 방에 unread 메시지가 없을 경우
                  *       2-2-1. 그냥 원래대로
                 */
-                // 내가 읽지 않은 메시지가 있다는 뜻 -> 이제 읽음 처리 된 메시지들 : redis에서 삭제
-                Long unreadCount = messageUnreadService.getUnreadMessageCount(roomId, userId);
-                if(unreadCount > 0){
-                    messageUnreadService.removeUnread(roomId, userId);
-                } else {
-                    // 채팅방에 내가 보낸 메시지를 상대방이 안읽은 경우 : 안읽은 메시지 개수 보내주기 -> 프론트에서 해당 개수만큼 (아래부터) '안읽음' 보여주기
-                    System.out.println("📝 상대방이 현재 안읽은 메시지가 있습니다!!" + messageUnreadService.getOtherUserUnreadCount(roomId) + "개");
-                }
+                // 내가 읽지 않은 메시지가 있다는 뜻 -> 이제 읽음 처리 된 메시지들 : redis에서 삭제 -> 개수 파악하지 말고 바로 삭제 처리
+                messageUnreadService.removeUnread(roomId, userId);
+//                if(unreadCount > 0){
+//                    messageUnreadService.removeUnread(roomId, userId);
+//                } else {
+//                    // 채팅방에 내가 보낸 메시지를 상대방이 안읽은 경우 : 안읽은 메시지 개수 보내주기 -> 프론트에서 해당 개수만큼 (아래부터) '안읽음' 보여주기
+//                    System.out.println("📝 상대방이 현재 안읽은 메시지가 있습니다!!" + messageUnreadService.getOtherUserUnreadCount(roomId) + "개");
+//                }
             }
         }
     }
 
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
+        // TODO G : 채팅방 접속 종료 시 userId 받아서 redis에서 해당 userId 삭제
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String roomId = (String) accessor.getSessionAttributes().get("roomId");
         Map<String, Object> outMessage = Map.of(

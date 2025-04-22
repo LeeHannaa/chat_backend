@@ -15,12 +15,14 @@ public class RoomUserCountService {
         return "chat:room:usercount:" + roomId;
     }
 
-    public void increaseUserCount(String roomId) {
+    public void increaseUserCount(String roomId, String userId) {
+        // G : userId를 value 값으로 저장
         String key = getRoomUserCountKey(roomId);
-        redisTemplate.opsForValue().increment(key);
+        redisTemplate.opsForValue().append(roomId, userId);
     }
 
     public void decreaseUserCount(String roomId) {
+        // G : userId를 value에서 제거
         String key = getRoomUserCountKey(roomId);
         Long count = redisTemplate.opsForValue().decrement(key);
 
@@ -32,7 +34,8 @@ public class RoomUserCountService {
 
     public int getUserCount(Long roomId) {
         String key = getRoomUserCountKey(roomId.toString());
-        String count = redisTemplate.opsForValue().get(key);
-        return count != null ? Integer.parseInt(count) : 0;
+        // G : 접속자 수 value의 크기로 전달
+        int count = redisTemplate.opsForValue().get(key).length();
+        return count;
     }
 }
