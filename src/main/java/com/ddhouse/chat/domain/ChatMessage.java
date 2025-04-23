@@ -18,10 +18,6 @@ public class ChatMessage {
     @PrimaryKey
     private UUID id;
     private String msg;
-//    private Long roomId;
-//    private Long writerId;
-//    private LocalDateTime createdDate;
-//    private String writerName;
 
     public ChatMessage(ChatMessageRequestDto chatMessageRequestDto) {
         this.id = UUID.randomUUID();

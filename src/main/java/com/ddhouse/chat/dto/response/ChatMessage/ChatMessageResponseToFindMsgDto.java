@@ -19,8 +19,9 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
     private String msg;
     private LocalDateTime createdDate;
     private boolean isDelete;
+    private int unreadCount;
 
-    public static ChatMessageResponseToFindMsgDto from (ChatMessage chatMessage, ChatRoomMessage chatRoomMessage) {
+    public static ChatMessageResponseToFindMsgDto from (ChatMessage chatMessage, ChatRoomMessage chatRoomMessage, int unreadCount) {
         return ChatMessageResponseToFindMsgDto.builder()
                 .id(chatMessage.getId())
                 .roomId(chatRoomMessage.getChatRoom().getId())
@@ -29,10 +30,11 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
                 .msg(chatMessage.getMsg())
                 .isDelete(chatRoomMessage.getIsDelete())
                 .createdDate(chatRoomMessage.getRegDate())
+                .unreadCount(unreadCount)
                 .build();
     }
 
-    public static ChatMessageResponseToFindMsgDto fromAllDelete (ChatMessage chatMessage, ChatRoomMessage chatRoomMessage) {
+    public static ChatMessageResponseToFindMsgDto fromAllDelete (ChatMessage chatMessage, ChatRoomMessage chatRoomMessage, int unreadCount) {
         return ChatMessageResponseToFindMsgDto.builder()
                 .id(chatMessage.getId())
                 .roomId(chatRoomMessage.getChatRoom().getId())
@@ -41,6 +43,7 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
                 .msg("삭제된 메시지입니다.")
                 .isDelete(chatRoomMessage.getIsDelete())
                 .createdDate(chatRoomMessage.getRegDate())
+                .unreadCount(unreadCount)
                 .build();
     }
 

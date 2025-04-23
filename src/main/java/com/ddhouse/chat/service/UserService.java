@@ -9,6 +9,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
 @Service
 @RequiredArgsConstructor
 public class UserService {
@@ -20,12 +22,17 @@ public class UserService {
         return userInfo;
     }
 
+    public List<User> findUserAll(){
+        List<User> users = userRepository.findAll();
+        return users;
+    }
+
     public String findFcmTokenByUserId(Long myId){
         User user = findByUserId(myId);
         String fcmToken = user.getFcmToken();
-        if (fcmToken == null) {
-            throw new NotFoundException("해당 유저의 FCM 토큰이 없습니다.");
-        }
+//        if (fcmToken == null) {
+//            throw new NotFoundException("해당 유저의 FCM 토큰이 없습니다.");
+//        }
         return fcmToken;
     }
 

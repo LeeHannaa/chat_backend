@@ -22,7 +22,7 @@ public class ChatRoomInfoResponseDto {
     public static ChatRoomInfoResponseDto create(ChatRoom chatRoom) {
         return ChatRoomInfoResponseDto.builder()
                 .roomId(chatRoom.getId())
-                .name(chatRoom.getApt().getName())
+                .name(chatRoom.getName())
                 .memberNum(chatRoom.getMemberNum())
                 .regDate(chatRoom.getRegDate())
                 .build();

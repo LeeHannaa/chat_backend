@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -18,9 +19,10 @@ public class MessageUnreadService {
     private final StringRedisTemplate redisTemplate;
     private static final String PREFIX = "unread";
 
-    public void addUnreadChat(String roomId, String receiverId, String msg) {
-        String key = PREFIX + ":" + roomId + ":" + receiverId;
-        redisTemplate.opsForSet().add(key, msg);
+    public void addUnreadChat(String roomId, String receiverId, UUID msgId) {
+        // TODO G **: 안읽은 메시지 저장할때는 msgId를 저장하고 거기 value로 receiverId(List)를 저장
+        String key = PREFIX + ":" + roomId + ":" + msgId;
+        redisTemplate.opsForSet().add(key, receiverId);
         // 사용자 목록도 저장
         redisTemplate.opsForSet().add("unreadUsers:" + roomId, receiverId);
         System.out.println("redis에 안읽은 채팅 내역들 저장 완료!!");
@@ -53,10 +55,34 @@ public class MessageUnreadService {
         return totalCount;
     }
 
+    // 각 메시지당 안읽은 사람 수
+    public int getUnreadCountByMsgId(String roomId, String msgId) {
+        String key = PREFIX + ":" + roomId + ":" + msgId;
+        Long totalCount = redisTemplate.opsForSet().size(key);
+        return totalCount != null ? totalCount.intValue() : 0;
+    }
+
     // 내가 상대방의 메시지를 안읽은 개수
-    public Long getUnreadMessageCount(String roomId, String myId) {
-        String key = PREFIX + ":" + roomId + ":" + myId;
-        return redisTemplate.opsForSet().size(key);
+    public Long getUnreadMessageCount(String roomId, String userId) {
+        // TODO G **: 현재 채팅방에 내가 읽지 않은 메시지의 개수 반환 받아서 전달하기
+//        String key = PREFIX + ":" + roomId + ":" + myId;
+//        return redisTemplate.opsForSet().size(key);
+        String pattern = PREFIX + ":" + roomId + ":*";
+        ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
+        Cursor<byte[]> cursor = redisTemplate.getConnectionFactory()
+                .getConnection()
+                .scan(options);
+
+        long count = 0L;
+
+        while (cursor.hasNext()) {
+            String key = new String(cursor.next());
+            if (redisTemplate.opsForSet().isMember(key, userId)) {
+                count++;
+            }
+        }
+
+        return count;
     }
 
     // 해당 방에 안 읽은 메시지가 있는지 없는지
@@ -64,26 +90,46 @@ public class MessageUnreadService {
         String key = "unreadUsers:" + roomId;
         if(Boolean.TRUE.equals(redisTemplate.opsForSet().size(key) == 0)) return false;
         else return true;
-
-//        Set<String> userIds = redisTemplate.opsForSet().members("unreadUsers:" + roomId);
-//        if (userIds == null || userIds.isEmpty()) return 0L;
-
-//        long total = 0L;
-//        for (String userId : userIds) {
-//            String key = PREFIX + ":" + roomId + ":" + userId;
-//            Long size = redisTemplate.opsForSet().size(key);
-//            if (size != null) total += size;
-//        }
-//        return total;
     }
 
     public void removeUnread(String roomId, String myId) {
         // 내가 해당 방의 채팅을 다 읽은 경우 - 삭제
-        String key = PREFIX + ":" + roomId + ":" + myId;
-        redisTemplate.delete(key);
-        // unreadUsers 삭제
-        redisTemplate.opsForSet().remove("unreadUsers:" + roomId, myId);
-        System.out.println("채팅방에 unread 삭제 완료! myId = " + myId);
+        // G : 해당 메시지에 안읽은 userIds에 myId가 포함된건 다 지우기 + value가 비어진다면 해당 key 지우기
+//        String key = PREFIX + ":" + roomId + ":" + myId;
+//        redisTemplate.delete(key);
+//        // unreadUsers 삭제
+//        redisTemplate.opsForSet().remove("unreadUsers:" + roomId, myId);
+//        System.out.println("채팅방에 unread 삭제 완료! myId = " + myId);
+
+
+
+        ScanOptions options = ScanOptions.scanOptions()
+                .match(PREFIX + ":" + roomId + ":*") // 해당 채팅방에 있는 메시지들
+                .count(500) // 한 번에 얼마나 스캔할지 (튜닝 가능)
+                .build();
+
+        try (Cursor<byte[]> cursor = redisTemplate.getConnectionFactory()
+                .getConnection()
+                .scan(options)) {
+
+            while (cursor.hasNext()) {
+                String key = new String(cursor.next());
+
+                // myId 제거 -> 지웠으면 1, 아니면 0 (없었던 경우)
+                Long removed = redisTemplate.opsForSet().remove(key, myId);
+
+                if (removed != null && removed > 0) {
+                    // Set이 비었으면 key 삭제
+                    Long size = redisTemplate.opsForSet().size(key);
+                    if (size != null && size == 0) {
+                        redisTemplate.delete(key);
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
     }
 
 }

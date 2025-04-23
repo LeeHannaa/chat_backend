@@ -11,7 +11,7 @@ import java.util.UUID;
 @Repository
 public interface ChatRoomMessageRepository extends JpaRepository<ChatRoomMessage, Long> {
 //    ChatRoomMessage findTopByChatRoomIdOrderByRegDateDesc(Long roomId);
-    List<ChatRoomMessage> findTop20ByChatRoomIdOrderByRegDateDesc(Long roomId);
+    List<ChatRoomMessage> findTop100ByChatRoomIdOrderByRegDateDesc(Long roomId);
 
     Optional<ChatRoomMessage> findByMessageId(UUID messageId);
     List<ChatRoomMessage> findAllByChatRoomId(Long roomId);

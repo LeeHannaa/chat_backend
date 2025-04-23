@@ -53,16 +53,14 @@ public class UserChatRoom extends BaseEntity {
                 .build();
     }
 
-//    public void deleteChatRoomConsultId() {
-//        if (this.consultId != 0) {
-//            this.consultId = Long.valueOf(0);
-//        }
-//    }
-//    public void deleteChatRoomUserId() {
-//        if (this.user.getId() != 0) {
-//            this.user = null;
-//        }
-//    }
+    public static UserChatRoom group(ChatRoom chatRoom, User user){
+        return UserChatRoom.builder()
+                .isInRoom(Boolean.TRUE)
+                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .user(user)
+                .chatRoom(chatRoom)
+                .build();
+    }
 
     public void leaveTheChatRoom(){
         if(this.isInRoom) {
@@ -76,6 +74,15 @@ public class UserChatRoom extends BaseEntity {
         if(!this.isInRoom){
             this.isInRoom = Boolean.TRUE;
         }
+    }
+
+    public static UserChatRoom addUsser(User user, ChatRoom chatRoom) {
+        return UserChatRoom.builder()
+                .isInRoom(Boolean.TRUE)
+                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .user(user)
+                .chatRoom(chatRoom)
+                .build();
     }
 }
 

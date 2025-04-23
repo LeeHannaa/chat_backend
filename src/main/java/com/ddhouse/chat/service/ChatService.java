@@ -4,11 +4,13 @@ package com.ddhouse.chat.service;
 import com.ddhouse.chat.domain.*;
 import com.ddhouse.chat.dto.info.ChatRoomDto;
 import com.ddhouse.chat.dto.info.ChatRoomForAptDto;
+import com.ddhouse.chat.dto.request.GroupChatRoomCreateDto;
 import com.ddhouse.chat.dto.response.ChatRoomInfoResponseDto;
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.weaver.ast.Not;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import reactor.core.publisher.Mono;
@@ -17,6 +19,7 @@ import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -27,6 +30,7 @@ public class ChatService {
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final UserChatRoomRepository userChatRoomRepository;
+    private final UserRepository userRepository;
     private final MessageUnreadService messageUnreadService;
     private final ChatRoomMessageRepository chatRoomMessageRepository;
 
@@ -34,6 +38,19 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.from(chatRoomDto));
         userChatRoomRepository.save(UserChatRoom.otherFrom(chatRoomDto, chatRoom));
         return userChatRoomRepository.save(UserChatRoom.from(chatRoomDto, chatRoom));
+    }
+
+    public ChatRoom createGroupChatRoom(GroupChatRoomCreateDto groupChatRoomCreateDto){
+        // 채팅방 저장
+        ChatRoom chatRoom = ChatRoom.group(groupChatRoomCreateDto.getChatRoomName(), groupChatRoomCreateDto.getUserIds().size());
+        chatRoomRepository.save(chatRoom);
+
+        List<UserChatRoom> userChatRooms = groupChatRoomCreateDto.getUserIds().stream()
+                .map(userId -> UserChatRoom.group(chatRoom, userRepository.findById(userId)
+                        .orElseThrow(() -> new NotFoundException("해당 아이디를 가진 유저를 찾지 못했습니다."))))
+                .collect(Collectors.toList());
+        userChatRoomRepository.saveAll(userChatRooms);
+        return chatRoom;
     }
 
     // 채팅 전체 리스트
@@ -68,7 +85,7 @@ public class ChatService {
     public Mono<Tuple3<String, LocalDateTime, Long>> getLastMessageWithUnreadCount(Long roomId, Long myId) {
         // chatRoomMessage에서 해당 roomId에서 createTime을 보고 가장 최신의 (+ isDelete가 ME -> MeswsageDeletePersonal에서 정보 확인) messageId를 가져와서 ChatMessage 테이블에서 msg 가져오기
         // chatRoomMessage에서 마지막 메시지의 isDelete가 ALL이면 "삭제된 메시지 입니다."로 설정
-        List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findTop20ByChatRoomIdOrderByRegDateDesc(roomId);
+        List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findTop100ByChatRoomIdOrderByRegDateDesc(roomId);
         Optional<ChatRoomMessage> lastMessageOpt = Optional.empty();
         for (ChatRoomMessage message : chatRoomMessages) {
             String deleteUsers = message.getDeleteUsers();
@@ -88,7 +105,11 @@ public class ChatService {
         ChatRoomMessage lastMessage = lastMessageOpt.orElse(null);
         if(lastMessage == null){
             // 전체를 빈값으로 전달, 날짜는 받아옴
-            return Mono.just(Tuples.of("", null, 0L));
+            Date currentDate = new Date();  // 현재 시간
+            LocalDateTime currentDateTime = currentDate.toInstant()
+                    .atZone(ZoneId.systemDefault())  // 시스템 기본 시간대
+                    .toLocalDateTime();
+            return Mono.just(Tuples.of("", currentDateTime, 0L));
         }
         Mono<Tuple2<String, LocalDateTime>> lastMessageMono = chatMessageRepository.findById(lastMessage.getMessageId())
                 .map(chatMessage -> {
@@ -110,10 +131,9 @@ public class ChatService {
                 ));
     }
 
-    public String findRoomName(Long roomId) {
+    public ChatRoom findChatRoomByRoomId(Long roomId) {
         return chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."))
-                .getName();
+                .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));
     }
     @Transactional
     public void increaseNumberInChatRoom(Long roomId){
@@ -142,11 +162,16 @@ public class ChatService {
                 chatRoomRepository.deleteById(roomId);
             }
             else {
-                // UserChatRoom에 leaveTheChatRoom 실행 (isInRoom을 F로, entryTime 시간 업데이트)
                 UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(myId, roomId)
                         .orElseThrow(() -> new NotFoundException("해당 채팅방에 존재하는 유저의 정보를 알 수 없습니다."));
-                userChatRoom.leaveTheChatRoom();
-                userChatRoomRepository.save(userChatRoom); // 변경사항 저장
+                // TODO G **: 단체 채팅방인 경우 isInRoom을 False로 하는게 아니라 그냥 해당 user 아웃
+                if(chatRoom.getIsGroup()){
+                    userChatRoomRepository.deleteById(userChatRoom.getId());
+                }else{
+                    // UserChatRoom에 leaveTheChatRoom 실행 (isInRoom을 F로, entryTime 시간 업데이트)
+                    userChatRoom.leaveTheChatRoom();
+                    userChatRoomRepository.save(userChatRoom); // 변경사항 저장
+                }
             }
         });
     }
