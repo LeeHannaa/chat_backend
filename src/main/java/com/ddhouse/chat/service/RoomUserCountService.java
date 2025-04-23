@@ -5,6 +5,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
 @Slf4j
 @RequiredArgsConstructor
 @Service
@@ -15,27 +20,40 @@ public class RoomUserCountService {
         return "chat:room:usercount:" + roomId;
     }
 
-    public void increaseUserCount(String roomId, String userId) {
-        // G : userId를 value 값으로 저장
+    public void addUserInChatRoom(String roomId, String userId) {
         String key = getRoomUserCountKey(roomId);
-        redisTemplate.opsForValue().append(roomId, userId);
+        redisTemplate.opsForSet().add(key, userId);
     }
 
-    public void decreaseUserCount(String roomId) {
-        // G : userId를 value에서 제거
+    public void outUserInChatRoom(String roomId, String userId) {
         String key = getRoomUserCountKey(roomId);
-        Long count = redisTemplate.opsForValue().decrement(key);
+        redisTemplate.opsForSet().remove(key, userId);
 
+        Long size = redisTemplate.opsForSet().size(key);
         // 0 이하일 경우 삭제
-        if (count != null && count <= 0) {
+        if (size != null && size <= 0) {
             redisTemplate.delete(key);
         }
     }
 
     public int getUserCount(Long roomId) {
+        // TODO G **: 현재 접속한 사람의 수
         String key = getRoomUserCountKey(roomId.toString());
-        // G : 접속자 수 value의 크기로 전달
-        int count = redisTemplate.opsForValue().get(key).length();
-        return count;
+        int size = redisTemplate.opsForSet().size(key).intValue();
+        return size;
+    }
+
+    public List<Long> getUserIdsInChatRoom(Long roomId, Long myId){
+        // TODO G **: 현재 접속한 사람의 ids (나빼고)
+        String key = getRoomUserCountKey(roomId.toString());
+        Set<String> userIdStrings = redisTemplate.opsForSet().members(key);
+        if (userIdStrings == null) {
+            return Collections.emptyList();
+        }
+
+        return userIdStrings.stream()
+                .map(Long::valueOf)
+                .filter(userId -> !userId.equals(myId))
+                .collect(Collectors.toList());
     }
 }

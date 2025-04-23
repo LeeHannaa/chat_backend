@@ -27,15 +27,19 @@ public class WebSocketEventListener {
 
         String roomId = accessor.getFirstNativeHeader("roomId");
         String userId = accessor.getFirstNativeHeader("myId");
-        System.out.println("userId : " + userId + "roomId : " + roomId);
+
         if (roomId != null) {
-            roomUserCountService.increaseUserCount(roomId, userId);
-            System.out.println("✅ 사용자 입장: " + roomId + ", 접속자 id 추 썌");
+            roomUserCountService.addUserInChatRoom(roomId, userId);
+            accessor.getSessionAttributes().put("roomId", roomId);
+            accessor.getSessionAttributes().put("myId", userId);
+            System.out.println("✅ 사용자 입장: " + roomId + ", 접속자 id : " + userId);
             int userCount = roomUserCountService.getUserCount(Long.valueOf(roomId));
+            // TODO : 상대방 입장 시 상대가 해당 채팅방에서 읽지 않았던 메시지 개수만큼 정보 전달!
+            Long NumberToBeRead = messageUnreadService.getUnreadMessageCount(roomId.toString(), userId.toString());
             if (userCount >= 2) {
                 Map<String, Object> infoMessage = Map.of(
                         "type", "INFO",
-                        "message", "상대방 입장"
+                        "message", NumberToBeRead
                 );
                 messagingTemplate.convertAndSend("/topic/chatroom/" + roomId, infoMessage);
             }
@@ -62,15 +66,17 @@ public class WebSocketEventListener {
 
     @EventListener
     public void handleWebSocketDisconnectListener(SessionDisconnectEvent event) {
-        // TODO G : 채팅방 접속 종료 시 userId 받아서 redis에서 해당 userId 삭제
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(event.getMessage());
         String roomId = (String) accessor.getSessionAttributes().get("roomId");
+        String userId = (String) accessor.getSessionAttributes().get("myId");
+        System.out.println("채팅방을 나갈때 myID를 확인해봦!!!!" + userId);
+
         Map<String, Object> outMessage = Map.of(
                 "type", "OUT",
                 "message", "상대방 퇴장"
         );
         if (roomId != null) {
-            roomUserCountService.decreaseUserCount(roomId);
+            roomUserCountService.outUserInChatRoom(roomId, userId);
             messagingTemplate.convertAndSend("/topic/chatroom/" + roomId, outMessage);
             System.out.println("👋 사용자 퇴장: " + roomId + ", count 감소");
         }

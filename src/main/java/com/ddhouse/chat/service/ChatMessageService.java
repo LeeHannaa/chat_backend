@@ -32,12 +32,13 @@ public class ChatMessageService {
     private final ChatService chatService;
     private final ChatRoomMessageRepository chatRoomMessageRepository;
     private final ChatRoomMessageService chatRoomMessageService;
+    private final MessageUnreadService messageUnreadService;
     public int getRoomMemberNum(Long roomId){
         return chatRoomRepository.findById(roomId).get().getMemberNum();
     }
 
     public Mono<List<ChatMessageResponseDto>> findChatMessages(Long roomId, Long myId) {
-        /* TODO
+        /*
         1. 해당 방에 메시지 내역이 잇는지 확인
             1-1. ChatRoomMessage에서 해당 roomId가 존재하는 지 확인
                 1-1-1. 있다면 2번으로 이동
@@ -70,11 +71,13 @@ public class ChatMessageService {
                     UUID msgId = chatRoomMessage.getMessageId();
                     return chatMessageRepository.findById(msgId)
                             .flatMap(chatMessage -> {
+                                // TODO G **: 각 메시지마다 읽지 않은 유저의 수를 함께 전달
+                                int unreadCountByMsgId = messageUnreadService.getUnreadCountByMsgId(chatRoomMessage.getChatRoom().getId().toString(), msgId.toString());
                                 if (chatRoomMessage.getIsDelete()) {
                                     // 전체 삭제된 메시지 처리
-                                    return Mono.just(ChatMessageResponseToFindMsgDto.fromAllDelete(chatMessage, chatRoomMessage));
+                                    return Mono.just(ChatMessageResponseToFindMsgDto.fromAllDelete(chatMessage, chatRoomMessage, unreadCountByMsgId));
                                 } else {
-                                    return Mono.just(ChatMessageResponseToFindMsgDto.from(chatMessage, chatRoomMessage));
+                                    return Mono.just(ChatMessageResponseToFindMsgDto.from(chatMessage, chatRoomMessage, unreadCountByMsgId));
                                 }
                             });
                 })
@@ -133,8 +136,8 @@ public class ChatMessageService {
                 });
     }
 
-    public Long findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기
-        // TODO G : 채팅방에 있는 모든 userId를 담은 List를 반환
+    public List<Long> findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기
+        // TODO G **: 채팅방에 있는 모든 userId를 담은 List를 반환
         /*
         1. 채팅방 id가 같은 userChatRoom을 다 가지고 오기
         2. 가져온 데이터를 확인하면서 writerId랑 다른 id가 receiverId.
@@ -144,8 +147,7 @@ public class ChatMessageService {
                 .stream()
                 .map(userChatRoom -> userChatRoom.getUser().getId())
                 .filter(userId -> !userId.equals(chatMessageRequestDto.getWriterId()))
-                .findFirst()
-                .orElseThrow(() -> new NotFoundException("수신자를 찾을 수 없습니다."));
+                .collect(Collectors.toList());
     }
 
     public UserChatRoom getUserInChatRoom(Long userId, Long roomId){

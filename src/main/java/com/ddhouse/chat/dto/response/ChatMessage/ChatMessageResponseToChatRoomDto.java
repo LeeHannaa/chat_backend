@@ -19,9 +19,9 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
     private Long writerId;
     private String msg;
     private LocalDateTime createdDate;
-    private int count;
+    private int unreadCount;
 
-    public static ChatMessageResponseToChatRoomDto from (ChatMessage chatMessage, ChatMessageRequestDto chatMessageRequestDto, int count) {
+    public static ChatMessageResponseToChatRoomDto from (ChatMessage chatMessage, ChatMessageRequestDto chatMessageRequestDto, int unreadCount) {
         return ChatMessageResponseToChatRoomDto.builder()
                 .id(chatMessage.getId())
                 .chatName(chatMessageRequestDto.getChatName())
@@ -30,7 +30,7 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
                 .writerName(chatMessageRequestDto.getWriterName())
                 .msg(chatMessage.getMsg())
                 .createdDate(chatMessageRequestDto.getRegDate())
-                .count(count)
+                .unreadCount(unreadCount)
                 .build();
     }
 }

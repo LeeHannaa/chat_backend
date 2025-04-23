@@ -85,7 +85,7 @@ public class ChatService {
     public Mono<Tuple3<String, LocalDateTime, Long>> getLastMessageWithUnreadCount(Long roomId, Long myId) {
         // chatRoomMessage에서 해당 roomId에서 createTime을 보고 가장 최신의 (+ isDelete가 ME -> MeswsageDeletePersonal에서 정보 확인) messageId를 가져와서 ChatMessage 테이블에서 msg 가져오기
         // chatRoomMessage에서 마지막 메시지의 isDelete가 ALL이면 "삭제된 메시지 입니다."로 설정
-        List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findTop20ByChatRoomIdOrderByRegDateDesc(roomId);
+        List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findTop100ByChatRoomIdOrderByRegDateDesc(roomId);
         Optional<ChatRoomMessage> lastMessageOpt = Optional.empty();
         for (ChatRoomMessage message : chatRoomMessages) {
             String deleteUsers = message.getDeleteUsers();
@@ -131,10 +131,9 @@ public class ChatService {
                 ));
     }
 
-    public String findRoomName(Long roomId) {
+    public ChatRoom findChatRoomByRoomId(Long roomId) {
         return chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."))
-                .getName();
+                .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));
     }
     @Transactional
     public void increaseNumberInChatRoom(Long roomId){
@@ -163,11 +162,16 @@ public class ChatService {
                 chatRoomRepository.deleteById(roomId);
             }
             else {
-                // UserChatRoom에 leaveTheChatRoom 실행 (isInRoom을 F로, entryTime 시간 업데이트)
                 UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(myId, roomId)
                         .orElseThrow(() -> new NotFoundException("해당 채팅방에 존재하는 유저의 정보를 알 수 없습니다."));
-                userChatRoom.leaveTheChatRoom();
-                userChatRoomRepository.save(userChatRoom); // 변경사항 저장
+                // TODO G **: 단체 채팅방인 경우 isInRoom을 False로 하는게 아니라 그냥 해당 user 아웃
+                if(chatRoom.getIsGroup()){
+                    userChatRoomRepository.deleteById(userChatRoom.getId());
+                }else{
+                    // UserChatRoom에 leaveTheChatRoom 실행 (isInRoom을 F로, entryTime 시간 업데이트)
+                    userChatRoom.leaveTheChatRoom();
+                    userChatRoomRepository.save(userChatRoom); // 변경사항 저장
+                }
             }
         });
     }

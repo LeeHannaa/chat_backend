@@ -62,9 +62,9 @@ public class ChatController {
                 .map(ResponseEntity::ok);
     }
 
-    @GetMapping("/unread/count")
-    public ResponseEntity<Long> getUnreadCountByRoom(@RequestParam("roomId") Long roomId){
-        Long unreadCount = messageUnreadService.getOtherUserUnreadCount(roomId.toString());
+    @GetMapping("/unread/count/{chatRoomId}")
+    public ResponseEntity<Long> getUnreadCountByRoom(@PathVariable("chatRoomId") Long roomId, @RequestParam("myId") Long myId){
+        Long unreadCount = messageUnreadService.getUnreadMessageCount(roomId.toString(), myId.toString());
         return ResponseEntity.ok().body(unreadCount);
     }
 

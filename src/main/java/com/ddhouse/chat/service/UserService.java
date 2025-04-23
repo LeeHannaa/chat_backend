@@ -30,9 +30,9 @@ public class UserService {
     public String findFcmTokenByUserId(Long myId){
         User user = findByUserId(myId);
         String fcmToken = user.getFcmToken();
-        if (fcmToken == null) {
-            throw new NotFoundException("해당 유저의 FCM 토큰이 없습니다.");
-        }
+//        if (fcmToken == null) {
+//            throw new NotFoundException("해당 유저의 FCM 토큰이 없습니다.");
+//        }
         return fcmToken;
     }
 
