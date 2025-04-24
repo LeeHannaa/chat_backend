@@ -81,7 +81,6 @@ public class MessageUnreadService {
                 count++;
             }
         }
-
         return count;
     }
 
@@ -97,11 +96,9 @@ public class MessageUnreadService {
         // G : 해당 메시지에 안읽은 userIds에 myId가 포함된건 다 지우기 + value가 비어진다면 해당 key 지우기
 //        String key = PREFIX + ":" + roomId + ":" + myId;
 //        redisTemplate.delete(key);
-//        // unreadUsers 삭제
-//        redisTemplate.opsForSet().remove("unreadUsers:" + roomId, myId);
-//        System.out.println("채팅방에 unread 삭제 완료! myId = " + myId);
-
-
+        // unreadUsers 삭제
+        redisTemplate.opsForSet().remove("unreadUsers:" + roomId, myId);
+        System.out.println("채팅방에 unread 삭제 완료! myId = " + myId);
 
         ScanOptions options = ScanOptions.scanOptions()
                 .match(PREFIX + ":" + roomId + ":*") // 해당 채팅방에 있는 메시지들

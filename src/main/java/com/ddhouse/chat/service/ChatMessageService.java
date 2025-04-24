@@ -101,7 +101,7 @@ public class ChatMessageService {
         // 1-2. chatRooms에서 aptId랑 파라미터 aptId랑 비교해서 동일한 데이터가 있으면 채팅방이 있는 경우!
         if (!chatRooms.isEmpty()) {
             for (ChatRoomForAptDto chatRoomForAptDto : chatRooms) {
-                if (chatRoomForAptDto.getApt().getId().equals(aptId)) {
+                if (chatRoomForAptDto.getApt() != null && chatRoomForAptDto.getApt().getId().equals(aptId)) {
                     return findChatMessages(chatRoomForAptDto.getRoomId(), myId);
                 }
             }
@@ -135,6 +135,7 @@ public class ChatMessageService {
                             .thenReturn(savedMessage);
                 });
     }
+
 
     public List<Long> findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기
         // TODO G **: 채팅방에 있는 모든 userId를 담은 List를 반환

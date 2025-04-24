@@ -52,7 +52,6 @@ public class WebSocketEventListener {
                  *   2-2. 해당 방에 unread 메시지가 없을 경우
                  *       2-2-1. 그냥 원래대로
                 */
-                // 내가 읽지 않은 메시지가 있다는 뜻 -> 이제 읽음 처리 된 메시지들 : redis에서 삭제 -> 개수 파악하지 말고 바로 삭제 처리
                 messageUnreadService.removeUnread(roomId, userId);
 //                if(unreadCount > 0){
 //                    messageUnreadService.removeUnread(roomId, userId);

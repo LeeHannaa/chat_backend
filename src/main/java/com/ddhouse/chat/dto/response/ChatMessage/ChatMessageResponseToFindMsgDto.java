@@ -2,6 +2,7 @@ package com.ddhouse.chat.dto.response.ChatMessage;
 
 import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.domain.ChatRoomMessage;
+import com.ddhouse.chat.domain.MessageType;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
@@ -18,6 +19,7 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
     private Long writerId;
     private String msg;
     private LocalDateTime createdDate;
+    private MessageType type;
     private boolean isDelete;
     private int unreadCount;
 
@@ -28,6 +30,7 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
                 .writerId(chatRoomMessage.getUser().getId())
                 .writerName(chatRoomMessage.getUser().getName())
                 .msg(chatMessage.getMsg())
+                .type(chatRoomMessage.getType())
                 .isDelete(chatRoomMessage.getIsDelete())
                 .createdDate(chatRoomMessage.getRegDate())
                 .unreadCount(unreadCount)
@@ -41,6 +44,7 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
                 .writerId(chatRoomMessage.getUser().getId())
                 .writerName(chatRoomMessage.getUser().getName())
                 .msg("삭제된 메시지입니다.")
+                .type(chatRoomMessage.getType())
                 .isDelete(chatRoomMessage.getIsDelete())
                 .createdDate(chatRoomMessage.getRegDate())
                 .unreadCount(unreadCount)
