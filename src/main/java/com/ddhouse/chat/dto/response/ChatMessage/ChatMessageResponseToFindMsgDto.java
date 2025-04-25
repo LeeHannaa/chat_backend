@@ -37,6 +37,18 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
                 .build();
     }
 
+    public static ChatMessageResponseToFindMsgDto deleteFrom (ChatMessage chatMessage, ChatRoomMessage chatRoomMessage) {
+        return ChatMessageResponseToFindMsgDto.builder()
+                .id(chatMessage.getId())
+                .roomId(chatRoomMessage.getChatRoom().getId())
+                .writerId(chatRoomMessage.getUser().getId())
+                .writerName(chatRoomMessage.getUser().getName())
+                .msg(chatMessage.getMsg())
+                .type(chatRoomMessage.getType())
+                .createdDate(chatRoomMessage.getRegDate())
+                .build();
+    }
+
     public static ChatMessageResponseToFindMsgDto fromAllDelete (ChatMessage chatMessage, ChatRoomMessage chatRoomMessage, int unreadCount) {
         return ChatMessageResponseToFindMsgDto.builder()
                 .id(chatMessage.getId())

@@ -71,14 +71,18 @@ public class ChatMessageService {
                     UUID msgId = chatRoomMessage.getMessageId();
                     return chatMessageRepository.findById(msgId)
                             .flatMap(chatMessage -> {
-                                // TODO G **: 각 메시지마다 읽지 않은 유저의 수를 함께 전달
-                                int unreadCountByMsgId = messageUnreadService.getUnreadCountByMsgId(chatRoomMessage.getChatRoom().getId().toString(), msgId.toString());
-                                if (chatRoomMessage.getIsDelete()) {
-                                    // 전체 삭제된 메시지 처리
-                                    return Mono.just(ChatMessageResponseToFindMsgDto.fromAllDelete(chatMessage, chatRoomMessage, unreadCountByMsgId));
-                                } else {
-                                    return Mono.just(ChatMessageResponseToFindMsgDto.from(chatMessage, chatRoomMessage, unreadCountByMsgId));
+                                if(chatRoomMessage.getType() == MessageType.TEXT){
+                                    // TODO G **: 각 메시지마다 읽지 않은 유저의 수를 함께 전달
+                                    int unreadCountByMsgId = messageUnreadService.getUnreadCountByMsgId(chatRoomMessage.getChatRoom().getId().toString(), msgId.toString());
+                                    if (chatRoomMessage.getIsDelete()) {
+                                        // 전체 삭제된 메시지 처리
+                                        return Mono.just(ChatMessageResponseToFindMsgDto.fromAllDelete(chatMessage, chatRoomMessage, unreadCountByMsgId));
+                                    } else {
+                                        return Mono.just(ChatMessageResponseToFindMsgDto.from(chatMessage, chatRoomMessage, unreadCountByMsgId));
+                                    }
                                 }
+                                // SYSTEM 타입의 메시지일 경우
+                                return Mono.just(ChatMessageResponseToFindMsgDto.deleteFrom(chatMessage, chatRoomMessage));
                             });
                 })
                 .collectList()
@@ -128,7 +132,7 @@ public class ChatMessageService {
     }
 
     public Mono<ChatMessage> saveChatMessage(ChatMessageRequestDto chatMessageRequestDto) {
-        return chatMessageRepository.save(new ChatMessage(chatMessageRequestDto))
+        return chatMessageRepository.save(ChatMessage.from(chatMessageRequestDto.getMsg()))
                 .flatMap(savedMessage -> {
                     UUID msgId = savedMessage.getId();
                     return chatRoomMessageService.saveChatRoomMessage(chatMessageRequestDto, msgId)

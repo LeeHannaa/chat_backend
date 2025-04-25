@@ -19,9 +19,11 @@ public class ChatMessage {
     private UUID id;
     private String msg;
 
-    public ChatMessage(ChatMessageRequestDto chatMessageRequestDto) {
-        this.id = UUID.randomUUID();
-        this.msg = chatMessageRequestDto.getMsg();
+    public static ChatMessage from (String msg) {
+        UUID uuid = UUID.randomUUID();
+        return ChatMessage.builder()
+                .id(uuid)
+                .msg(msg)
+                .build();
     }
-
 }

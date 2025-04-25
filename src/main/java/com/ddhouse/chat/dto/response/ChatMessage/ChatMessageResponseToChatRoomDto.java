@@ -1,6 +1,7 @@
 package com.ddhouse.chat.dto.response.ChatMessage;
 
 import com.ddhouse.chat.domain.ChatMessage;
+import com.ddhouse.chat.domain.ChatRoomMessage;
 import com.ddhouse.chat.domain.MessageType;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
 import lombok.Getter;
@@ -34,6 +35,21 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
                 .msg(chatMessage.getMsg())
                 .createdDate(chatMessageRequestDto.getRegDate())
                 .unreadCount(unreadCount)
+                .build();
+    }
+
+    // TODO G : 여기!!!!!!!
+    public static ChatMessageResponseToChatRoomDto deleteInviteFrom (ChatRoomMessage chatRoomMessage, String msg) {
+        return ChatMessageResponseToChatRoomDto.builder()
+                .id(chatRoomMessage.getMessageId())
+                .chatName(chatRoomMessage.getChatRoom().getName())
+                .roomId(chatRoomMessage.getChatRoom().getId())
+                .writerId(chatRoomMessage.getUser().getId())
+                .writerName(chatRoomMessage.getUser().getName())
+                .type(chatRoomMessage.getType())
+                .msg(msg)
+                .createdDate(chatRoomMessage.getRegDate())
+//                .unreadCount(unreadCount)
                 .build();
     }
 }
