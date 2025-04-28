@@ -2,6 +2,7 @@ package com.ddhouse.chat.controller;
 
 import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.domain.ChatRoom;
+import com.ddhouse.chat.domain.MessageType;
 import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.request.ChatRoomUpdateDto;
@@ -52,9 +53,6 @@ public class ChatMessageController {
         List<Long> userIdsInRoom = roomUserCountService.getUserIdsInChatRoom(chatMessageRequestDto.getRoomId(), chatMessageRequestDto.getWriterId());
         // 해당 채팅방
         ChatRoom chatRoom = chatService.findChatRoomByRoomId(chatMessageRequestDto.getRoomId());
-        // 채팅방 인원 중 현재 채팅방에 들어와있지 않은 유저들
-        receiverIds.removeIf(userId -> userIdsInRoom.contains(userId));
-
 
         /*
         * 3. 채팅 리스트에 들어가는 경우
@@ -71,6 +69,7 @@ public class ChatMessageController {
             if(!chatRoom.getIsGroup()){ // 1:1 채팅방
                 UserChatRoom userChatRoom = chatMessageService.getUserInChatRoom(receiverIds.get(0), chatMessageRequestDto.getRoomId());
                 if(!userChatRoom.getIsInRoom()){ // 방을 나갔으면 다시 방에 들어오게 되는 로직
+                    System.out.println("방을 나간 유저에게 보내는 경우!!!");
                     // 1. isInRoom을 True로 변경
                     chatMessageService.saveReEntryUserInChatRoom(userChatRoom);
                     // 2. ChatRoom에 memberNum 증가
@@ -86,18 +85,19 @@ public class ChatMessageController {
             template.convertAndSend("/topic/chatroom/" + chatMessageRequestDto.getRoomId(),
                     Map.of(
                             "type", "CHAT",
-                            "message", ChatMessageResponseToChatRoomDto.from(message, chatMessageRequestDto, unreadCountByMsgId)
+                            "message", ChatMessageResponseToChatRoomDto.from(message, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
                     )
             );
             String title = "새 메시지 도착!";
+            // 채팅방 인원 중 현재 채팅방에 들어와있지 않은 유저들
+            receiverIds.removeIf(userId -> userIdsInRoom.contains(userId));
             receiverIds.forEach(userId -> {
                 // Redis에 해당 메시지 중 안읽은 사람의 id 저장
                 messageUnreadService.addUnreadChat(chatMessageRequestDto.getRoomId().toString(), userId.toString(), message.getId());
                 // 현재 채팅방에 없는 사람들을 기준으로 확인
                 Long unreadCount = messageUnreadService.getUnreadMessageCount(chatMessageRequestDto.getRoomId().toString(), userId.toString());
                 template.convertAndSend(
-                        "/topic/chatlist/" + userId, ChatRoomUpdateDto.from(chatMessageRequestDto, unreadCount));
-                System.out.println("전송되는 메시지: " + ChatMessageResponseToChatRoomDto.from(message, chatMessageRequestDto, userIdsInRoom.size()).getMsg());  // 확인용
+                        "/topic/chatlist/" + userId, ChatRoomUpdateDto.from(chatMessageRequestDto, unreadCount, chatRoom.getMemberNum()));
                 // TODO G **: 단체 채팅방에 있는 유저들의 receiverId 각각 전송
                 String fcmToken = userService.findFcmTokenByUserId(userId);
                 if (roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId()) < 2 && fcmToken != null) {

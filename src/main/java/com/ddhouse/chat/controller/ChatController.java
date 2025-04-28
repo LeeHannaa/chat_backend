@@ -2,8 +2,10 @@ package com.ddhouse.chat.controller;
 
 import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.domain.User;
+import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.info.ChatRoomDto;
 import com.ddhouse.chat.dto.request.GroupChatRoomCreateDto;
+import com.ddhouse.chat.dto.request.InviteGroupRequestDto;
 import com.ddhouse.chat.dto.request.UserChatRoomAddDto;
 import com.ddhouse.chat.dto.response.ChatRoomInfoResponseDto;
 import com.ddhouse.chat.service.ChatRoomMessageService;
@@ -38,6 +40,13 @@ public class ChatController {
     public ResponseEntity<ChatRoom> createGroupChatRoom(@RequestBody GroupChatRoomCreateDto groupChatRoomCreateDto) {
         ChatRoom newChatRoom = chatService.createGroupChatRoom(groupChatRoomCreateDto);
         return ResponseEntity.ok().body(newChatRoom);
+    }
+
+    @PostMapping("/invite/user/group") // 단체 채팅방 유저 초대
+    // TODO : userId, roomId 이렇게 받아오기
+    public ResponseEntity<UserChatRoom> inviteUserGroupChatRoom(@RequestBody InviteGroupRequestDto inviteGroupRequestDto) {
+        UserChatRoom userChatRoom = chatService.inviteGroupChatRoom(inviteGroupRequestDto);
+        return ResponseEntity.ok().body(userChatRoom);
     }
 
 

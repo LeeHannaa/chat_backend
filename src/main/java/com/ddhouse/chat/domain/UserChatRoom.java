@@ -65,7 +65,6 @@ public class UserChatRoom extends BaseEntity {
     public void leaveTheChatRoom(){
         if(this.isInRoom) {
             this.isInRoom = Boolean.FALSE;
-            // TODO : TIMEERROR
             this.entryTime = LocalDateTime.now(ZoneId.of("Asia/Seoul")); // 채팅방 나가는 기점을 시작으로 시간 업데이트
         }
     }

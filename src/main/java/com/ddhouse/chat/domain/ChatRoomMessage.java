@@ -23,22 +23,29 @@ public class ChatRoomMessage extends BaseEntity {
     private UUID messageId; // Cassandra
     private Boolean isDelete; // 전체 삭제 여부
     private String deleteUsers; // ,를 기준으로 유저 아이디 저장
+    @Enumerated(EnumType.STRING)
+    private MessageType type;
 
     @ManyToOne
     @JoinColumn(name = "chatRoomId", nullable = false)
     private ChatRoom chatRoom;
 
     @ManyToOne
-    @JoinColumn(name = "userId", nullable = false) // 채팅 작성자
+    @JoinColumn(name = "userId", nullable = true) // 채팅 작성자
     private User user;
 
-    public static ChatRoomMessage save(UUID msgId, User user, ChatRoom chatRoom) {
+    public static ChatRoomMessage save(UUID msgId, User user, ChatRoom chatRoom, MessageType messageType) {
         return ChatRoomMessage.builder()
                 .messageId(msgId)
                 .chatRoom(chatRoom)
+                .type(messageType)
                 .isDelete(false)
                 .user(user)
                 .build();
+    }
+
+    public void updateInvite(Boolean isDelete){
+        this.isDelete = isDelete;
     }
 
     public void deleteMessageAll() {

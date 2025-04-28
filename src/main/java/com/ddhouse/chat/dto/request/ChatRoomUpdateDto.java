@@ -16,16 +16,18 @@ public class ChatRoomUpdateDto {
     private String chatName;
     private String msg;
     private String writerName;
+    private int memberNum;
     private LocalDateTime regDate;
     private LocalDateTime updateLastMsgTime;
     private Long unreadCount;
 
-    public static ChatRoomUpdateDto from (ChatMessageRequestDto chatMessageRequestDto, Long count) {
+    public static ChatRoomUpdateDto from (ChatMessageRequestDto chatMessageRequestDto, Long count, int memberNum) {
         return ChatRoomUpdateDto.builder()
                 .roomId(chatMessageRequestDto.getRoomId())
                 .chatName(chatMessageRequestDto.getChatName())
                 .msg(chatMessageRequestDto.getMsg())
                 .writerName(chatMessageRequestDto.getWriterName())
+                .memberNum(memberNum)
                 .regDate(chatMessageRequestDto.getRegDate())
                 .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .unreadCount(count)
