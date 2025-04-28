@@ -43,6 +43,7 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
                 .roomId(chatRoomMessage.getChatRoom().getId())
                 .writerId(chatRoomMessage.getUser().getId())
                 .writerName(chatRoomMessage.getUser().getName())
+                .isDelete(chatRoomMessage.getIsDelete()) // true면 해당 유저가 다시 초대 되었다는 뜻!!!
                 .msg(chatMessage.getMsg())
                 .type(chatRoomMessage.getType())
                 .createdDate(chatRoomMessage.getRegDate())

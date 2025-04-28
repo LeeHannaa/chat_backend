@@ -58,6 +58,7 @@ public class ChatService {
         userChatRoomRepository.saveAll(userChatRooms);
         return chatRoom;
     }
+    @Transactional
     public UserChatRoom inviteGroupChatRoom(InviteGroupRequestDto inviteGroupRequestDto){
         // 채팅방 유저 초대
         User user = userService.findByUserId(inviteGroupRequestDto.getUserId());
@@ -70,11 +71,15 @@ public class ChatService {
             chatRoom.increaseMemberNum();
             chatRoomRepository.save(chatRoom);
             String inviteMsg = user.getName() + "님이 초대되었습니다.";
+            // TODO G : 채팅방을 나갔다는 메시지의 id를 받아와서 해당 메시지의 isDelete를 true로 저장
+            ChatRoomMessage beforeChatRoomMessage = chatRoomMessageService.findByMessageId(inviteGroupRequestDto.getMsgId());
+            beforeChatRoomMessage.updateInvite(Boolean.TRUE);
+            chatRoomMessageRepository.save(beforeChatRoomMessage);
             // TODO G : 채팅방에 유저 초대하면 누가 누구를 초대했는지 시스템타입으로 메시지 저장
             chatMessageRepository.save(ChatMessage.from(inviteMsg))
                     .flatMap(savedMessage -> {
                         ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(savedMessage.getId(), user, chatRoom, MessageType.SYSTEM);
-                        ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteInviteFrom(chatRoomMessage, inviteMsg);
+                        ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteInviteFrom(chatRoomMessage, inviteMsg, beforeChatRoomMessage.getMessageId());
                         Map<String, Object> inviteUser = Map.of(
                                 "type", "INVITE",
                                 "message", chatMessageResponseToChatRoomDto
@@ -212,7 +217,7 @@ public class ChatService {
                             .flatMap(savedMessage -> {
                                 msgId.set(savedMessage.getId());
                                 ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(msgId.get(), user, chatRoom, MessageType.SYSTEM);
-                                ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteInviteFrom(chatRoomMessage, deleteMsg);
+                                ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteFrom(chatRoomMessage, deleteMsg);
                                 Map<String, Object> leaveUser = Map.of(
                                         "type", "LEAVE",
                                         "message", chatMessageResponseToChatRoomDto,

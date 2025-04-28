@@ -21,6 +21,7 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
     private Long writerId;
     private MessageType type;
     private String msg;
+    private UUID beforeMsgId;
     private LocalDateTime createdDate;
     private int unreadCount;
 
@@ -39,7 +40,22 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
     }
 
     // TODO G : 여기!!!!!!!
-    public static ChatMessageResponseToChatRoomDto deleteInviteFrom (ChatRoomMessage chatRoomMessage, String msg) {
+    public static ChatMessageResponseToChatRoomDto deleteInviteFrom (ChatRoomMessage chatRoomMessage, String msg, UUID beforeMsgId) {
+        return ChatMessageResponseToChatRoomDto.builder()
+                .id(chatRoomMessage.getMessageId())
+                .chatName(chatRoomMessage.getChatRoom().getName())
+                .roomId(chatRoomMessage.getChatRoom().getId())
+                .writerId(chatRoomMessage.getUser().getId())
+                .writerName(chatRoomMessage.getUser().getName())
+                .type(chatRoomMessage.getType())
+                .msg(msg)
+                .beforeMsgId(beforeMsgId)
+                .createdDate(chatRoomMessage.getRegDate())
+//                .unreadCount(unreadCount)
+                .build();
+    }
+
+    public static ChatMessageResponseToChatRoomDto deleteFrom (ChatRoomMessage chatRoomMessage, String msg) {
         return ChatMessageResponseToChatRoomDto.builder()
                 .id(chatRoomMessage.getMessageId())
                 .chatName(chatRoomMessage.getChatRoom().getName())

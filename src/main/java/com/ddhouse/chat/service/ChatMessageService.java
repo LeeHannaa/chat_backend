@@ -81,7 +81,7 @@ public class ChatMessageService {
                                         return Mono.just(ChatMessageResponseToFindMsgDto.from(chatMessage, chatRoomMessage, unreadCountByMsgId));
                                     }
                                 }
-                                // SYSTEM 타입의 메시지일 경우
+                                // SYSTEM 타입의 메시지일 경우 -> isDelete가 true면 유저가 다시 초대되었다는 뜻!!!!!
                                 return Mono.just(ChatMessageResponseToFindMsgDto.deleteFrom(chatMessage, chatRoomMessage));
                             });
                 })

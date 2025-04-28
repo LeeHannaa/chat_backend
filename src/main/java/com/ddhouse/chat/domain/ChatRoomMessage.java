@@ -44,6 +44,10 @@ public class ChatRoomMessage extends BaseEntity {
                 .build();
     }
 
+    public void updateInvite(Boolean isDelete){
+        this.isDelete = isDelete;
+    }
+
     public void deleteMessageAll() {
         if (!this.isDelete) {
             this.isDelete = true;
