@@ -136,14 +136,17 @@ public class ChatService {
         for (ChatRoomMessage message : chatRoomMessages) {
             String deleteUsers = message.getDeleteUsers();
 
-            // deleteUsers가 null이거나 비어있으면 바로 리턴
-            if (deleteUsers == null || deleteUsers.isBlank()) {
+            // deleteUsers가 null이거나 비어있으면 바로 리턴 + 메시지 전체 삭제 아닌 경우
+            // ** 전체 삭제일 경우 삭제메시지 없이 채팅 삭제 피드백 반영
+            if ((deleteUsers == null || deleteUsers.isBlank()) && !message.getIsDelete()) {
                 lastMessageOpt = Optional.of(message);
                 break;
             }
 
+            //
             List<Long> deleteUserList = message.getDeleteUserList();
-            if (deleteUserList!= null && !deleteUserList.contains(myId)) {
+            // ** 메시지 전체 삭제 아닌 경우 마지막 메시지로 pick!
+            if (deleteUserList!= null && !deleteUserList.contains(myId) && !message.getIsDelete()) {
                 lastMessageOpt = Optional.of(message);
                 break;
             }
@@ -153,13 +156,17 @@ public class ChatService {
             // 전체를 빈값으로 전달, 날짜는 받아옴 (단톡아니면 메시지 없으면 리스트에서 안보임)
             return Mono.just(Tuples.of("채팅방에 초대되었습니다.", entryTime, 0L));
         }
+//        * like kakaoTalk (전체 삭제일 경우도 그냥 아예 삭제하는 피드백 반영 *
+//        Mono<Tuple2<String, LocalDateTime>> lastMessageMono = chatMessageRepository.findById(lastMessage.getMessageId())
+//                .map(chatMessage -> {
+//                    String msgContent = lastMessage.getIsDelete()
+//                            ? "삭제된 메시지입니다."
+//                            : chatMessage.getMsg();
+//                    return Tuples.of(msgContent, lastMessage.getRegDate());
+//                });
         Mono<Tuple2<String, LocalDateTime>> lastMessageMono = chatMessageRepository.findById(lastMessage.getMessageId())
-                .map(chatMessage -> {
-                    String msgContent = lastMessage.getIsDelete()
-                            ? "삭제된 메시지입니다."
-                            : chatMessage.getMsg();
-                    return Tuples.of(msgContent, lastMessage.getRegDate());
-                });
+                .map(chatMessage -> Tuples.of(chatMessage.getMsg(), lastMessage.getRegDate()));
+
 
         Long unreadCount = messageUnreadService.getUnreadMessageCount(roomId.toString(), myId.toString());
         System.out.println("안읽은 메시지 수 확인해보기 :" + unreadCount);
