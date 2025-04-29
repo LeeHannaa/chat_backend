@@ -1,6 +1,8 @@
 package com.ddhouse.chat.dto.request;
 
 import com.ddhouse.chat.domain.ChatMessage;
+import com.ddhouse.chat.domain.ChatRoom;
+import com.ddhouse.chat.domain.User;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -19,4 +21,14 @@ public class ChatMessageRequestDto{ // 프론트가 백으로 주는 정보
     private String writerName;
     private String msg;
     private LocalDateTime regDate;
+
+    public static ChatMessageRequestDto from(ChatRoom chatRoom, User user, String text) {
+        return ChatMessageRequestDto.builder()
+                .roomId(chatRoom.getId())
+                .chatName(chatRoom.getName())
+                .writerId(user.getId())
+                .writerName(user.getName())
+                .msg(text)
+                .build();
+    }
 }

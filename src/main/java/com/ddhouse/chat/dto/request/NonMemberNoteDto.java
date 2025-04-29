@@ -7,8 +7,8 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class UserChatRoomAddDto {
-    String userIds;
-    Long chatRoomId;
-
+public class NonMemberNoteDto {
+    Long aptId;
+    String phoneNumber;
+    String noteText;
 }

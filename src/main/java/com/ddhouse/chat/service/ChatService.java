@@ -4,8 +4,7 @@ package com.ddhouse.chat.service;
 import com.ddhouse.chat.domain.*;
 import com.ddhouse.chat.dto.info.ChatRoomDto;
 import com.ddhouse.chat.dto.info.ChatRoomForAptDto;
-import com.ddhouse.chat.dto.request.GroupChatRoomCreateDto;
-import com.ddhouse.chat.dto.request.InviteGroupRequestDto;
+import com.ddhouse.chat.dto.request.*;
 import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseToChatRoomDto;
 import com.ddhouse.chat.dto.response.ChatRoomInfoResponseDto;
 import com.ddhouse.chat.exception.NotFoundException;
@@ -29,6 +28,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class ChatService {
+
     private final ChatRoomRepository chatRoomRepository;
     private final ChatMessageRepository chatMessageRepository;
     private final UserChatRoomRepository userChatRoomRepository;
