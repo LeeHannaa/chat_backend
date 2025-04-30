@@ -19,7 +19,7 @@ public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
+    private String name;  // 비유저 전화번호 쪽지위해 임시 데이터
     private String fcmToken;
 
     public void setUpdateFcmToken(String fcmToken) {

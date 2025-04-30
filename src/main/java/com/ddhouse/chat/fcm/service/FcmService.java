@@ -1,5 +1,6 @@
 package com.ddhouse.chat.fcm.service;
 
+import com.ddhouse.chat.dto.FcmDto;
 import com.ddhouse.chat.fcm.dto.FcmMessage;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -23,8 +24,8 @@ public class FcmService {
             "ddhouse-chat/messages:send";
     private final ObjectMapper objectMapper;
 
-    public void sendMessageTo(String targetToken, String title, String body, String roomId, String roomName) throws IOException {
-        String message = makeMessage(targetToken, title, body, roomId, roomName);
+    public void sendMessageTo(FcmDto fcmDto) throws IOException {
+        String message = makeMessage(fcmDto);
 
         OkHttpClient client = new OkHttpClient();
         RequestBody requestBody = RequestBody.create(message,
@@ -41,24 +42,37 @@ public class FcmService {
         System.out.println(response.body().string());
     }
 
-    private String makeMessage(String targetToken, String title, String body, String roomId, String roomName) throws JsonParseException, JsonProcessingException {
+    private String makeMessage(FcmDto fcmDto) throws JsonParseException, JsonProcessingException {
         Map<String, String> data = new HashMap<>();
-        data.put("roomId", roomId);
-        data.put("roomName", roomName);
+        if(fcmDto.getTitle() == "새 메시지 도착!"){ // 채팅
+            data.put("roomId", fcmDto.getRoomId());
+            data.put("roomName", fcmDto.getRoomName());
 
-        FcmMessage fcmMessage = FcmMessage.builder()
-                .message(FcmMessage.Message.builder()
-                        .token(targetToken)
-                        .notification(FcmMessage.Notification.builder()
-                                .title(title)
-                                .body(body)
-                                .build())
-                        .data(data)
-                        .build())
-                .validateOnly(false)
-                .build();
-
-        return objectMapper.writeValueAsString(fcmMessage);
+            FcmMessage fcmMessage = FcmMessage.builder()
+                    .message(FcmMessage.Message.builder()
+                            .token(fcmDto.getTargetToken())
+                            .notification(FcmMessage.Notification.builder()
+                                    .title(fcmDto.getTitle())
+                                    .body(fcmDto.getBody())
+                                    .build())
+                            .data(data)
+                            .build())
+                    .validateOnly(false)
+                    .build();
+            return objectMapper.writeValueAsString(fcmMessage);
+        } else{ // 문의 쪽지
+            FcmMessage fcmMessage = FcmMessage.builder()
+                    .message(FcmMessage.Message.builder()
+                            .token(fcmDto.getTargetToken())
+                            .notification(FcmMessage.Notification.builder()
+                                    .title(fcmDto.getTitle())
+                                    .body(fcmDto.getBody())
+                                    .build())
+                            .build())
+                    .validateOnly(false)
+                    .build();
+            return objectMapper.writeValueAsString(fcmMessage);
+        }
     }
 
     private String getAccessToken() throws IOException {

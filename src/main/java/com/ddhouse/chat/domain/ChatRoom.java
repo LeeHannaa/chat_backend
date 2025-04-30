@@ -38,6 +38,17 @@ public class ChatRoom extends BaseEntity {
                 .build();
     }
 
+
+    public static ChatRoom from (Apt apt) {
+        // 아파트 문의하기를 통해 방이 생성된 경우 -> 1:1 채팅 (비회원 쪽지)
+        return ChatRoom.builder()
+                .name(apt.getName())
+                .memberNum(2)
+                .apt(apt)
+                .isGroup(Boolean.FALSE)
+                .build();
+    }
+
     public static ChatRoom group(String name, int count){
         // 그룹 단체 채팅방 생성
         return ChatRoom.builder()

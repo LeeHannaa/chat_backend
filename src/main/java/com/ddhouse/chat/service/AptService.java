@@ -27,4 +27,15 @@ public class AptService {
         return AptDto.from(apt);
     }
 
+    public Apt findByAptId(Long id) {
+        Apt apt = aptRepository.findById(id)
+                .orElseThrow(() -> new NotFoundException("아파트 ID " + id + "에 해당하는 데이터가 없습니다."));
+        return apt;
+    }
+
+    public List<Apt> findAptsByUserId(Long userId) {
+        List<Apt> apt = aptRepository.findByUserId(userId);
+        return apt;
+    }
+
 }
