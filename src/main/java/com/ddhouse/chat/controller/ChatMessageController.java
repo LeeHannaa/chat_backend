@@ -4,6 +4,7 @@ import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.domain.MessageType;
 import com.ddhouse.chat.domain.UserChatRoom;
+import com.ddhouse.chat.dto.FcmDto;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.request.ChatRoomUpdateDto;
 import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseDto;
@@ -88,7 +89,6 @@ public class ChatMessageController {
                             "message", ChatMessageResponseToChatRoomDto.from(message, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
                     )
             );
-            String title = "새 메시지 도착!";
             // 채팅방 인원 중 현재 채팅방에 들어와있지 않은 유저들
             receiverIds.removeIf(userId -> userIdsInRoom.contains(userId));
             receiverIds.forEach(userId -> {
@@ -100,15 +100,11 @@ public class ChatMessageController {
                         "/topic/chatlist/" + userId, ChatRoomUpdateDto.from(chatMessageRequestDto, unreadCount, chatRoom.getMemberNum()));
                 // TODO G **: 단체 채팅방에 있는 유저들의 receiverId 각각 전송
                 String fcmToken = userService.findFcmTokenByUserId(userId);
+                String body = userService.findNameByUserId(chatMessageRequestDto.getWriterId()) + " : " + chatMessageRequestDto.getMsg();
                 if (roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId()) < 2 && fcmToken != null) {
                     try {
                         fcmService.sendMessageTo(
-                                fcmToken,
-                                title,
-                                userService.findNameByUserId(chatMessageRequestDto.getWriterId()) + " : " + chatMessageRequestDto.getMsg(),
-                                chatMessageRequestDto.getRoomId().toString(),
-                                chatRoom.getName()
-                        );
+                                FcmDto.chat(fcmToken, body, chatMessageRequestDto.getRoomId().toString(), chatRoom.getName()));
                     } catch (IOException e) {
                         System.err.println("FCM 전송 실패: " + e.getMessage());
                     }

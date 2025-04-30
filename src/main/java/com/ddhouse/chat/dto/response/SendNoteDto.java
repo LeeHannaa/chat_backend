@@ -18,6 +18,7 @@ public class SendNoteDto {
     String phoneNumber;
     String noteText;
     LocalDateTime regDate;
+    Boolean isRead;
 
     public static SendNoteDto from(Note note) {
         return SendNoteDto.builder()

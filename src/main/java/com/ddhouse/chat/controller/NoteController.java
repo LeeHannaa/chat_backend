@@ -16,6 +16,8 @@ import reactor.core.publisher.Mono;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,9 +33,21 @@ public class NoteController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<SendNoteDto>> getAptList(@RequestParam Long myId) {
+    public ResponseEntity<List<SendNoteDto>> getNoteList(@RequestParam Long myId) {
         List<SendNoteDto> sendNoteDtos = noteService.findMyNoteList(myId);
         return ResponseEntity.ok().body(sendNoteDtos);
     }
 
+    @PostMapping("/read/note")
+    public ResponseEntity<Void> readNoteNonMember(@RequestParam Long myId, @RequestBody Long noteId) {
+        // 쪽지를 읽은 경우
+        noteService.readNoteToDelete(myId, noteId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/delete/{noteId}")
+    public ResponseEntity<Void> deleteChatMessageAll(@PathVariable("noteId") Long noteId, @RequestParam("myId") Long myId){
+        noteService.deleteNote(noteId, myId);
+        return ResponseEntity.ok().build();
+    }
 }
