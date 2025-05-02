@@ -95,7 +95,7 @@ public class ChatMessageController {
                 // 현재 채팅방에 없는 사람들을 기준으로 확인
                 Long unreadCount = messageUnreadService.getUnreadMessageCount(chatMessageRequestDto.getRoomId().toString(), userId.toString());
                 template.convertAndSend(
-                        "/topic/chatlist/" + userId,
+                        "/topic/user/" + userId,
                         Map.of(
                                 "type", "CHATLIST",
                                 "message", ChatRoomUpdateDto.from(chatMessageRequestDto, unreadCount, chatRoom.getMemberNum())

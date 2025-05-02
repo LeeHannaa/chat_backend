@@ -15,6 +15,7 @@ public class ChatMessageResponseCreateDto extends ChatMessageResponseDto{
     private String roomName;
     private LocalDateTime regDate;
     private int memberNum;
+    private Boolean isGroup;
 
 
     public static ChatMessageResponseCreateDto create (UserChatRoom userChatRoom) {
@@ -22,6 +23,7 @@ public class ChatMessageResponseCreateDto extends ChatMessageResponseDto{
                 .roomId(userChatRoom.getChatRoom().getId())
                 .roomName(userChatRoom.getChatRoom().getName())
                 .memberNum(2)
+                .isGroup(userChatRoom.getChatRoom().getIsGroup())
                 .regDate(userChatRoom.getRegDate())
                 .build();
     }
