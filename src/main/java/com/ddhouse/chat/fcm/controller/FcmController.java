@@ -1,14 +1,11 @@
 package com.ddhouse.chat.fcm.controller;
 
 import com.ddhouse.chat.fcm.dto.FcmTokenSaveRequest;
-import com.ddhouse.chat.fcm.dto.FcmTokenRequestDto;
 import com.ddhouse.chat.fcm.service.FcmService;
 import com.ddhouse.chat.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.io.IOException;
 
 @RestController
 @RequiredArgsConstructor

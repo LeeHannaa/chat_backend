@@ -1,6 +1,5 @@
 package com.ddhouse.chat.dto.request;
 
-import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.domain.User;
 import lombok.Builder;
@@ -8,7 +7,6 @@ import lombok.Getter;
 import lombok.Setter;
 
 import java.time.LocalDateTime;
-import java.time.ZoneId;
 
 
 @Getter

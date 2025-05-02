@@ -1,6 +1,5 @@
 package com.ddhouse.chat.controller;
 
-import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.domain.MessageType;
 import com.ddhouse.chat.domain.UserChatRoom;
@@ -20,7 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -97,7 +95,11 @@ public class ChatMessageController {
                 // 현재 채팅방에 없는 사람들을 기준으로 확인
                 Long unreadCount = messageUnreadService.getUnreadMessageCount(chatMessageRequestDto.getRoomId().toString(), userId.toString());
                 template.convertAndSend(
-                        "/topic/chatlist/" + userId, ChatRoomUpdateDto.from(chatMessageRequestDto, unreadCount, chatRoom.getMemberNum()));
+                        "/topic/chatlist/" + userId,
+                        Map.of(
+                                "type", "CHATLIST",
+                                "message", ChatRoomUpdateDto.from(chatMessageRequestDto, unreadCount, chatRoom.getMemberNum())
+                        ));
                 // TODO G **: 단체 채팅방에 있는 유저들의 receiverId 각각 전송
                 String fcmToken = userService.findFcmTokenByUserId(userId);
                 String body = userService.findNameByUserId(chatMessageRequestDto.getWriterId()) + " : " + chatMessageRequestDto.getMsg();

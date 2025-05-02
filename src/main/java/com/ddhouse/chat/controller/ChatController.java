@@ -1,15 +1,11 @@
 package com.ddhouse.chat.controller;
 
 import com.ddhouse.chat.domain.ChatRoom;
-import com.ddhouse.chat.domain.User;
 import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.info.ChatRoomDto;
 import com.ddhouse.chat.dto.request.GroupChatRoomCreateDto;
 import com.ddhouse.chat.dto.request.InviteGroupRequestDto;
-import com.ddhouse.chat.dto.request.NonMemberNoteDto;
-import com.ddhouse.chat.dto.request.UserChatRoomAddDto;
 import com.ddhouse.chat.dto.response.ChatRoomInfoResponseDto;
-import com.ddhouse.chat.service.ChatRoomMessageService;
 import com.ddhouse.chat.service.ChatService;
 import com.ddhouse.chat.service.MessageUnreadService;
 import lombok.RequiredArgsConstructor;
@@ -18,10 +14,8 @@ import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor

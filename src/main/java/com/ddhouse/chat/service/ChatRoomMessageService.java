@@ -2,7 +2,6 @@ package com.ddhouse.chat.service;
 
 import com.ddhouse.chat.domain.*;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
-import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseToChatRoomDto;
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.ChatRoomMessageRepository;
 import com.ddhouse.chat.repository.ChatRoomRepository;
