@@ -2,7 +2,6 @@ package com.ddhouse.chat.domain;
 
 import com.ddhouse.chat.BaseEntity;
 import com.ddhouse.chat.dto.info.ChatRoomDto;
-import com.ddhouse.chat.dto.request.GroupChatRoomCreateDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

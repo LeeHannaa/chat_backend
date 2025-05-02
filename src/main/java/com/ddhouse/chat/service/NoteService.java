@@ -1,12 +1,9 @@
 package com.ddhouse.chat.service;
 
 import com.ddhouse.chat.domain.Apt;
-import com.ddhouse.chat.domain.ChatRoomMessage;
 import com.ddhouse.chat.domain.Note;
-import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.FcmDto;
 import com.ddhouse.chat.dto.request.NonMemberNoteDto;
-import com.ddhouse.chat.dto.response.ChatRoomInfoResponseDto;
 import com.ddhouse.chat.dto.response.SendNoteDto;
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.fcm.service.FcmService;
@@ -21,7 +18,6 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Slf4j

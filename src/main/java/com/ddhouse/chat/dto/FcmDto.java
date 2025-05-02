@@ -1,6 +1,5 @@
 package com.ddhouse.chat.dto;
 
-import com.ddhouse.chat.domain.Apt;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

@@ -1,6 +1,5 @@
 package com.ddhouse.chat.repository;
 
-import com.ddhouse.chat.domain.Apt;
 import com.ddhouse.chat.domain.Note;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

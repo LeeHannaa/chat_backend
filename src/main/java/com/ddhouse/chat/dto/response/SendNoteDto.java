@@ -1,7 +1,6 @@
 package com.ddhouse.chat.dto.response;
 
 import com.ddhouse.chat.domain.Note;
-import com.ddhouse.chat.dto.request.NonMemberNoteDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
