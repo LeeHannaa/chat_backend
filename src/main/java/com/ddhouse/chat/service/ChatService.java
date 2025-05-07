@@ -93,13 +93,6 @@ public class ChatService {
         return userChatRoomRepository.save(UserChatRoom.group(chatRoom, user));
     }
 
-
-    // 채팅 전체 리스트
-//    public List<ChatRoomDto> findChatRoomList() {
-//        List<ChatRoom> chatRooms = chatRoomRepository.findAll();
-//        return chatRooms.stream().map(ChatRoomDto::from).collect(Collectors.toList());
-//    }
-
     public List<ChatRoomInfoResponseDto> findMyChatRoomList(Long myId) {
         // 내가 문의자로 들어간 채팅방 or 내가 관리자로 있는 채팅방
         List<UserChatRoom> chatRooms = userChatRoomRepository.findByUserId(myId);
@@ -129,21 +122,16 @@ public class ChatService {
                 .orElseThrow(() -> new NotFoundException("채팅방에서 해당 유저의 정보를 찾을 수 없습니다."));
         LocalDateTime entryTime = userChatRoom.getEntryTime();
 
-        // chatRoomMessage에서 해당 roomId에서 createTime을 보고 가장 최신의 (+ isDelete가 ME -> MeswsageDeletePersonal에서 정보 확인) messageId를 가져와서 ChatMessage 테이블에서 msg 가져오기
-        // chatRoomMessage에서 마지막 메시지의 isDelete가 ALL이면 "삭제된 메시지 입니다."로 설정
         List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findTop100ByChatRoomIdAndRegDateAfterOrderByRegDateDesc(roomId, entryTime);
         Optional<ChatRoomMessage> lastMessageOpt = Optional.empty();
         for (ChatRoomMessage message : chatRoomMessages) {
             String deleteUsers = message.getDeleteUsers();
-
             // deleteUsers가 null이거나 비어있으면 바로 리턴 + 메시지 전체 삭제 아닌 경우
             // ** 전체 삭제일 경우 삭제메시지 없이 채팅 삭제 피드백 반영
             if ((deleteUsers == null || deleteUsers.isBlank()) && !message.getIsDelete()) {
                 lastMessageOpt = Optional.of(message);
                 break;
             }
-
-            //
             List<Long> deleteUserList = message.getDeleteUserList();
             // ** 메시지 전체 삭제 아닌 경우 마지막 메시지로 pick!
             if (deleteUserList!= null && !deleteUserList.contains(myId) && !message.getIsDelete()) {
@@ -194,12 +182,6 @@ public class ChatService {
 
     @Transactional
     public void deleteChatRoom(Long roomId, Long myId){
-        /*
-        [ 채팅방 삭제 로직 ]
-        1. roomId를 가지고 ChatRoom에 memberNum 감소
-            1-1. memberNum이 0인 경우 해당 roomId를 가진 UserChatRoom 데이터 전체 삭제 & ChatRoomMessage 데이터 전체 삭제 (카산드라는 삭제할지 말지 나중에 결정)
-            1-2. memberNum이 0이 아닌 경우 : UserChatRoom에 leaveTheChatRoom 실행 (isInRoom을 F로, entryTime 시간 업데이트)
-        */
         // 채팅 이용자가 0명인 경우 전체 대화 삭제
         Optional<ChatRoom> chatRoomOptional = chatRoomRepository.findById(roomId);
         chatRoomOptional.ifPresent(chatRoom -> {
@@ -213,10 +195,8 @@ public class ChatService {
             else {
                 UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(myId, roomId)
                         .orElseThrow(() -> new NotFoundException("해당 채팅방에 존재하는 유저의 정보를 알 수 없습니다."));
-                // TODO G **: 단체 채팅방인 경우 isInRoom을 False로 하는게 아니라 그냥 해당 user 아웃
                 if(chatRoom.getIsGroup()){
                     userChatRoomRepository.deleteById(userChatRoom.getId());
-                    // TODO G : 시스템 타입으로 해당 유저가 방을 나갔다는 메시지를 저장 후 그 메시지를 보내기
                     User user = userService.findByUserId(myId);
                     String deleteMsg = user.getName() + "님이 채팅방을 나갔습니다.";
                     AtomicReference<UUID> msgId = new AtomicReference<>();
@@ -233,7 +213,6 @@ public class ChatService {
                                 // TODO G **: 실시간으로 해당 유저가 방을 나갔음을 알림
                                 template.convertAndSend("/topic/chatroom/" + roomId, leaveUser);
                                 System.out.println("채팅방에 유저가 나감 : " + deleteMsg);
-                                // TODO G **: 채팅방 유저가 나갈 경우 유저가 안읽은 메시지가 있으면 다 읽음처리
                                 messageUnreadService.removeUnread(roomId.toString(), myId.toString());
                                 return Mono.fromCallable(() -> chatRoomMessageRepository.save(chatRoomMessage));
                             })

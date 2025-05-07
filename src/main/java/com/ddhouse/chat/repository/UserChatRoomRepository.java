@@ -10,14 +10,8 @@ import java.util.List;
 import java.util.Optional;
 @Repository
 public interface UserChatRoomRepository extends JpaRepository<UserChatRoom, Long> {
-
-//    @Query("SELECT DISTINCT u FROM UserChatRoom u WHERE u.user.id = :id OR u.consultId = :id")
-//    List<UserChatRoom> findByUserIdOrConsultId(@Param("id") Long id);
-
     List<UserChatRoom> findByUserId(Long userId);
     Optional<UserChatRoom> findByUserIdAndChatRoomId(Long userId, Long chatRoomId);
-
-//    Optional<UserChatRoom> findByUserIdAndConsultId(Long userId, Long consultId);
     void deleteByChatRoomId(Long roomId);
     Optional<UserChatRoom> findByChatRoomId(Long roomId);
     List<UserChatRoom> findAllByChatRoomId(Long chatRoomId);

@@ -8,7 +8,7 @@ import lombok.Setter;
 @Setter
 @Builder
 public class UserChatRoomAddDto {
+    // 기존 채팅방에 유저 추가할 경우
     String userIds;
     Long chatRoomId;
-
 }

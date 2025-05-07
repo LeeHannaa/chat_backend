@@ -62,6 +62,9 @@ public class ChatRoom extends BaseEntity {
             this.memberNum--;
         }
     }
+    public void updateGroup(Boolean isGroup){
+        this.isGroup = isGroup;
+    }
 
     public void increaseMemberNum() {
         this.memberNum++;

@@ -43,23 +43,6 @@ public class WebSocketEventListener {
                 );
                 messagingTemplate.convertAndSend("/topic/chatroom/" + roomId, infoMessage);
             }
-            if(messageUnreadService.getUnreadCount(roomId)) {
-                // 해당 채팅방에 안읽은 메시지가 존재하는 경우
-                /*
-                 *   2-1. 해당 방에 unread 메시지가 저장되어있을 때
-                 *       2-1-1. 나의 id와 저장된 userId가 다른 경우 (내가 읽지 않은 메시지가 있다는 뜻 -> 이제 읽음 처리 된 메시지들) : redis에서 삭제 -> 채팅 내역들 보내주고
-                 *       2-1-2. id가 같은 경우 : 안읽은 메시지 개수 보내주기 -> 프론트에서 해당 개수만큼 (아래부터) '안읽음' 보여주기
-                 *   2-2. 해당 방에 unread 메시지가 없을 경우
-                 *       2-2-1. 그냥 원래대로
-                */
-                messageUnreadService.removeUnread(roomId, userId);
-//                if(unreadCount > 0){
-//                    messageUnreadService.removeUnread(roomId, userId);
-//                } else {
-//                    // 채팅방에 내가 보낸 메시지를 상대방이 안읽은 경우 : 안읽은 메시지 개수 보내주기 -> 프론트에서 해당 개수만큼 (아래부터) '안읽음' 보여주기
-//                    System.out.println("📝 상대방이 현재 안읽은 메시지가 있습니다!!" + messageUnreadService.getOtherUserUnreadCount(roomId) + "개");
-//                }
-            }
         }
     }
 

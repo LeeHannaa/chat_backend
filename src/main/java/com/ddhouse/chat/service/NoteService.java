@@ -32,12 +32,6 @@ public class NoteService {
     private final NoteUnreadService noteUnreadService;
 
     public void sendNoteNonMember(NonMemberNoteDto nonMemberNoteDto){
-        /*
-        1. 비회원 유저는 한번의 발신만 가능 (전화번호를 입력해서)
-        2. 매물 등록자는 비회원 유저의 전화번호를 통해 문의 내용을 확인하고 연락한다.
-        3. 쪽지 저장
-        4. 실시간으로 매물 등록자에게 쪽지가 왔음을 알린다.
-        */
         Apt apt = aptService.findByAptId(nonMemberNoteDto.getAptId());
         Note note = noteRepository.save(Note.save(nonMemberNoteDto, apt));
 

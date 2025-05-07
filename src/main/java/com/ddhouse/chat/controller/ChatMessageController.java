@@ -43,44 +43,24 @@ public class ChatMessageController {
     //메세지 송신 및 수신
     @MessageMapping("/message")
     public Mono<ResponseEntity<Void>> receiveMessage(@Payload ChatMessageRequestDto chatMessageRequestDto) {
-        System.out.println("메시지 수신 : " + chatMessageRequestDto.getMsg());
-        // TODO G **: 현재 채팅방에 있는 모든 인원을 리시버 id로 저장 (List) 나 빼고
         // 채팅방에 나 빼고 존재하는 유저들
         List<Long> receiverIds = chatMessageService.findReceiverId(chatMessageRequestDto);
-        // TODO G **: 현재 접속한 수만 가져오는게 아니라 접속한 사람의 userId(value값)도 가져오기 -> 채팅방 인원 id랑 비교 후 접속하지 않은 사용자에게 알림 처리 및 redis에 안읽은 사용자로 저장
         // 현재 채팅방에 입장한 유저들 (나빼고)
         List<Long> userIdsInRoom = roomUserCountService.getUserIdsInChatRoom(chatMessageRequestDto.getRoomId(), chatMessageRequestDto.getWriterId());
         // 해당 채팅방
         ChatRoom chatRoom = chatService.findChatRoomByRoomId(chatMessageRequestDto.getRoomId());
 
-        /*
-        * 3. 채팅 리스트에 들어가는 경우
-        *   3-1. 각 방의 라스트 채팅 내용 불러오면서 redis에 각 방의 안읽은 채팅 개수들 같이 넣어서 보내주기
-        * 4. 채팅방으로 이동이 가능한 페이지에 있는 경우
-        *   4-1. redis에서 unread에 메시지가 한개 이상이라도 있다면 알림처리된 아이콘으로 변경할 수 있도록 api 내용 보내주기
-        */
-        // TODO G **: 한번 단체 채팅이면 영원한 단체 채팅
         return chatMessageService.saveChatMessage(chatMessageRequestDto).flatMap(message -> {
-            /*
-            1.  현재 채팅방이 단체 채팅방인지 1:1 채팅방인지 보고 상대가 나갔다면 바로 다시 보내는 로직 적용
-            */
-            // 메시지를 해당 채팅방 구독자들에게 전송
             if(!chatRoom.getIsGroup()){ // 1:1 채팅방
                 UserChatRoom userChatRoom = chatMessageService.getUserInChatRoom(receiverIds.get(0), chatMessageRequestDto.getRoomId());
                 if(!userChatRoom.getIsInRoom()){ // 방을 나갔으면 다시 방에 들어오게 되는 로직
-                    System.out.println("방을 나간 유저에게 보내는 경우!!!");
-                    // 1. isInRoom을 True로 변경
                     chatMessageService.saveReEntryUserInChatRoom(userChatRoom);
-                    // 2. ChatRoom에 memberNum 증가
                     chatService.increaseNumberInChatRoom(chatMessageRequestDto.getRoomId());
                 }
-            } else{ // 단체 채팅방
-
             }
-            // TODO G **: 해당 메시지를 읽지 않은 유저의 수를 반환하기
             int countInRoom = roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId());
             int unreadCountByMsgId = chatService.findChatRoomByRoomId(chatMessageRequestDto.getRoomId()).getMemberNum() - countInRoom;
-
+            // [ 현재 채팅방에 접속한 경우 필요한 데이터 실시간 전달 ]
             template.convertAndSend("/topic/chatroom/" + chatMessageRequestDto.getRoomId(),
                     Map.of(
                             "type", "CHAT",
@@ -100,7 +80,7 @@ public class ChatMessageController {
                                 "type", "CHATLIST",
                                 "message", ChatRoomUpdateDto.from(chatMessageRequestDto, unreadCount, chatRoom.getMemberNum())
                         ));
-                // TODO G **: 단체 채팅방에 있는 유저들의 receiverId 각각 전송
+                // FCM 알림 전송
                 String fcmToken = userService.findFcmTokenByUserId(userId);
                 String body = userService.findNameByUserId(chatMessageRequestDto.getWriterId()) + " : " + chatMessageRequestDto.getMsg();
                 if (roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId()) < 2 && fcmToken != null) {
@@ -154,8 +134,6 @@ public class ChatMessageController {
                 "type", "DELETE",
                 "messageId", msgId.toString()
         );
-
-        // 3. 해당 채팅방 topic으로 전송
         template.convertAndSend("/topic/chatroom/" + roomIdToDeleteMsg, deleteMessage);
         return ResponseEntity.ok().build();
     }

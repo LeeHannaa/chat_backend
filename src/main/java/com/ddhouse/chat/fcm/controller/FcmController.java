@@ -12,25 +12,9 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/fcmtoken")
 public class FcmController {
     private final UserService userService;
-    private final FcmService fcmService;
 
     @PostMapping("/save")
     public ResponseEntity<Void> postFcmToken(@RequestBody FcmTokenSaveRequest fcmTokenSaveRequest){
         return userService.addFcmToken(fcmTokenSaveRequest);
     }
-
-//    @PostMapping("/message") // 수동버전
-//    public ResponseEntity pushMessage(@RequestParam Long myId, @RequestBody FcmTokenRequestDto fcmRequestDto) throws IOException {
-//        String fcmToken = userService.findFcmTokenByUserId(myId);
-//        System.out.println(fcmToken + " "
-//                +fcmRequestDto.getTitle() + " " + fcmRequestDto.getBody());
-//
-//        fcmService.sendMessageTo(
-//                fcmToken,
-//                fcmRequestDto.getTitle(),
-//                fcmRequestDto.getBody(),
-//                roomId);
-//        return ResponseEntity.ok().build();
-//    }
-
 }
