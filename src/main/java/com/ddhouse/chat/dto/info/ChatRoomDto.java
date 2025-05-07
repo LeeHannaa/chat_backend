@@ -25,15 +25,15 @@ public class ChatRoomDto {
     private ChatRoom chatRoom;
     private Long unreadCount;
 
+
+    // 처음 채팅방을 생성할 때 (문의 -> 채팅방 생성)
     public static ChatRoomDto createChatRoomDto(Apt apt, User user) {
         return ChatRoomDto.builder()
                 .name(apt.getName())
                 .memberNum(2)
                 .apt(apt)
                 .user(user)
-                // TODO : TIMEERROR
-//                .regDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
-                .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul"))) // 처음 생성 할 때
+                .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .lastMsg("")
                 .build();
     }

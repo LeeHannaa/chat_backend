@@ -20,8 +20,7 @@ public class UserChatRoom extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-//    private Long consultId; // 매물 등록자 id
-    private Boolean isInRoom; // 채팅방에 있는지
+    private Boolean isInRoom;
     private LocalDateTime entryTime;
 
     @ManyToOne
@@ -34,9 +33,7 @@ public class UserChatRoom extends BaseEntity {
 
     public static UserChatRoom from(ChatRoomDto dto, ChatRoom chatRoom) {
         return UserChatRoom.builder()
-//                .consultId(dto.getApt().getUser().getId())
                 .isInRoom(Boolean.TRUE)
-                // TODO : TIMEERROR
                 .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .user(dto.getUser())
                 .chatRoom(chatRoom)
@@ -44,9 +41,7 @@ public class UserChatRoom extends BaseEntity {
     }
     public static UserChatRoom otherFrom(ChatRoomDto dto, ChatRoom chatRoom) {
         return UserChatRoom.builder()
-//                .consultId(dto.getApt().getUser().getId())
                 .isInRoom(Boolean.TRUE)
-                // TODO : TIMEERROR
                 .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .user(dto.getApt().getUser())
                 .chatRoom(chatRoom)
@@ -70,18 +65,9 @@ public class UserChatRoom extends BaseEntity {
     }
 
     public void reEntryInChatRoom() {
-        if(!this.isInRoom){
+        if (!this.isInRoom) {
             this.isInRoom = Boolean.TRUE;
         }
-    }
-
-    public static UserChatRoom addUsser(User user, ChatRoom chatRoom) {
-        return UserChatRoom.builder()
-                .isInRoom(Boolean.TRUE)
-                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
-                .user(user)
-                .chatRoom(chatRoom)
-                .build();
     }
 }
 

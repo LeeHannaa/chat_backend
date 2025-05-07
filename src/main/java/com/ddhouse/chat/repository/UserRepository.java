@@ -10,10 +10,4 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-
-    @Modifying
-    @Transactional
-    @Query("UPDATE User u SET u.fcmToken = :fcmToken WHERE u.id = :id")
-    int updateFcmToken(@Param("id") Long id, @Param("fcmToken") String fcmToken);
-
 }

@@ -64,9 +64,6 @@ public class MessageUnreadService {
 
     // 내가 상대방의 메시지를 안읽은 개수
     public Long getUnreadMessageCount(String roomId, String userId) {
-        // TODO G **: 현재 채팅방에 내가 읽지 않은 메시지의 개수 반환 받아서 전달하기
-//        String key = PREFIX + ":" + roomId + ":" + myId;
-//        return redisTemplate.opsForSet().size(key);
         String pattern = PREFIX + ":" + roomId + ":*";
         ScanOptions options = ScanOptions.scanOptions().match(pattern).count(100).build();
         Cursor<byte[]> cursor = redisTemplate.getConnectionFactory()
@@ -92,11 +89,6 @@ public class MessageUnreadService {
     }
 
     public void removeUnread(String roomId, String myId) {
-        // 내가 해당 방의 채팅을 다 읽은 경우 - 삭제
-        // G : 해당 메시지에 안읽은 userIds에 myId가 포함된건 다 지우기 + value가 비어진다면 해당 key 지우기
-//        String key = PREFIX + ":" + roomId + ":" + myId;
-//        redisTemplate.delete(key);
-        // unreadUsers 삭제
         redisTemplate.opsForSet().remove("unreadUsers:" + roomId, myId);
         System.out.println("채팅방에 unread 삭제 완료! myId = " + myId);
 

@@ -38,16 +38,6 @@ public class ChatMessageService {
     }
 
     public Mono<List<ChatMessageResponseDto>> findChatMessages(Long roomId, Long myId) {
-        /*
-        1. 해당 방에 메시지 내역이 잇는지 확인
-            1-1. ChatRoomMessage에서 해당 roomId가 존재하는 지 확인
-                1-1-1. 있다면 2번으로 이동
-                1-1-2. 없다면 방의 정보를 담아서 넘기기
-        2. 메시지가 있다면 해당 roomId에 해당하는 모든 ChatRoomMessage 리스트 반환
-        ** entryTime을 기준으로 이후의 메시지만 반환 **
-            2-1. 각각의 messageId를 가지고 msg를 받아와서 dto에 저장
-            2-2. ChatRoomMessage에 createTime을 기준으로 정렬 후 넘기기
-        */
         List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findAllByChatRoomId(roomId);
         if(chatRoomMessages.isEmpty()){
             System.out.println("채팅 내역이 없는 경우 (채팅방만 존재) -> 채팅방의 정보만 보내기! ");
@@ -56,8 +46,6 @@ public class ChatMessageService {
             );
             return Mono.just(Collections.singletonList(chatMessageResponseCreateDto));
         }
-        // UserChatRoom에서 해당 userId를 통해 entryTime을 가져오기
-        // entryTime을 가지고 ChatRoomMessage에서 regDate가 해당 entryTime 이후의 내용들만 메시지를 담아서 보내기
         LocalDateTime standardTime = userChatRoomRepository
                 .findByUserIdAndChatRoomId(myId, roomId)
                 .orElseThrow(() -> new NotFoundException("채팅방 정보가 없습니다."))
@@ -102,9 +90,7 @@ public class ChatMessageService {
 
     public Mono<List<ChatMessageResponseDto>> getChatRoomByAptIdAndUserId(Long aptId, Long myId) {
         // 1. 기존에 채팅하던 방이 있는 경우
-        // 1-1. 내 아이디로 나의 채팅방 불러오기
         List<ChatRoomForAptDto> chatRooms = chatService.findMyChatRoomListForApt(myId);
-        // 1-2. chatRooms에서 aptId랑 파라미터 aptId랑 비교해서 동일한 데이터가 있으면 채팅방이 있는 경우!
         if (!chatRooms.isEmpty()) {
             for (ChatRoomForAptDto chatRoomForAptDto : chatRooms) {
                 if (chatRoomForAptDto.getApt() != null && chatRoomForAptDto.getApt().getId().equals(aptId)) {
@@ -112,7 +98,6 @@ public class ChatMessageService {
                 }
             }
         }
-
         // 2. 방을 생성해야하는 경우
         Optional<Apt> aptOptional = aptRepository.findById(aptId);
         if (aptOptional.isPresent()) {
@@ -144,12 +129,6 @@ public class ChatMessageService {
 
 
     public List<Long> findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기
-        // TODO G **: 채팅방에 있는 모든 userId를 담은 List를 반환
-        /*
-        1. 채팅방 id가 같은 userChatRoom을 다 가지고 오기
-        2. 가져온 데이터를 확인하면서 writerId랑 다른 id가 receiverId.
-        3. 찾은 receiverId를 반환하기 -> 단체 채팅으로 넘어간다면 리스트로 반환? 음 이건 고민해보기
-        */
         return userChatRoomRepository.findAllByChatRoomId(chatMessageRequestDto.getRoomId())
                 .stream()
                 .map(userChatRoom -> userChatRoom.getUser().getId())

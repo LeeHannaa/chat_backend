@@ -37,7 +37,7 @@ public class ChatController {
         return ResponseEntity.ok().body(newChatRoom);
     }
 
-    @PostMapping("/invite/user/group") // 단체 채팅방 유저 초대
+    @PostMapping("/invite/user/group")
     // TODO : userId, roomId 이렇게 받아오기
     public ResponseEntity<UserChatRoom> inviteUserGroupChatRoom(@RequestBody InviteGroupRequestDto inviteGroupRequestDto) {
         UserChatRoom userChatRoom = chatService.inviteGroupChatRoom(inviteGroupRequestDto);

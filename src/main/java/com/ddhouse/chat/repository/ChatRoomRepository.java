@@ -6,7 +6,4 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface ChatRoomRepository extends JpaRepository<ChatRoom, Long> {
-//    Optional<ChatRoom> findByAptIdAndUserId(Long aptId, Long userId);
-//    List<ChatRoom> findByUserId(Long userId);
-
 }
