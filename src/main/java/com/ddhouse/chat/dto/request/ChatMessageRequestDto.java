@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Builder
-public class ChatMessageRequestDto{ // 프론트가 백으로 주는 정보
+public class ChatMessageRequestDto{
     private Long roomId;
     private String chatName;
     private Long writerId;

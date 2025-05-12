@@ -87,6 +87,7 @@ public class ChatMessageController {
                     try {
                         fcmService.sendMessageTo(
                                 FcmDto.chat(fcmToken, body, chatMessageRequestDto.getRoomId().toString(), chatRoom.getName()));
+                        System.out.println("fcm 알림 전송 완료!");
                     } catch (IOException e) {
                         System.err.println("FCM 전송 실패: " + e.getMessage());
                     }

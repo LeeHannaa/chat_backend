@@ -39,7 +39,6 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
                 .build();
     }
 
-    // TODO G : 여기!!!!!!!
     public static ChatMessageResponseToChatRoomDto deleteInviteFrom (ChatRoomMessage chatRoomMessage, String msg, UUID beforeMsgId) {
         return ChatMessageResponseToChatRoomDto.builder()
                 .id(chatRoomMessage.getMessageId())

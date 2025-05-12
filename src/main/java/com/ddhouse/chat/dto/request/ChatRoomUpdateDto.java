@@ -12,8 +12,8 @@ import java.time.ZoneId;
 @Builder
 public class ChatRoomUpdateDto {
     private Long roomId;
-    private String chatName;
-    private String msg;
+    private String name;
+    private String lastMsg;
     private int memberNum;
     private LocalDateTime updateLastMsgTime;
     private Long unreadCount;
@@ -21,8 +21,8 @@ public class ChatRoomUpdateDto {
     public static ChatRoomUpdateDto from (ChatMessageRequestDto chatMessageRequestDto, Long count, int memberNum) {
         return ChatRoomUpdateDto.builder()
                 .roomId(chatMessageRequestDto.getRoomId())
-                .chatName(chatMessageRequestDto.getChatName())
-                .msg(chatMessageRequestDto.getMsg())
+                .name(chatMessageRequestDto.getChatName())
+                .lastMsg(chatMessageRequestDto.getMsg())
                 .memberNum(memberNum)
                 .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .unreadCount(count)

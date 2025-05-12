@@ -34,7 +34,6 @@ public class WebSocketEventListener {
             accessor.getSessionAttributes().put("myId", userId);
             System.out.println("✅ 사용자 입장: " + roomId + ", 접속자 id : " + userId);
             int userCount = roomUserCountService.getUserCount(Long.valueOf(roomId));
-            // TODO : 상대방 입장 시 상대가 해당 채팅방에서 읽지 않았던 메시지 개수만큼 정보 전달!
             Long NumberToBeRead = messageUnreadService.getUnreadMessageCount(roomId.toString(), userId.toString());
             if (userCount >= 2) {
                 Map<String, Object> infoMessage = Map.of(
@@ -43,6 +42,12 @@ public class WebSocketEventListener {
                 );
                 messagingTemplate.convertAndSend("/topic/chatroom/" + roomId, infoMessage);
             }
+            if(NumberToBeRead > 0){
+                messageUnreadService.removeUnread(roomId, userId);
+            }
+//            if(messageUnreadService.getMessageUnreadCount(roomId)) {
+//                messageUnreadService.removeUnread(roomId, userId);
+//            }
         }
     }
 
