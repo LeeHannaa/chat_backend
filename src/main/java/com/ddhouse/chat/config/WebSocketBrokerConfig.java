@@ -1,6 +1,6 @@
 package com.ddhouse.chat.config;
 
-import com.ddhouse.chat.handler.StompHandler;
+import com.ddhouse.chat.handler.StompChannelInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.messaging.simp.config.ChannelRegistration;
@@ -11,8 +11,7 @@ import org.springframework.web.socket.config.annotation.*;
 @EnableWebSocketMessageBroker
 @RequiredArgsConstructor
 public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
- private final StompHandler stompHandler;
-
+ private final StompChannelInterceptor stompChannelInterceptor;
 
  @Override
  public void registerStompEndpoints(StompEndpointRegistry registry) {
@@ -41,7 +40,7 @@ public class WebSocketBrokerConfig implements WebSocketMessageBrokerConfigurer {
 
  @Override
  public void configureClientInboundChannel(ChannelRegistration registration) {
-  registration.interceptors(stompHandler); // 여기서 interceptor 등록!
+  registration.interceptors(stompChannelInterceptor);
  }
 
 }
