@@ -12,25 +12,30 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+
 @Component
 @RequiredArgsConstructor
 public class StompChannelInterceptor implements ChannelInterceptor {
     private final RoomUserCountService roomUserCountService;
     private final MessageUnreadService messageUnreadService;
     private final ApplicationEventPublisher eventPublisher;
+    private final Map<String, String> subscriptionIdToUserId = new ConcurrentHashMap<>();
 
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 
-        String sessionId = accessor.getSessionId();
+        String subscriptionId = accessor.getSubscriptionId();
         String userId = accessor.getFirstNativeHeader("myId");
         String roomId = extractRoomIdFromDestination(accessor.getDestination()); // 예: /topic/chatroom/123
 
         if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
             // 구독 (입장)
             if (roomId != null && userId != null) {
+                subscriptionIdToUserId.put(subscriptionId, userId);
                 roomUserCountService.addUserInChatRoom(roomId, userId);
                 Long unread = messageUnreadService.getUnreadMessageCount(roomId, userId);
 
@@ -45,6 +50,11 @@ public class StompChannelInterceptor implements ChannelInterceptor {
             }
 
         } else if (StompCommand.UNSUBSCRIBE.equals(accessor.getCommand())) {
+            subscriptionId = accessor.getSubscriptionId();
+            roomId = subscriptionId.replace("chatroom-", "");
+            userId = subscriptionIdToUserId.get(subscriptionId);
+            System.out.println("userId랑 roomId 항상 확인해보기 : " + userId + ", " + roomId);
+
             // 구독 취소 (퇴장)
             if (roomId != null && userId != null) {
                 roomUserCountService.outUserInChatRoom(roomId, userId);
