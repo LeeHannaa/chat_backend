@@ -3,6 +3,7 @@ package com.ddhouse.chat.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -16,17 +17,16 @@ import java.util.stream.Collectors;
 public class RoomUserCountService {
     private final StringRedisTemplate redisTemplate;
 
-    private String getRoomUserCountKey(String roomId) {
-        return "chat:room:usercount:" + roomId;
-    }
-
+    @Async
     public void addUserInChatRoom(String roomId, String userId) {
-        String key = getRoomUserCountKey(roomId);
+        String key = "chat:room:usercount:" + roomId;
         redisTemplate.opsForSet().add(key, userId);
+        System.out.println("redis에 유저 카톡방 들어온 정보 저장!!");
     }
 
+    @Async
     public void outUserInChatRoom(String roomId, String userId) {
-        String key = getRoomUserCountKey(roomId);
+        String key = "chat:room:usercount:" + roomId;
         redisTemplate.opsForSet().remove(key, userId);
 
         Long size = redisTemplate.opsForSet().size(key);
@@ -34,18 +34,19 @@ public class RoomUserCountService {
         if (size != null && size <= 0) {
             redisTemplate.delete(key);
         }
+        System.out.println("redis에 유저 카톡방 나간 정보 저장!!");
     }
 
     public int getUserCount(Long roomId) {
         // TODO G **: 현재 접속한 사람의 수
-        String key = getRoomUserCountKey(roomId.toString());
+        String key = "chat:room:usercount:" + roomId.toString();
         int size = redisTemplate.opsForSet().size(key).intValue();
         return size;
     }
 
     public List<Long> getUserIdsInChatRoom(Long roomId, Long myId){
         // TODO G **: 현재 접속한 사람의 ids (나빼고)
-        String key = getRoomUserCountKey(roomId.toString());
+        String key = "chat:room:usercount:" + roomId.toString();
         Set<String> userIdStrings = redisTemplate.opsForSet().members(key);
         if (userIdStrings == null) {
             return Collections.emptyList();

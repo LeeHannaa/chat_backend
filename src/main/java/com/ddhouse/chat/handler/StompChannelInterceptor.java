@@ -10,6 +10,7 @@ import org.springframework.messaging.MessageChannel;
 import org.springframework.messaging.simp.stomp.StompCommand;
 import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -22,7 +23,6 @@ public class StompChannelInterceptor implements ChannelInterceptor {
     private final MessageUnreadService messageUnreadService;
     private final ApplicationEventPublisher eventPublisher;
     private final Map<String, String> subscriptionIdToUserId = new ConcurrentHashMap<>();
-
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
