@@ -27,14 +27,18 @@ public class RoomUserCountService {
     @Async
     public void outUserInChatRoom(String roomId, String userId) {
         String key = "chat:room:usercount:" + roomId;
+        Set<String> members = redisTemplate.opsForSet().members(key);
+        System.out.println("🧐 현재 Redis에 남아있는 유저 목록: " + members);
+        System.out.println("👤 제거하려는 유저 ID: " + userId);
         redisTemplate.opsForSet().remove(key, userId);
 
         Long size = redisTemplate.opsForSet().size(key);
+        System.out.println("🚪 유저 나감 처리: roomId=" + roomId + ", 현재 인원 수=" + size);
+
         // 0 이하일 경우 삭제
         if (size != null && size <= 0) {
             redisTemplate.delete(key);
         }
-        System.out.println("redis에 유저 카톡방 나간 정보 저장!!");
     }
 
     public int getUserCount(Long roomId) {
