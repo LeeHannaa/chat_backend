@@ -12,8 +12,6 @@ import org.springframework.messaging.simp.stomp.StompHeaderAccessor;
 import org.springframework.messaging.support.ChannelInterceptor;
 import org.springframework.stereotype.Component;
 
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 @RequiredArgsConstructor
@@ -21,45 +19,42 @@ public class StompChannelInterceptor implements ChannelInterceptor {
     private final RoomUserCountService roomUserCountService;
     private final MessageUnreadService messageUnreadService;
     private final ApplicationEventPublisher eventPublisher;
-    private final Map<String, String> subscriptionIdToUserId = new ConcurrentHashMap<>();
 
-
+    // TODO [ERROR] : 상황에 따라 myId를 잘 못가져오고 있음 -> 다 필요없고 roomId랑 userId를 헤더에 정확히 심어서 보내고 그 값을 그대로 빼서 확인하자!!
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
-
-        String subscriptionId = accessor.getSubscriptionId();
-        String userId = accessor.getFirstNativeHeader("myId");
-        String roomId = extractRoomIdFromDestination(accessor.getDestination()); // 예: /topic/chatroom/123
-
+//        String destination = accessor.getDestination();
+//        System.out.println("destination : " + destination);
         if (StompCommand.SUBSCRIBE.equals(accessor.getCommand())) {
+            String subscriptionId = accessor.getFirstNativeHeader("id");
+            System.out.println("subscriptionId 확인하기 입장시 : " + subscriptionId);
+            String roomId = extractRoomId(subscriptionId);
+            String userId = extractUserId(subscriptionId);
             // 구독 (입장)
             if (roomId != null && userId != null) {
-                subscriptionIdToUserId.put(subscriptionId, userId);
                 roomUserCountService.addUserInChatRoom(roomId, userId);
                 Long unread = messageUnreadService.getUnreadMessageCount(roomId, userId);
-
                 if (roomUserCountService.getUserCount(Long.valueOf(roomId)) >= 2) {
                     // 순환 참조 문제로 인해 EventListener로 진행
-                    eventPublisher.publishEvent(new NotificationEvent(roomId, unread, NotificationEvent.NotificationType.ENTER));
+                    eventPublisher.publishEvent(new NotificationEvent(roomId, userId, unread, NotificationEvent.NotificationType.ENTER));
                 }
                 if (unread > 0) {
                     messageUnreadService.removeUnread(roomId, userId);
                 }
                 System.out.println("✅ 구독: " + roomId + ", 유저: " + userId);
             }
-
         } else if (StompCommand.UNSUBSCRIBE.equals(accessor.getCommand())) {
-            subscriptionId = accessor.getSubscriptionId();
-            roomId = subscriptionId.replace("chatroom-", "");
-            userId = subscriptionIdToUserId.get(subscriptionId);
-            System.out.println("userId랑 roomId 항상 확인해보기 : " + userId + ", " + roomId);
+            String subscriptionId = accessor.getSubscriptionId();
+            System.out.println("subscriptionId 확인하기 퇴장시 : " + subscriptionId);
+            String roomId = extractRoomId(subscriptionId);
+            String userId = extractUserId(subscriptionId);
 
             // 구독 취소 (퇴장)
             if (roomId != null && userId != null) {
                 roomUserCountService.outUserInChatRoom(roomId, userId);
                 // 순환 참조 문제로 인해 EventListener로 진행
-                eventPublisher.publishEvent(new NotificationEvent(roomId, null, NotificationEvent.NotificationType.LEAVE));
+                eventPublisher.publishEvent(new NotificationEvent(roomId, userId,null, NotificationEvent.NotificationType.LEAVE));
                 System.out.println("👋 구독 취소: " + roomId + ", 유저: " + userId);
             }
         }
@@ -67,11 +62,20 @@ public class StompChannelInterceptor implements ChannelInterceptor {
         return message;
     }
 
-    private String extractRoomIdFromDestination(String destination) {
-        if (destination != null && destination.startsWith("/topic/chatroom/")) {
-            return destination.substring("/topic/chatroom/".length());
+    // [해결책1] subscriptionId 예: chatroom-23-user-456
+    String extractRoomId(String subscriptionId) {
+        if (subscriptionId != null && subscriptionId.startsWith("chatroom-") && subscriptionId.contains("-user-")) {
+            return subscriptionId.substring("chatroom-".length(), subscriptionId.indexOf("-user-"));
         }
         return null;
     }
+
+    String extractUserId(String subscriptionId) {
+        if (subscriptionId != null && subscriptionId.contains("-user-")) {
+            return subscriptionId.substring(subscriptionId.indexOf("-user-") + "-user-".length());
+        }
+        return null;
+    }
+
 }
 

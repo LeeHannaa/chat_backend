@@ -4,6 +4,7 @@ import com.ddhouse.chat.dto.NotificationEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
 import java.util.Map;
@@ -14,6 +15,7 @@ public class NotificationEventListener {
 
     private final SimpMessageSendingOperations messagingTemplate;
 
+    @Async
     @EventListener
     public void handleNotification(NotificationEvent event) {
         if (event.getType() == NotificationEvent.NotificationType.ENTER) {
