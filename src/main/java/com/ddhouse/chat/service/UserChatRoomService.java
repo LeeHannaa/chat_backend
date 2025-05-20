@@ -1,6 +1,7 @@
 package com.ddhouse.chat.service;
 
 import com.ddhouse.chat.domain.*;
+import com.ddhouse.chat.dto.ChatRoomCreateDto;
 import com.ddhouse.chat.dto.request.UserChatRoomAddDto;
 import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseToChatRoomDto;
 import com.ddhouse.chat.exception.NotFoundException;
@@ -14,6 +15,7 @@ import reactor.core.publisher.Mono;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -56,5 +58,16 @@ public class UserChatRoomService {
         userChatRoomRepository.saveAll(userChatRooms);
 
 
+    }
+
+    public UserChatRoom findByUserAndChatRoom(List<ChatRoom> chatRooms, User user) {
+        // TODO : 여기서 확인하고 있으면 넘겨주고 아니면 null 넘겨줘야함!!
+        for (ChatRoom chatRoom : chatRooms) {
+            Optional<UserChatRoom> userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(user.getId(), chatRoom.getId());
+            if (userChatRoom.isPresent()) {
+                return userChatRoom.get();
+            }
+        }
+        return null;
     }
 }

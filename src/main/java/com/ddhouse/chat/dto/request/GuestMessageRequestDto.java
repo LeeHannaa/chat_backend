@@ -7,7 +7,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @Builder
-public class NonMemberNoteDto {
+public class GuestMessageRequestDto {
     Long aptId;
     String phoneNumber;
     String noteText;

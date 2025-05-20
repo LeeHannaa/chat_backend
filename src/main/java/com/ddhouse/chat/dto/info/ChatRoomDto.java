@@ -27,6 +27,7 @@ public class ChatRoomDto {
 
 
     // 처음 채팅방을 생성할 때 (문의 -> 채팅방 생성)
+    // TODO : 아파트랑 채팅방이랑 관련 없음
     public static ChatRoomDto createChatRoomDto(Apt apt, User user) {
         return ChatRoomDto.builder()
                 .name(apt.getName())

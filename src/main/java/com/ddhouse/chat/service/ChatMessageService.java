@@ -1,8 +1,11 @@
 package com.ddhouse.chat.service;
 
 import com.ddhouse.chat.domain.*;
+import com.ddhouse.chat.dto.ChatRoomCreateDto;
+import com.ddhouse.chat.dto.FcmDto;
 import com.ddhouse.chat.dto.info.ChatRoomForAptDto;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
+import com.ddhouse.chat.dto.request.GuestMessageRequestDto;
 import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseCreateDto;
 import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseDto;
 import com.ddhouse.chat.dto.info.ChatRoomDto;
@@ -16,6 +19,7 @@ import org.springframework.stereotype.Service;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,6 +34,9 @@ public class ChatMessageService {
     private final UserRepository userRepository;
     private final AptRepository aptRepository;
     private final ChatService chatService;
+    private final UserService userService;
+    private final AptService aptService;
+    private final UserChatRoomService userChatRoomService;
     private final ChatRoomMessageRepository chatRoomMessageRepository;
     private final ChatRoomMessageService chatRoomMessageService;
     private final MessageUnreadService messageUnreadService;
@@ -144,5 +151,47 @@ public class ChatMessageService {
     public void saveReEntryUserInChatRoom(UserChatRoom userChatRoom){
         userChatRoom.reEntryInChatRoom();
         userChatRoomRepository.save(userChatRoom);
+    }
+
+
+    public void sendMessageGuest(GuestMessageRequestDto guestMessageRequestDto){
+        /*
+        [ 비회원 매물 문의 시 채팅으로 넘어가는 과정 ]
+        1. chatRoom에서 phoneNumber로 존재하는 채팅방 있는지 확인
+        2. request에서 apt를 통해 userId를 받아오기
+        3. 1에서 존재하는 채팅방이 있었다면 UserChatRoom에서 userId랑 roomId를 통해 존재하는 방이 있는지 확인
+            3-2. 채팅방을 생성해야하는 경우
+                3-2-1. ChatRoom 생성
+                3-2-2. UserChatRoom 생성
+                3-2-3. 메시지 저장
+                3-1-2. 접속되어있지 않다면 CHATLIST로 userId 경로로 메시지 소켓 전송
+                    3-1-2-1. 메시지 안읽음 처리
+            3-1. 존재하는 채팅방이 있다면 해당 채팅방에 userId가 접속되어있는지 확인
+                3-1. 메시지 저장
+                3-1-1. 접속되어있다면 CHAT으로 메시지 소켓전송
+                    3-1-1-1. 메시지 읽음 처리 (안읽음으로 redis에 저장하는 과정 생략)
+                3-1-2. 접속되어있지 않다면 CHATLIST로 userId 경로로 메시지 소켓 전송
+                    3-1-2-1. 메시지 안읽음 처리
+        */
+        Apt apt = aptService.findByAptId(guestMessageRequestDto.getAptId());
+        User user = apt.getUser();
+        // 해당 비회원의 채팅방이 존재하는지 여부
+        List<ChatRoom> chatRooms = chatService.findChatRoomByPhoneNumber(guestMessageRequestDto.getPhoneNumber());
+        if(chatRooms == null && user != null) {
+            // 방을 생성해야하는 경우
+            UserChatRoom createdChatRoom = chatService.createChatRoomByGuest(ChatRoomCreateDto.to(guestMessageRequestDto, user));
+        } else {
+            // 비회원과 매물 소유자의 채팅방이 있는지 확인
+            // TODO : 있는지 없는지 확인하고 돌려주는 시스템으로 가야함!!
+            UserChatRoom userChatRoom = userChatRoomService.findByUserAndChatRoom(chatRooms, user);
+            if(userChatRoom != null){
+                // 기존의 채팅방이 존재하는 경우
+
+            } else {
+                // 방을 생성해야하는 경우
+                UserChatRoom createdChatRoom = chatService.createChatRoomByGuest(ChatRoomCreateDto.to(guestMessageRequestDto, user));
+            }
+
+        }
     }
 }

@@ -2,6 +2,7 @@ package com.ddhouse.chat.service;
 
 
 import com.ddhouse.chat.domain.*;
+import com.ddhouse.chat.dto.ChatRoomCreateDto;
 import com.ddhouse.chat.dto.info.ChatRoomDto;
 import com.ddhouse.chat.dto.info.ChatRoomForAptDto;
 import com.ddhouse.chat.dto.request.*;
@@ -44,6 +45,11 @@ public class ChatService {
         ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.from(chatRoomDto));
         userChatRoomRepository.save(UserChatRoom.otherFrom(chatRoomDto, chatRoom));
         return userChatRoomRepository.save(UserChatRoom.from(chatRoomDto, chatRoom));
+    }
+
+    public UserChatRoom createChatRoomByGuest(ChatRoomCreateDto chatRoomCreateDto) {
+        ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.from(chatRoomCreateDto));
+        return userChatRoomRepository.save(UserChatRoom.from(chatRoomCreateDto, chatRoom));
     }
 
     public ChatRoom createGroupChatRoom(GroupChatRoomCreateDto groupChatRoomCreateDto){
@@ -172,6 +178,11 @@ public class ChatService {
         return chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));
     }
+    public List<ChatRoom> findChatRoomByPhoneNumber(String phoneNumber) {
+        return chatRoomRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));
+    }
+
     @Transactional
     public void increaseNumberInChatRoom(Long roomId){
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)

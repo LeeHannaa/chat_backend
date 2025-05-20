@@ -5,7 +5,8 @@ import com.ddhouse.chat.domain.MessageType;
 import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.FcmDto;
 import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
-import com.ddhouse.chat.dto.request.ChatRoomUpdateDto;
+import com.ddhouse.chat.dto.request.ChatRoomListUpdateDto;
+import com.ddhouse.chat.dto.request.GuestMessageRequestDto;
 import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseDto;
 import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseToChatRoomDto;
 import com.ddhouse.chat.fcm.service.FcmService;
@@ -78,7 +79,7 @@ public class ChatMessageController {
                         "/topic/user/" + userId,
                         Map.of(
                                 "type", "CHATLIST",
-                                "message", ChatRoomUpdateDto.from(chatMessageRequestDto, unreadCount, chatRoom.getMemberNum())
+                                "message", ChatRoomListUpdateDto.from(chatMessageRequestDto, unreadCount, chatRoom.getMemberNum())
                         ));
                 // FCM 알림 전송
                 String fcmToken = userService.findFcmTokenByUserId(userId);
@@ -136,6 +137,13 @@ public class ChatMessageController {
                 "messageId", msgId.toString()
         );
         template.convertAndSend("/topic/chatroom/" + roomIdToDeleteMsg, deleteMessage);
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/send/guest")
+    public ResponseEntity<Void> sendNoteNonMember(@RequestBody GuestMessageRequestDto guestMessageRequestDto) {
+        // 비회원 유저가 쪽지 문의 남기는 경우
+        chatMessageService.sendMessageGuest(guestMessageRequestDto);
         return ResponseEntity.ok().build();
     }
 }
