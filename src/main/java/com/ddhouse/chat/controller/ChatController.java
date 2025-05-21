@@ -2,10 +2,10 @@ package com.ddhouse.chat.controller;
 
 import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.domain.UserChatRoom;
-import com.ddhouse.chat.dto.info.ChatRoomDto;
-import com.ddhouse.chat.dto.request.GroupChatRoomCreateDto;
-import com.ddhouse.chat.dto.request.InviteGroupRequestDto;
-import com.ddhouse.chat.dto.response.ChatRoomInfoResponseDto;
+import com.ddhouse.chat.dto.ChatRoomDto;
+import com.ddhouse.chat.dto.request.group.GroupChatRoomCreateDto;
+import com.ddhouse.chat.dto.request.group.InviteGroupRequestDto;
+import com.ddhouse.chat.dto.response.chatRoom.ChatRoomListResponseDto;
 import com.ddhouse.chat.service.ChatService;
 import com.ddhouse.chat.service.MessageUnreadService;
 import lombok.RequiredArgsConstructor;
@@ -46,8 +46,8 @@ public class ChatController {
 
 
     @GetMapping
-    public Mono<ResponseEntity<List<ChatRoomInfoResponseDto>>> getMyChatRoomList(@RequestParam("myId") Long myId) {
-        List<ChatRoomInfoResponseDto> responses = chatService.findMyChatRoomList(myId);
+    public Mono<ResponseEntity<List<ChatRoomListResponseDto>>> getMyChatRoomList(@RequestParam("myId") Long myId) {
+        List<ChatRoomListResponseDto> responses = chatService.findMyChatRoomList(myId);
         if (responses.isEmpty()) {
             System.out.println("현재 내가 들어가있는 채팅방 없음!!!!");
             return Mono.just(ResponseEntity.ok(Collections.emptyList()));

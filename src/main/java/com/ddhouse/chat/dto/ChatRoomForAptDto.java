@@ -1,4 +1,4 @@
-package com.ddhouse.chat.dto.info;
+package com.ddhouse.chat.dto;
 
 import com.ddhouse.chat.domain.Apt;
 import com.ddhouse.chat.domain.ChatRoom;

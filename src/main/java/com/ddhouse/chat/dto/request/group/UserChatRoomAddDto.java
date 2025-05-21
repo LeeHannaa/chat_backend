@@ -1,4 +1,4 @@
-package com.ddhouse.chat.dto.request;
+package com.ddhouse.chat.dto.request.group;
 
 import lombok.Builder;
 import lombok.Getter;

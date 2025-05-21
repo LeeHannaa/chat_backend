@@ -3,12 +3,13 @@ package com.ddhouse.chat.controller;
 import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.domain.MessageType;
 import com.ddhouse.chat.domain.UserChatRoom;
-import com.ddhouse.chat.dto.FcmDto;
-import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
-import com.ddhouse.chat.dto.request.ChatRoomListUpdateDto;
-import com.ddhouse.chat.dto.request.GuestMessageRequestDto;
-import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseDto;
-import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseToChatRoomDto;
+import com.ddhouse.chat.dto.SaveMessageDto;
+import com.ddhouse.chat.dto.response.FcmDto;
+import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
+import com.ddhouse.chat.dto.response.chatRoom.ChatRoomListResponseDto;
+import com.ddhouse.chat.dto.request.message.GuestMessageRequestDto;
+import com.ddhouse.chat.dto.response.message.ChatMessageResponseDto;
+import com.ddhouse.chat.dto.response.message.ChatMessageResponseToChatRoomDto;
 import com.ddhouse.chat.fcm.service.FcmService;
 import com.ddhouse.chat.service.*;
 import lombok.RequiredArgsConstructor;
@@ -51,10 +52,10 @@ public class ChatMessageController {
         // 해당 채팅방
         ChatRoom chatRoom = chatService.findChatRoomByRoomId(chatMessageRequestDto.getRoomId());
 
-        return chatMessageService.saveChatMessage(chatMessageRequestDto).flatMap(message -> {
-            if(!chatRoom.getIsGroup()){ // 1:1 채팅방
+        return chatMessageService.saveChatMessage(SaveMessageDto.from(chatMessageRequestDto)).flatMap(message -> {
+            if(!chatRoom.getIsGroup()) { // 1:1 채팅방
                 UserChatRoom userChatRoom = chatMessageService.getUserInChatRoom(receiverIds.get(0), chatMessageRequestDto.getRoomId());
-                if(!userChatRoom.getIsInRoom()){ // 방을 나갔으면 다시 방에 들어오게 되는 로직
+                if(!userChatRoom.getIsInRoom()) { // 방을 나갔으면 다시 방에 들어오게 되는 로직
                     chatMessageService.saveReEntryUserInChatRoom(userChatRoom);
                     chatService.increaseNumberInChatRoom(chatMessageRequestDto.getRoomId());
                 }
@@ -79,7 +80,7 @@ public class ChatMessageController {
                         "/topic/user/" + userId,
                         Map.of(
                                 "type", "CHATLIST",
-                                "message", ChatRoomListUpdateDto.from(chatMessageRequestDto, unreadCount, chatRoom.getMemberNum())
+                                "message", ChatRoomListResponseDto.from(chatMessageRequestDto, unreadCount, chatRoom.getMemberNum())
                         ));
                 // FCM 알림 전송
                 String fcmToken = userService.findFcmTokenByUserId(userId);
@@ -141,9 +142,9 @@ public class ChatMessageController {
     }
 
     @PostMapping("/send/guest")
-    public ResponseEntity<Void> sendNoteNonMember(@RequestBody GuestMessageRequestDto guestMessageRequestDto) {
+    public Mono<ResponseEntity<Void>> sendNoteNonMember(@RequestBody GuestMessageRequestDto guestMessageRequestDto) {
         // 비회원 유저가 쪽지 문의 남기는 경우
         chatMessageService.sendMessageGuest(guestMessageRequestDto);
-        return ResponseEntity.ok().build();
+        return Mono.just(ResponseEntity.ok().build());
     }
 }

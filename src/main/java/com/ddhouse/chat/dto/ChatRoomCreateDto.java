@@ -1,8 +1,7 @@
 package com.ddhouse.chat.dto;
 
-import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.domain.User;
-import com.ddhouse.chat.dto.request.GuestMessageRequestDto;
+import com.ddhouse.chat.dto.request.message.GuestMessageRequestDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -14,6 +13,7 @@ import java.time.ZoneId;
 @Setter
 @Builder
 public class ChatRoomCreateDto {
+    // 채팅방을 처음 생성하는 경우 (일단 비회원)
     private User user;
     private int memberNum;
     private String phoneNumber; // 비회원 매물 문의 시 등록

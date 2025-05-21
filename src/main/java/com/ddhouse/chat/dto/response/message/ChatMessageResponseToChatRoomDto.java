@@ -1,9 +1,10 @@
-package com.ddhouse.chat.dto.response.ChatMessage;
+package com.ddhouse.chat.dto.response.message;
 
 import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.domain.ChatRoomMessage;
 import com.ddhouse.chat.domain.MessageType;
-import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
+import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
+import com.ddhouse.chat.dto.request.message.GuestMessageRequestDto;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
@@ -36,6 +37,19 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
                 .msg(chatMessage.getMsg())
                 .createdDate(chatMessageRequestDto.getRegDate())
                 .unreadCount(unreadCount)
+                .build();
+    }
+
+    public static ChatMessageResponseToChatRoomDto guest (ChatMessage chatMessage, GuestMessageRequestDto guestMessageRequestDto, Long roomId, MessageType messageType) {
+        return ChatMessageResponseToChatRoomDto.builder()
+                .id(chatMessage.getId())
+                .chatName(guestMessageRequestDto.getPhoneNumber())
+                .roomId(roomId)
+                .writerName(guestMessageRequestDto.getPhoneNumber())
+                .type(messageType)
+                .msg(chatMessage.getMsg())
+                .createdDate(guestMessageRequestDto.getRegDate())
+                .unreadCount(0)
                 .build();
     }
 

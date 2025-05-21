@@ -1,20 +1,16 @@
 package com.ddhouse.chat.service;
 
 import com.ddhouse.chat.domain.*;
-import com.ddhouse.chat.dto.ChatRoomCreateDto;
-import com.ddhouse.chat.dto.request.UserChatRoomAddDto;
-import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseToChatRoomDto;
+import com.ddhouse.chat.dto.request.group.UserChatRoomAddDto;
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 

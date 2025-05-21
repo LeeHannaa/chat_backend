@@ -3,11 +3,12 @@ package com.ddhouse.chat.service;
 
 import com.ddhouse.chat.domain.*;
 import com.ddhouse.chat.dto.ChatRoomCreateDto;
-import com.ddhouse.chat.dto.info.ChatRoomDto;
-import com.ddhouse.chat.dto.info.ChatRoomForAptDto;
-import com.ddhouse.chat.dto.request.*;
-import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseToChatRoomDto;
-import com.ddhouse.chat.dto.response.ChatRoomInfoResponseDto;
+import com.ddhouse.chat.dto.ChatRoomDto;
+import com.ddhouse.chat.dto.ChatRoomForAptDto;
+import com.ddhouse.chat.dto.request.group.GroupChatRoomCreateDto;
+import com.ddhouse.chat.dto.request.group.InviteGroupRequestDto;
+import com.ddhouse.chat.dto.response.message.ChatMessageResponseToChatRoomDto;
+import com.ddhouse.chat.dto.response.chatRoom.ChatRoomListResponseDto;
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -99,14 +100,14 @@ public class ChatService {
         return userChatRoomRepository.save(UserChatRoom.group(chatRoom, user));
     }
 
-    public List<ChatRoomInfoResponseDto> findMyChatRoomList(Long myId) {
+    public List<ChatRoomListResponseDto> findMyChatRoomList(Long myId) {
         // 내가 문의자로 들어간 채팅방 or 내가 관리자로 있는 채팅방
         List<UserChatRoom> chatRooms = userChatRoomRepository.findByUserId(myId);
         return chatRooms.stream()
                 .filter(UserChatRoom::getIsInRoom) // 나가기 하지 않은 채팅방만
                 .map(UserChatRoom::getChatRoom)
                 .filter(chatRoom -> chatRoomMessageRepository.existsByChatRoomId(chatRoom.getId())) // 메시지가 존재하는 경우만 필터링
-                .map(ChatRoomInfoResponseDto::create)
+                .map(ChatRoomListResponseDto::create)
                 .collect(Collectors.toList());
     }
 

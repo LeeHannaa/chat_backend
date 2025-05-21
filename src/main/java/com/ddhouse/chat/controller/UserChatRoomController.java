@@ -1,6 +1,6 @@
 package com.ddhouse.chat.controller;
 
-import com.ddhouse.chat.dto.request.UserChatRoomAddDto;
+import com.ddhouse.chat.dto.request.group.UserChatRoomAddDto;
 import com.ddhouse.chat.service.UserChatRoomService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.PostMapping;
