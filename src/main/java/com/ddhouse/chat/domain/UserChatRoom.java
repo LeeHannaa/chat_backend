@@ -40,14 +40,14 @@ public class UserChatRoom extends BaseEntity {
                 .chatRoom(chatRoom)
                 .build();
     }
-    public static UserChatRoom otherFrom(ChatRoomDto dto, ChatRoom chatRoom) {
-        return UserChatRoom.builder()
-                .isInRoom(Boolean.TRUE)
-                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
-                .user(dto.getApt().getUser())
-                .chatRoom(chatRoom)
-                .build();
-    }
+//    public static UserChatRoom otherFrom(UserChatRoom userChatRoom, ChatRoom chatRoom) {
+//        return UserChatRoom.builder()
+//                .isInRoom(Boolean.TRUE)
+//                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+//                .user(dto.getApt().getUser())
+//                .chatRoom(chatRoom)
+//                .build();
+//    }
 
     public static UserChatRoom from(ChatRoomCreateDto chatRoomCreateDto, ChatRoom chatRoom) {
         // 비회원이 매물 문의했을 때 채팅 방이 생성되는 경우

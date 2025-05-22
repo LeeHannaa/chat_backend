@@ -114,35 +114,27 @@ public class ChatMessageService {
                 }
             }
         }
-        // 2. 방을 생성해야하는 경우
+//        // 2. 방을 생성해야하는 경우
         Optional<Apt> aptOptional = aptRepository.findById(aptId);
         if (aptOptional.isPresent()) {
             Apt apt = aptOptional.get();
             if (apt.getUser().getId().equals(myId)) {
                 // 내가 올린 매물 내가 문의하기 누른 경우
                 return Mono.error(new NotFlowException("비정상 플로우 : 내가 올린 매물 내가 문의하게 된 경우"));
-            } else {
-                // 새로운 방을 생성해야하는 경우 (1:1)
-                System.out.println("새로운 방 생성");
-                User user = userRepository.findById(myId).orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
-                UserChatRoom createdChatRoom = chatService.createChatRoom(ChatRoomDto.createChatRoomDto(apt, user));
-                ChatMessageResponseCreateDto newRoomInfo = ChatMessageResponseCreateDto.create(createdChatRoom);
-                return Mono.just(Collections.singletonList(newRoomInfo));
             }
         }
-        // aptId가 존재하지 않는 경우
+//            else {
+//                // 새로운 방을 생성해야하는 경우 (1:1)
+//                System.out.println("새로운 방 생성");
+//                User user = userRepository.findById(myId).orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
+//                UserChatRoom createdChatRoom = chatService.createChatRoom(ChatRoomDto.createChatRoomDto(apt, user));
+//                ChatMessageResponseCreateDto newRoomInfo = ChatMessageResponseCreateDto.create(createdChatRoom);
+//                return Mono.just(Collections.singletonList(newRoomInfo));
+//            }
+//        }
+//        // aptId가 존재하지 않는 경우
         return Mono.error(new NotFoundException("해당 매물 정보를 찾을 수 없습니다."));
     }
-
-    public Mono<ChatMessage> saveChatMessage(SaveMessageDto saveMessageDto) {
-        return chatMessageRepository.save(ChatMessage.from(saveMessageDto.getMsg()))
-                .flatMap(savedMessage -> {
-                    UUID msgId = savedMessage.getId();
-                    return chatRoomMessageService.saveChatRoomMessage(saveMessageDto, msgId)
-                            .thenReturn(savedMessage);
-                });
-    }
-
 
     public List<Long> findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기
         return userChatRoomRepository.findAllByChatRoomId(chatMessageRequestDto.getRoomId())
@@ -162,12 +154,23 @@ public class ChatMessageService {
         userChatRoomRepository.save(userChatRoom);
     }
 
+    public Mono<ChatMessage> saveChatMessage(SaveMessageDto saveMessageDto) {
+        ChatMessage chatMessage = ChatMessage.from(saveMessageDto.getMsg());
+        return chatMessageRepository.save(chatMessage)
+                .flatMap(savedMessage -> {
+                    UUID msgId = savedMessage.getId();
+                    return chatRoomMessageService.saveChatRoomMessage(saveMessageDto, msgId)
+                            .doOnSuccess(unused -> System.out.println("chatRoomMessage 저장 완료"))
+                            .thenReturn(savedMessage);
+                })
+                .doOnError(e -> System.err.println("saveChatMessage 에러: " + e.getMessage()));
+    }
 
     public Mono<ChatMessage> sendMessageGuest(GuestMessageRequestDto guestMessageRequestDto){
         Apt apt = aptService.findByAptId(guestMessageRequestDto.getAptId());
         User user = apt.getUser();
         // 해당 비회원의 채팅방이 존재하는지 여부
-        List<ChatRoom> chatRooms = chatService.findChatRoomByPhoneNumber(guestMessageRequestDto.getPhoneNumber());
+        List<ChatRoom> chatRooms = chatService.findChatRoomsByPhoneNumber(guestMessageRequestDto.getPhoneNumber());
         if(chatRooms != null && user != null){
             UserChatRoom userChatRoom = userChatRoomService.findByUserAndChatRoom(chatRooms, user);
             if(userChatRoom != null){
@@ -194,18 +197,21 @@ public class ChatMessageService {
             }
         }
         // 방을 생성해야하는 경우
-        UserChatRoom createdChatRoom = chatService.createChatRoomByGuest(ChatRoomCreateDto.to(guestMessageRequestDto, user));
+        UserChatRoom createdChatRoom = chatService.createChatRoomByGuest(ChatRoomCreateDto.guest(guestMessageRequestDto, user));
         Mono<ChatMessage> chatMessageMono = saveChatMessage(SaveMessageDto.guest(guestMessageRequestDto, createdChatRoom.getChatRoom().getId()));
+        chatMessageMono.subscribe();
         return chatMessageMono.flatMap(chatMessage -> {
             sendSocketChatListAndFcm(createdChatRoom, guestMessageRequestDto, chatMessage);
             return Mono.just(chatMessage);
         });
     }
 
+    // TODO : 실행이 안됨! 여기서부터 해결해야할듯!! 일단 비회원 쪽지 전송하고 있고, 프론트에서 채팅방 들어갔을 때 채팅도 안보임, 어디 문제인지 아직 모르겠음.
     public void sendSocketChatListAndFcm(UserChatRoom userChatRoom, GuestMessageRequestDto guestMessageRequestDto, ChatMessage chatMessage){
         // 메시지 안읽음 처리
         messageUnreadService.addUnreadChat(userChatRoom.getChatRoom().getId().toString(), userChatRoom.getUser().getId().toString(), chatMessage.getId());
         Long unreadCount = messageUnreadService.getUnreadMessageCount(userChatRoom.getChatRoom().getId().toString(),  userChatRoom.getUser().getId().toString());
+        System.out.println("방생성 후 소켓 전달 완료!!!!!! " + chatMessage);
         template.convertAndSend(
                 "/topic/user/" + userChatRoom.getUser().getId(),
                 Map.of(

@@ -1,6 +1,7 @@
 package com.ddhouse.chat.dto;
 
 import com.ddhouse.chat.domain.User;
+import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.request.message.GuestMessageRequestDto;
 import lombok.Builder;
 import lombok.Getter;
@@ -21,13 +22,23 @@ public class ChatRoomCreateDto {
     private LocalDateTime updateLastMsgTime;
 
     // 처음 채팅방을 생성할 때 (문의 -> 채팅방 생성)
-    public static ChatRoomCreateDto to(GuestMessageRequestDto guestMessageRequestDto, User user) {
+    public static ChatRoomCreateDto guest(GuestMessageRequestDto guestMessageRequestDto, User user) {
         return ChatRoomCreateDto.builder()
                 .user(user)
-                .memberNum(2)
+                .memberNum(1)
                 .phoneNumber(guestMessageRequestDto.getPhoneNumber())
                 .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .lastMsg(guestMessageRequestDto.getNoteText())
                 .build();
     }
+
+    // 처음 채팅방을 생성할 때 (문의 -> 채팅방 생성) 회원 버전
+//    public static ChatRoomCreateDto from(ChatMessageRequestDto chatMessageRequestDto, User user) {
+//        return ChatRoomCreateDto.builder()
+//                .user(user)
+//                .memberNum(2)
+//                .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+//                .lastMsg(chatMessageRequestDto.getMsg())
+//                .build();
+//    }
 }

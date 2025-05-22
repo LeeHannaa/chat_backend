@@ -42,9 +42,9 @@ public class ChatService {
     private final SimpMessageSendingOperations template;
 
 
-    public UserChatRoom createChatRoom(ChatRoomDto chatRoomDto) {
+    public UserChatRoom createChatRoom(ChatRoomDto chatRoomDto, ChatRoomDto myChatRoomDto) {
         ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.from(chatRoomDto));
-        userChatRoomRepository.save(UserChatRoom.otherFrom(chatRoomDto, chatRoom));
+        userChatRoomRepository.save(UserChatRoom.from(myChatRoomDto, chatRoom));
         return userChatRoomRepository.save(UserChatRoom.from(chatRoomDto, chatRoom));
     }
 
@@ -179,7 +179,7 @@ public class ChatService {
         return chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));
     }
-    public List<ChatRoom> findChatRoomByPhoneNumber(String phoneNumber) {
+    public List<ChatRoom> findChatRoomsByPhoneNumber(String phoneNumber) {
         return chatRoomRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));
     }

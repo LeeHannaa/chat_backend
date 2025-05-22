@@ -1,8 +1,8 @@
 package com.ddhouse.chat.controller;
 
-import com.ddhouse.chat.domain.ChatRoom;
-import com.ddhouse.chat.domain.MessageType;
-import com.ddhouse.chat.domain.UserChatRoom;
+import com.ddhouse.chat.domain.*;
+import com.ddhouse.chat.dto.ChatRoomCreateDto;
+import com.ddhouse.chat.dto.ChatRoomDto;
 import com.ddhouse.chat.dto.SaveMessageDto;
 import com.ddhouse.chat.dto.response.FcmDto;
 import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
@@ -37,6 +37,8 @@ public class ChatMessageController {
     private final RoomUserCountService roomUserCountService;
     private final MessageUnreadService messageUnreadService;
     private final ChatService chatService;
+    private final AptService aptService;
+    private final UserChatRoomService userChatRoomService;
 
 
     private final SimpMessageSendingOperations template;
@@ -45,6 +47,27 @@ public class ChatMessageController {
     //메세지 송신 및 수신
     @MessageMapping("/message")
     public Mono<ResponseEntity<Void>> receiveMessage(@Payload ChatMessageRequestDto chatMessageRequestDto) {
+        if(chatMessageRequestDto.getRoomId() == null && chatMessageRequestDto.getAptId() != null){
+            // TODO : 매물 문의를 통해 메시지를 전송한 경우
+            Apt apt = aptService.findByAptId(chatMessageRequestDto.getAptId());
+            User user = apt.getUser();
+            User me = userService.findByUserId(chatMessageRequestDto.getWriterId());
+            // 방이 존재하는 경우
+            List<ChatRoom> chatRooms = userChatRoomService.findChatRoomsByUserId(chatMessageRequestDto.getWriterId());
+            if(chatRooms != null){
+                // 방이 존재할 가능성 여부 확인
+                UserChatRoom userChatRoom = userChatRoomService.findByUserAndChatRoom(chatRooms, user);
+                if(userChatRoom != null){
+                    // 방이 존재하는 경우 -> roomId 넣어주기
+                    chatMessageRequestDto.addRoomId(userChatRoom.getChatRoom().getId());
+                }
+            }
+            if(chatMessageRequestDto.getRoomId() == null ){
+                // 방을 생성해야하는 경우
+                UserChatRoom createdChatRoom = chatService.createChatRoom(ChatRoomDto.createChatRoomDto(chatMessageRequestDto, user), ChatRoomDto.createChatRoomDto(chatMessageRequestDto, me));
+                chatMessageRequestDto.addRoomId(createdChatRoom.getChatRoom().getId());
+            }
+        }
         // 채팅방에 나 빼고 존재하는 유저들
         List<Long> receiverIds = chatMessageService.findReceiverId(chatMessageRequestDto);
         // 현재 채팅방에 입장한 유저들 (나빼고)
@@ -113,9 +136,9 @@ public class ChatMessageController {
 
     @GetMapping("/apt/find/list/{aptId}")
     // CHECK : 프론트에서 임시로 myId 받아와서 확인 (병합시 토큰으로 처리)
-    public Mono<ResponseEntity<List<ChatMessageResponseDto>>> findMessageByAptId(@PathVariable("aptId") Long roomId, @RequestParam("myId") Long myId) {
+    public Mono<ResponseEntity<List<ChatMessageResponseDto>>> findMessageByAptId(@PathVariable("aptId") Long aptId, @RequestParam("myId") Long myId) {
         System.out.println("매물id로 채팅 내역 불러오기");
-        return chatMessageService.getChatRoomByAptIdAndUserId(roomId, myId)
+        return chatMessageService.getChatRoomByAptIdAndUserId(aptId, myId)
                 .map(messages -> {
                     System.out.println("해당 채팅방의 메시지들 가져오기 결과 : " + messages);
                     return ResponseEntity.ok(messages);

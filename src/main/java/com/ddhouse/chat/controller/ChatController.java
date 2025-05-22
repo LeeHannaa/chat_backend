@@ -24,11 +24,11 @@ public class ChatController {
     private final ChatService chatService;
     private final MessageUnreadService messageUnreadService;
 
-    @PostMapping("/create") // 직접적으로 사용하지 않음
-    public ResponseEntity<Void> createChatRoom(@RequestBody ChatRoomDto chatRoomDto) {
-        chatService.createChatRoom(chatRoomDto);
-        return ResponseEntity.ok().build();
-    }
+//    @PostMapping("/create") // 직접적으로 사용하지 않음
+//    public ResponseEntity<Void> createChatRoom(@RequestBody ChatRoomDto chatRoomDto) {
+//        chatService.createChatRoom(chatRoomDto);
+//        return ResponseEntity.ok().build();
+//    }
 
     @PostMapping("/create/group") // 단체 채팅방 생성
     // TODO : 단체 채팅방 만들기 객체 설정해서 진행하면 됨!!!!

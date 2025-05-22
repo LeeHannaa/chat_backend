@@ -35,7 +35,7 @@ public class ChatRoom extends BaseEntity {
         return ChatRoom.builder()
                 .name(dto.getName())
                 .memberNum(dto.getMemberNum())
-                .apt(dto.getApt())
+//                .apt(dto.getApt())
                 .isGroup(Boolean.FALSE)
                 .build();
     }
@@ -43,7 +43,7 @@ public class ChatRoom extends BaseEntity {
     public static ChatRoom from (ChatRoomCreateDto chatRoomCreateDto) {
         // 비회원이 문의 시 채팅방이 생성되는 경우
         return ChatRoom.builder()
-                .name(chatRoomCreateDto.getName())
+//                .name(chatRoomCreateDto.getName())
                 .memberNum(chatRoomCreateDto.getMemberNum())
                 .isGroup(Boolean.FALSE)
                 .phoneNumber(chatRoomCreateDto.getPhoneNumber())

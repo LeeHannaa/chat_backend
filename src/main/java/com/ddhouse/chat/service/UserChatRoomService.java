@@ -66,4 +66,13 @@ public class UserChatRoomService {
         }
         return null;
     }
+
+
+    public List<ChatRoom> findChatRoomsByUserId(Long userId) {
+        List<UserChatRoom> chatRooms = userChatRoomRepository.findByUserId(userId);
+        return chatRooms.stream()
+                .map(UserChatRoom::getChatRoom)
+                .collect(Collectors.toList());
+    }
+
 }

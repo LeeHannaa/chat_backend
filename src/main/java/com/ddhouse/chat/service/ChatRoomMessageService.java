@@ -31,12 +31,14 @@ public class ChatRoomMessageService {
 
     public Mono<ChatRoomMessage> saveChatRoomMessage(SaveMessageDto saveMessageDto, UUID msgId){
         // TODO : 비회원인 경우 userId -> null
-        User user = userRepository.findById(saveMessageDto.getWriterId())
-                .orElseThrow(() -> new NotFoundException("해당 사용자를 찾을 수 없습니다."));
+        User user = null;
+        if(saveMessageDto.getWriterId() != null) {
+            user = userRepository.findById(saveMessageDto.getWriterId())
+                    .orElseThrow(() -> new NotFoundException("해당 사용자를 찾을 수 없습니다."));
+        }
         ChatRoom chatRoom = chatRoomRepository.findById(saveMessageDto.getRoomId())
                         .orElseThrow(() -> new NotFoundException("해당 채팅방을 찾을 수 없습니다."));
         ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(msgId, user, chatRoom, MessageType.TEXT);
-
         return Mono.just(chatRoomMessageRepository.save(chatRoomMessage));
     }
 
