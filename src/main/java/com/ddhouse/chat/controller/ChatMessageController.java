@@ -59,6 +59,7 @@ public class ChatMessageController {
                 UserChatRoom userChatRoom = userChatRoomService.findByUserAndChatRoom(chatRooms, user);
                 if(userChatRoom != null){
                     // 방이 존재하는 경우 -> roomId 넣어주기
+                    System.out.println("방이 존재하는 경우다!!!!!!!!!!!");
                     chatMessageRequestDto.addRoomId(userChatRoom.getChatRoom().getId());
                 }
             }
@@ -67,6 +68,13 @@ public class ChatMessageController {
                 UserChatRoom createdChatRoom = chatService.createChatRoom(ChatRoomDto.createChatRoomDto(chatMessageRequestDto, user), ChatRoomDto.createChatRoomDto(chatMessageRequestDto, me));
                 chatMessageRequestDto.addRoomId(createdChatRoom.getChatRoom().getId());
             }
+            // TODO : ROOM_CREATED으로 방이 생성되었거나, 메시지가 저장되었음을 클라이언트에게 알리기
+            template.convertAndSend("/topic/user/" + chatMessageRequestDto.getWriterId(),
+                    Map.of(
+                            "type", "CLEAR_ROOM",
+                            "roomId", chatMessageRequestDto.getRoomId()
+                    )
+            );
         }
         // 채팅방에 나 빼고 존재하는 유저들
         List<Long> receiverIds = chatMessageService.findReceiverId(chatMessageRequestDto);
@@ -135,7 +143,6 @@ public class ChatMessageController {
     }
 
     @GetMapping("/apt/find/list/{aptId}")
-    // CHECK : 프론트에서 임시로 myId 받아와서 확인 (병합시 토큰으로 처리)
     public Mono<ResponseEntity<List<ChatMessageResponseDto>>> findMessageByAptId(@PathVariable("aptId") Long aptId, @RequestParam("myId") Long myId) {
         System.out.println("매물id로 채팅 내역 불러오기");
         return chatMessageService.getChatRoomByAptIdAndUserId(aptId, myId)
@@ -167,7 +174,8 @@ public class ChatMessageController {
     @PostMapping("/send/guest")
     public Mono<ResponseEntity<Void>> sendNoteNonMember(@RequestBody GuestMessageRequestDto guestMessageRequestDto) {
         // 비회원 유저가 쪽지 문의 남기는 경우
-        chatMessageService.sendMessageGuest(guestMessageRequestDto);
-        return Mono.just(ResponseEntity.ok().build());
+        // 리턴값을 활용해서 리액티브 체인을 계속 연결
+        return chatMessageService.sendMessageGuest(guestMessageRequestDto)
+                .then(Mono.just(ResponseEntity.ok().build()));
     }
 }

@@ -22,14 +22,21 @@ public class ChatRoomListResponseDto {
     private LocalDateTime updateLastMsgTime;
     private Long unreadCount;
 
-    public static ChatRoomListResponseDto create(ChatRoom chatRoom) {
+    public static ChatRoomListResponseDto one(ChatRoom chatRoom, String chatName) {
+        return ChatRoomListResponseDto.builder()
+                .roomId(chatRoom.getId())
+                .name(chatName)
+                .memberNum(chatRoom.getMemberNum())
+                .build();
+    }
+
+    public static ChatRoomListResponseDto group(ChatRoom chatRoom) {
         return ChatRoomListResponseDto.builder()
                 .roomId(chatRoom.getId())
                 .name(chatRoom.getName())
                 .memberNum(chatRoom.getMemberNum())
                 .build();
     }
-
     public static ChatRoomListResponseDto from (ChatMessageRequestDto chatMessageRequestDto, Long count, int memberNum) {
         return ChatRoomListResponseDto.builder()
                 .roomId(chatMessageRequestDto.getRoomId())

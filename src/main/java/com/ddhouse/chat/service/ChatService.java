@@ -107,7 +107,26 @@ public class ChatService {
                 .filter(UserChatRoom::getIsInRoom) // 나가기 하지 않은 채팅방만
                 .map(UserChatRoom::getChatRoom)
                 .filter(chatRoom -> chatRoomMessageRepository.existsByChatRoomId(chatRoom.getId())) // 메시지가 존재하는 경우만 필터링
-                .map(ChatRoomListResponseDto::create)
+                .map(chatRoom -> {
+                    if(chatRoom.getIsGroup()){
+                        // 단톡이었으면 -> 채팅방 이름으로
+                        return ChatRoomListResponseDto.group(chatRoom);
+                    } else if (chatRoom.getPhoneNumber() != null) {
+                        // 비회원 문의 톡
+                        return ChatRoomListResponseDto.one(chatRoom, chatRoom.getPhoneNumber());
+                    } else{
+                        // 개인톡 -> 상대방 이름으로
+                        Optional<UserChatRoom> opponent = userChatRoomRepository.findOpponent(myId, chatRoom.getId());
+
+                        String chatName = opponent.stream()
+                                .map(UserChatRoom::getUser)
+                                .map(User::getName)
+                                .findFirst()
+                                .orElse("알 수 없음");
+
+                        return ChatRoomListResponseDto.one(chatRoom, chatName);
+                    }
+                })
                 .collect(Collectors.toList());
     }
 
@@ -179,6 +198,7 @@ public class ChatService {
         return chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));
     }
+
     public List<ChatRoom> findChatRoomsByPhoneNumber(String phoneNumber) {
         return chatRoomRepository.findByPhoneNumber(phoneNumber)
                 .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));

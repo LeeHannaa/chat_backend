@@ -105,35 +105,16 @@ public class ChatMessageService {
 
 
     public Mono<List<ChatMessageResponseDto>> getChatRoomByAptIdAndUserId(Long aptId, Long myId) {
-        // 1. 기존에 채팅하던 방이 있는 경우
-        List<ChatRoomForAptDto> chatRooms = chatService.findMyChatRoomListForApt(myId);
-        if (!chatRooms.isEmpty()) {
-            for (ChatRoomForAptDto chatRoomForAptDto : chatRooms) {
-                if (chatRoomForAptDto.getApt() != null && chatRoomForAptDto.getApt().getId().equals(aptId)) {
-                    return findChatMessages(chatRoomForAptDto.getRoomId(), myId);
-                }
-            }
+        // TODO : 채팅 메시지를 저장한 다음 -> 웹소켓으로 저장했다는 것을 알리고 채팅 페이지로 이동
+        // 1. 매물을 통해서는 무조건 채팅방이 존재함 -> 문의 전송 한 후 채팅 리스트 불러오기
+        User opponent = aptService.findByAptId(aptId).getUser();
+        // 두 사람이 모두 참여하고 있고 그룹채팅이 아닌 방 찾기
+        Optional<ChatRoom> chatRoom = chatRoomRepository.findPrivateChatRoomBetweenUsers(myId, opponent.getId());
+        if(chatRoom.isPresent()){
+            return findChatMessages(chatRoom.get().getId(), myId);
+        }else{
+            return Mono.error(new NotFoundException("두 사람이 모두 참여하고 있고 그룹채팅이 아닌 방 정보를 찾을 수 없습니다."));
         }
-//        // 2. 방을 생성해야하는 경우
-        Optional<Apt> aptOptional = aptRepository.findById(aptId);
-        if (aptOptional.isPresent()) {
-            Apt apt = aptOptional.get();
-            if (apt.getUser().getId().equals(myId)) {
-                // 내가 올린 매물 내가 문의하기 누른 경우
-                return Mono.error(new NotFlowException("비정상 플로우 : 내가 올린 매물 내가 문의하게 된 경우"));
-            }
-        }
-//            else {
-//                // 새로운 방을 생성해야하는 경우 (1:1)
-//                System.out.println("새로운 방 생성");
-//                User user = userRepository.findById(myId).orElseThrow(() -> new NotFoundException("사용자를 찾을 수 없습니다."));
-//                UserChatRoom createdChatRoom = chatService.createChatRoom(ChatRoomDto.createChatRoomDto(apt, user));
-//                ChatMessageResponseCreateDto newRoomInfo = ChatMessageResponseCreateDto.create(createdChatRoom);
-//                return Mono.just(Collections.singletonList(newRoomInfo));
-//            }
-//        }
-//        // aptId가 존재하지 않는 경우
-        return Mono.error(new NotFoundException("해당 매물 정보를 찾을 수 없습니다."));
     }
 
     public List<Long> findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기
@@ -199,19 +180,16 @@ public class ChatMessageService {
         // 방을 생성해야하는 경우
         UserChatRoom createdChatRoom = chatService.createChatRoomByGuest(ChatRoomCreateDto.guest(guestMessageRequestDto, user));
         Mono<ChatMessage> chatMessageMono = saveChatMessage(SaveMessageDto.guest(guestMessageRequestDto, createdChatRoom.getChatRoom().getId()));
-        chatMessageMono.subscribe();
         return chatMessageMono.flatMap(chatMessage -> {
             sendSocketChatListAndFcm(createdChatRoom, guestMessageRequestDto, chatMessage);
             return Mono.just(chatMessage);
         });
     }
 
-    // TODO : 실행이 안됨! 여기서부터 해결해야할듯!! 일단 비회원 쪽지 전송하고 있고, 프론트에서 채팅방 들어갔을 때 채팅도 안보임, 어디 문제인지 아직 모르겠음.
     public void sendSocketChatListAndFcm(UserChatRoom userChatRoom, GuestMessageRequestDto guestMessageRequestDto, ChatMessage chatMessage){
         // 메시지 안읽음 처리
         messageUnreadService.addUnreadChat(userChatRoom.getChatRoom().getId().toString(), userChatRoom.getUser().getId().toString(), chatMessage.getId());
         Long unreadCount = messageUnreadService.getUnreadMessageCount(userChatRoom.getChatRoom().getId().toString(),  userChatRoom.getUser().getId().toString());
-        System.out.println("방생성 후 소켓 전달 완료!!!!!! " + chatMessage);
         template.convertAndSend(
                 "/topic/user/" + userChatRoom.getUser().getId(),
                 Map.of(
