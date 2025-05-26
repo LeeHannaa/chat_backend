@@ -40,6 +40,15 @@ public class UserChatRoom extends BaseEntity {
                 .chatRoom(chatRoom)
                 .build();
     }
+
+    public static UserChatRoom person(ChatRoomDto dto, ChatRoom chatRoom) {
+        return UserChatRoom.builder()
+                .isInRoom(Boolean.TRUE)
+                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .user(dto.getUser())
+                .chatRoom(chatRoom)
+                .build();
+    }
 //    public static UserChatRoom otherFrom(UserChatRoom userChatRoom, ChatRoom chatRoom) {
 //        return UserChatRoom.builder()
 //                .isInRoom(Boolean.TRUE)

@@ -35,9 +35,26 @@ public class ChatRoomDto {
 //                .name(apt.getName())
                 .memberNum(2)
 //                .apt(apt)
-                .user(user)
+                .user(user) // UserChatRoom때 사용
                 .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .lastMsg(chatMessageRequestDto.getMsg())
+                .build();
+    }
+
+    public static ChatRoomDto person(User user) {
+        return ChatRoomDto.builder()
+                .memberNum(2)
+                .user(user)
+                .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .lastMsg("")
+                .build();
+    }
+
+    public static ChatRoomDto from() {
+        return ChatRoomDto.builder()
+                .memberNum(2)
+                .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .lastMsg("")
                 .build();
     }
 

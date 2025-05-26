@@ -48,6 +48,14 @@ public class ChatService {
         return userChatRoomRepository.save(UserChatRoom.from(chatRoomDto, chatRoom));
     }
 
+    public UserChatRoom createChatRoomByConnecting(Long userId, Long myId) {
+        User other = userService.findByUserId(userId);
+        User me = userService.findByUserId(myId);
+        ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.from(ChatRoomDto.from()));
+        userChatRoomRepository.save(UserChatRoom.person(ChatRoomDto.person(other), chatRoom));
+        return userChatRoomRepository.save(UserChatRoom.from(ChatRoomDto.person(me), chatRoom));
+    }
+
     public UserChatRoom createChatRoomByGuest(ChatRoomCreateDto chatRoomCreateDto) {
         ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.from(chatRoomCreateDto));
         return userChatRoomRepository.save(UserChatRoom.from(chatRoomCreateDto, chatRoom));
