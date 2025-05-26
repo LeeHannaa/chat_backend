@@ -54,11 +54,12 @@ public class ChatMessageService {
     }
 
     public Mono<List<ChatMessageResponseDto>> findChatMessages(Long roomId, Long myId) {
+        // 해당 방에 있는 모든 채팅 메시지
         List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findAllByChatRoomId(roomId);
         if(chatRoomMessages.isEmpty()){
             System.out.println("채팅 내역이 없는 경우 (채팅방만 존재) -> 채팅방의 정보만 보내기! ");
             ChatMessageResponseCreateDto chatMessageResponseCreateDto = ChatMessageResponseCreateDto.create(
-                    userChatRoomRepository.findByChatRoomId(roomId).orElseThrow(() -> new NotFoundException("해당 채팅방의 정보를 찾을 수 없습니다."))
+                    userChatRoomRepository.findByChatRoomIdAndUserId(roomId, myId).orElseThrow(() -> new NotFoundException("해당 채팅방의 정보를 찾을 수 없습니다."))
             );
             return Mono.just(Collections.singletonList(chatMessageResponseCreateDto));
         }
@@ -101,20 +102,6 @@ public class ChatMessageService {
                     return result;
             });
         return chatRoomMessagesMono;
-    }
-
-
-    public Mono<List<ChatMessageResponseDto>> getChatRoomByAptIdAndUserId(Long aptId, Long myId) {
-        // TODO : 채팅 메시지를 저장한 다음 -> 웹소켓으로 저장했다는 것을 알리고 채팅 페이지로 이동
-        // 1. 매물을 통해서는 무조건 채팅방이 존재함 -> 문의 전송 한 후 채팅 리스트 불러오기
-        User opponent = aptService.findByAptId(aptId).getUser();
-        // 두 사람이 모두 참여하고 있고 그룹채팅이 아닌 방 찾기
-        Optional<ChatRoom> chatRoom = chatRoomRepository.findPrivateChatRoomBetweenUsers(myId, opponent.getId());
-        if(chatRoom.isPresent()){
-            return findChatMessages(chatRoom.get().getId(), myId);
-        }else{
-            return Mono.error(new NotFoundException("두 사람이 모두 참여하고 있고 그룹채팅이 아닌 방 정보를 찾을 수 없습니다."));
-        }
     }
 
     public List<Long> findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기

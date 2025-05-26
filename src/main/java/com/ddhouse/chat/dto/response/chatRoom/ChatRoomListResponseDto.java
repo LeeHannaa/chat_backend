@@ -37,10 +37,10 @@ public class ChatRoomListResponseDto {
                 .memberNum(chatRoom.getMemberNum())
                 .build();
     }
-    public static ChatRoomListResponseDto from (ChatMessageRequestDto chatMessageRequestDto, Long count, int memberNum) {
+    public static ChatRoomListResponseDto from (ChatMessageRequestDto chatMessageRequestDto, String userName, Long count, int memberNum) {
         return ChatRoomListResponseDto.builder()
                 .roomId(chatMessageRequestDto.getRoomId())
-                .name(chatMessageRequestDto.getChatName())
+                .name(userName != null ? userName : chatMessageRequestDto.getChatName())
                 .lastMsg(chatMessageRequestDto.getMsg())
                 .memberNum(memberNum)
                 .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))

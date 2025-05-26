@@ -18,7 +18,7 @@ public interface UserChatRoomRepository extends JpaRepository<UserChatRoom, Long
     @Query("SELECT u FROM UserChatRoom u WHERE u.chatRoom.id = :chatRoomId AND u.user.id <> :myId")
     Optional<UserChatRoom> findOpponent(@Param("myId") Long myId, @Param("chatRoomId") Long chatRoomId);
     void deleteByChatRoomId(Long roomId);
-    Optional<UserChatRoom> findByChatRoomId(Long roomId);
+    Optional<UserChatRoom> findByChatRoomIdAndUserId(Long roomId, Long userId);
     List<UserChatRoom> findAllByChatRoomId(Long chatRoomId);
     boolean existsByUserAndChatRoom(User user, ChatRoom chatRoom);
 

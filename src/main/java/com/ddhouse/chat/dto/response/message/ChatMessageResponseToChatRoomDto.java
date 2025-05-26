@@ -26,10 +26,10 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
     private LocalDateTime createdDate;
     private int unreadCount;
 
-    public static ChatMessageResponseToChatRoomDto from (ChatMessage chatMessage, ChatMessageRequestDto chatMessageRequestDto, int unreadCount, MessageType messageType) {
+    public static ChatMessageResponseToChatRoomDto from (ChatMessage chatMessage, String userName, ChatMessageRequestDto chatMessageRequestDto, int unreadCount, MessageType messageType) {
         return ChatMessageResponseToChatRoomDto.builder()
                 .id(chatMessage.getId())
-                .chatName(chatMessageRequestDto.getChatName())
+                .chatName(userName != null ? userName : chatMessageRequestDto.getChatName())
                 .roomId(chatMessageRequestDto.getRoomId())
                 .writerId(chatMessageRequestDto.getWriterId())
                 .writerName(chatMessageRequestDto.getWriterName())

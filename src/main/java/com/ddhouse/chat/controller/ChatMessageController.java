@@ -4,6 +4,7 @@ import com.ddhouse.chat.domain.*;
 import com.ddhouse.chat.dto.ChatRoomCreateDto;
 import com.ddhouse.chat.dto.ChatRoomDto;
 import com.ddhouse.chat.dto.SaveMessageDto;
+import com.ddhouse.chat.dto.response.CreatedChatRoomFromAptDto;
 import com.ddhouse.chat.dto.response.FcmDto;
 import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.response.chatRoom.ChatRoomListResponseDto;
@@ -68,11 +69,11 @@ public class ChatMessageController {
                 UserChatRoom createdChatRoom = chatService.createChatRoom(ChatRoomDto.createChatRoomDto(chatMessageRequestDto, user), ChatRoomDto.createChatRoomDto(chatMessageRequestDto, me));
                 chatMessageRequestDto.addRoomId(createdChatRoom.getChatRoom().getId());
             }
-            // TODO : ROOM_CREATED으로 방이 생성되었거나, 메시지가 저장되었음을 클라이언트에게 알리기
+            // TODO : 매물 문의한 다음 채팅 페이지 이동 시 채팅 내역을 소켓 메시지로 전달받지 못하는 이슈
             template.convertAndSend("/topic/user/" + chatMessageRequestDto.getWriterId(),
                     Map.of(
                             "type", "CLEAR_ROOM",
-                            "roomId", chatMessageRequestDto.getRoomId()
+                            "message", CreatedChatRoomFromAptDto.from(chatMessageRequestDto.getRoomId(), user.getName())
                     )
             );
         }
@@ -82,6 +83,7 @@ public class ChatMessageController {
         List<Long> userIdsInRoom = roomUserCountService.getUserIdsInChatRoom(chatMessageRequestDto.getRoomId(), chatMessageRequestDto.getWriterId());
         // 해당 채팅방
         ChatRoom chatRoom = chatService.findChatRoomByRoomId(chatMessageRequestDto.getRoomId());
+        String senderName = userService.findByUserId(chatMessageRequestDto.getWriterId()).getName(); // 1:1인 경우 채팅방 이름
 
         return chatMessageService.saveChatMessage(SaveMessageDto.from(chatMessageRequestDto)).flatMap(message -> {
             if(!chatRoom.getIsGroup()) { // 1:1 채팅방
@@ -97,7 +99,8 @@ public class ChatMessageController {
             template.convertAndSend("/topic/chatroom/" + chatMessageRequestDto.getRoomId(),
                     Map.of(
                             "type", "CHAT",
-                            "message", ChatMessageResponseToChatRoomDto.from(message, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
+                            "message", chatRoom.getIsGroup() ? ChatMessageResponseToChatRoomDto.from(message, null, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
+                                    : ChatMessageResponseToChatRoomDto.from(message, senderName, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
                     )
             );
             // 채팅방 인원 중 현재 채팅방에 들어와있지 않은 유저들
@@ -111,7 +114,8 @@ public class ChatMessageController {
                         "/topic/user/" + userId,
                         Map.of(
                                 "type", "CHATLIST",
-                                "message", ChatRoomListResponseDto.from(chatMessageRequestDto, unreadCount, chatRoom.getMemberNum())
+                                "message", chatRoom.getIsGroup() ? ChatRoomListResponseDto.from(chatMessageRequestDto, null, unreadCount, chatRoom.getMemberNum())
+                                        : ChatRoomListResponseDto.from(chatMessageRequestDto, senderName, unreadCount, chatRoom.getMemberNum())
                         ));
                 // FCM 알림 전송
                 String fcmToken = userService.findFcmTokenByUserId(userId);
@@ -119,7 +123,8 @@ public class ChatMessageController {
                 if (roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId()) < 2 && fcmToken != null) {
                     try {
                         fcmService.sendMessageTo(
-                                FcmDto.chat(fcmToken, body, chatMessageRequestDto.getRoomId().toString(), chatRoom.getName()));
+                                chatRoom.getIsGroup() ? FcmDto.chat(fcmToken, body, chatMessageRequestDto.getRoomId().toString(), chatRoom.getName())
+                                : FcmDto.chat(fcmToken, body, chatMessageRequestDto.getRoomId().toString(), senderName));
                         System.out.println("fcm 알림 전송 완료!");
                     } catch (IOException e) {
                         System.err.println("FCM 전송 실패: " + e.getMessage());
@@ -135,17 +140,6 @@ public class ChatMessageController {
     public Mono<ResponseEntity<List<ChatMessageResponseDto>>> findMessageByChatRoomId(@PathVariable("chatRoomId") Long roomId, @RequestParam("myId") Long myId) {
         System.out.println("채팅방 채팅 내역 확인하기");
         return chatMessageService.findChatMessages(roomId, myId)
-                .map(messages -> {
-                    System.out.println("해당 채팅방의 메시지들 가져오기 결과 : " + messages);
-                    return ResponseEntity.ok(messages);
-                })
-                .defaultIfEmpty(ResponseEntity.notFound().build());
-    }
-
-    @GetMapping("/apt/find/list/{aptId}")
-    public Mono<ResponseEntity<List<ChatMessageResponseDto>>> findMessageByAptId(@PathVariable("aptId") Long aptId, @RequestParam("myId") Long myId) {
-        System.out.println("매물id로 채팅 내역 불러오기");
-        return chatMessageService.getChatRoomByAptIdAndUserId(aptId, myId)
                 .map(messages -> {
                     System.out.println("해당 채팅방의 메시지들 가져오기 결과 : " + messages);
                     return ResponseEntity.ok(messages);

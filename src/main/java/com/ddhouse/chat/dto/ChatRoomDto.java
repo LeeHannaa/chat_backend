@@ -41,16 +41,4 @@ public class ChatRoomDto {
                 .build();
     }
 
-    public static ChatRoomDto create(ChatMessageRequestDto chatMessageRequestDto, User user) {
-        // 이용자가 매물 문의를 했을 때 채팅방을 생성해야하는 경우
-        return ChatRoomDto.builder()
-//                .name(apt.getName())
-                .memberNum(2)
-//                .apt(apt)
-                .user(user)
-                .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
-                .lastMsg(chatMessageRequestDto.getMsg())
-                .build();
-    }
-
 }

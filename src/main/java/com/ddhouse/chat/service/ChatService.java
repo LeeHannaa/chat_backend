@@ -170,14 +170,6 @@ public class ChatService {
             // 전체를 빈값으로 전달, 날짜는 받아옴 (단톡아니면 메시지 없으면 리스트에서 안보임)
             return Mono.just(Tuples.of("채팅방에 초대되었습니다.", entryTime, 0L));
         }
-//        * like kakaoTalk (전체 삭제일 경우도 그냥 아예 삭제하는 피드백 반영 *
-//        Mono<Tuple2<String, LocalDateTime>> lastMessageMono = chatMessageRepository.findById(lastMessage.getMessageId())
-//                .map(chatMessage -> {
-//                    String msgContent = lastMessage.getIsDelete()
-//                            ? "삭제된 메시지입니다."
-//                            : chatMessage.getMsg();
-//                    return Tuples.of(msgContent, lastMessage.getRegDate());
-//                });
         Mono<Tuple2<String, LocalDateTime>> lastMessageMono = chatMessageRepository.findById(lastMessage.getMessageId())
                 .map(chatMessage -> Tuples.of(chatMessage.getMsg(), lastMessage.getRegDate()));
 
