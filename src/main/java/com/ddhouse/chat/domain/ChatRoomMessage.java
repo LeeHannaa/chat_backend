@@ -31,7 +31,7 @@ public class ChatRoomMessage extends BaseEntity {
     private ChatRoom chatRoom;
 
     @ManyToOne
-    @JoinColumn(name = "userId", nullable = true) // 채팅 작성자
+    @JoinColumn(name = "userId", nullable = true) // 회원, 비회원
     private User user;
 
     public static ChatRoomMessage save(UUID msgId, User user, ChatRoom chatRoom, MessageType messageType) {

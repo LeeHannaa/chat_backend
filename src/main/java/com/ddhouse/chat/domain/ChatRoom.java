@@ -1,7 +1,8 @@
 package com.ddhouse.chat.domain;
 
 import com.ddhouse.chat.BaseEntity;
-import com.ddhouse.chat.dto.info.ChatRoomDto;
+import com.ddhouse.chat.dto.ChatRoomCreateDto;
+import com.ddhouse.chat.dto.ChatRoomDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -18,10 +19,12 @@ public class ChatRoom extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String name; // 임시 -> 현재는 매물 이름으로 채팅방 이름이라서 무쓸모
+    private String name; // nullble -> 1:1 채팅인 경우 서로 상대의 이름으로 채팅방 이름 보이도록 설정 | 단체 채팅 시 이름 지정
     private int memberNum;
     private Boolean isGroup;
+    private String phoneNumber; // 비회원 채팅방
 
+    // TODO : 없어져야함 apt
     @ManyToOne
     @JoinColumn(name = "aptId", nullable = true) // 매물 가진 고객 -> 단체 채팅 때문에 null 설정
     private Apt apt;
@@ -32,8 +35,18 @@ public class ChatRoom extends BaseEntity {
         return ChatRoom.builder()
                 .name(dto.getName())
                 .memberNum(dto.getMemberNum())
-                .apt(dto.getApt())
+//                .apt(dto.getApt())
                 .isGroup(Boolean.FALSE)
+                .build();
+    }
+
+    public static ChatRoom from (ChatRoomCreateDto chatRoomCreateDto) {
+        // 비회원이 문의 시 채팅방이 생성되는 경우
+        return ChatRoom.builder()
+//                .name(chatRoomCreateDto.getName())
+                .memberNum(chatRoomCreateDto.getMemberNum())
+                .isGroup(Boolean.FALSE)
+                .phoneNumber(chatRoomCreateDto.getPhoneNumber())
                 .build();
     }
 

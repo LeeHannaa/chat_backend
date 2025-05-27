@@ -2,11 +2,13 @@ package com.ddhouse.chat.service;
 
 
 import com.ddhouse.chat.domain.*;
-import com.ddhouse.chat.dto.info.ChatRoomDto;
-import com.ddhouse.chat.dto.info.ChatRoomForAptDto;
-import com.ddhouse.chat.dto.request.*;
-import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseToChatRoomDto;
-import com.ddhouse.chat.dto.response.ChatRoomInfoResponseDto;
+import com.ddhouse.chat.dto.ChatRoomCreateDto;
+import com.ddhouse.chat.dto.ChatRoomDto;
+import com.ddhouse.chat.dto.ChatRoomForAptDto;
+import com.ddhouse.chat.dto.request.group.GroupChatRoomCreateDto;
+import com.ddhouse.chat.dto.request.group.InviteGroupRequestDto;
+import com.ddhouse.chat.dto.response.message.ChatMessageResponseToChatRoomDto;
+import com.ddhouse.chat.dto.response.chatRoom.ChatRoomListResponseDto;
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.*;
 import lombok.RequiredArgsConstructor;
@@ -40,10 +42,23 @@ public class ChatService {
     private final SimpMessageSendingOperations template;
 
 
-    public UserChatRoom createChatRoom(ChatRoomDto chatRoomDto) {
+    public UserChatRoom createChatRoom(ChatRoomDto chatRoomDto, ChatRoomDto myChatRoomDto) {
         ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.from(chatRoomDto));
-        userChatRoomRepository.save(UserChatRoom.otherFrom(chatRoomDto, chatRoom));
+        userChatRoomRepository.save(UserChatRoom.from(myChatRoomDto, chatRoom));
         return userChatRoomRepository.save(UserChatRoom.from(chatRoomDto, chatRoom));
+    }
+
+    public UserChatRoom createChatRoomByConnecting(Long userId, Long myId) {
+        User other = userService.findByUserId(userId);
+        User me = userService.findByUserId(myId);
+        ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.from(ChatRoomDto.from()));
+        userChatRoomRepository.save(UserChatRoom.person(ChatRoomDto.person(other), chatRoom));
+        return userChatRoomRepository.save(UserChatRoom.from(ChatRoomDto.person(me), chatRoom));
+    }
+
+    public UserChatRoom createChatRoomByGuest(ChatRoomCreateDto chatRoomCreateDto) {
+        ChatRoom chatRoom = chatRoomRepository.save(ChatRoom.from(chatRoomCreateDto));
+        return userChatRoomRepository.save(UserChatRoom.from(chatRoomCreateDto, chatRoom));
     }
 
     public ChatRoom createGroupChatRoom(GroupChatRoomCreateDto groupChatRoomCreateDto){
@@ -93,14 +108,33 @@ public class ChatService {
         return userChatRoomRepository.save(UserChatRoom.group(chatRoom, user));
     }
 
-    public List<ChatRoomInfoResponseDto> findMyChatRoomList(Long myId) {
+    public List<ChatRoomListResponseDto> findMyChatRoomList(Long myId) {
         // 내가 문의자로 들어간 채팅방 or 내가 관리자로 있는 채팅방
         List<UserChatRoom> chatRooms = userChatRoomRepository.findByUserId(myId);
         return chatRooms.stream()
                 .filter(UserChatRoom::getIsInRoom) // 나가기 하지 않은 채팅방만
                 .map(UserChatRoom::getChatRoom)
                 .filter(chatRoom -> chatRoomMessageRepository.existsByChatRoomId(chatRoom.getId())) // 메시지가 존재하는 경우만 필터링
-                .map(ChatRoomInfoResponseDto::create)
+                .map(chatRoom -> {
+                    if(chatRoom.getIsGroup()){
+                        // 단톡이었으면 -> 채팅방 이름으로
+                        return ChatRoomListResponseDto.group(chatRoom);
+                    } else if (chatRoom.getPhoneNumber() != null) {
+                        // 비회원 문의 톡
+                        return ChatRoomListResponseDto.one(chatRoom, chatRoom.getPhoneNumber());
+                    } else{
+                        // 개인톡 -> 상대방 이름으로
+                        Optional<UserChatRoom> opponent = userChatRoomRepository.findOpponent(myId, chatRoom.getId());
+
+                        String chatName = opponent.stream()
+                                .map(UserChatRoom::getUser)
+                                .map(User::getName)
+                                .findFirst()
+                                .orElse("알 수 없음");
+
+                        return ChatRoomListResponseDto.one(chatRoom, chatName);
+                    }
+                })
                 .collect(Collectors.toList());
     }
 
@@ -144,14 +178,6 @@ public class ChatService {
             // 전체를 빈값으로 전달, 날짜는 받아옴 (단톡아니면 메시지 없으면 리스트에서 안보임)
             return Mono.just(Tuples.of("채팅방에 초대되었습니다.", entryTime, 0L));
         }
-//        * like kakaoTalk (전체 삭제일 경우도 그냥 아예 삭제하는 피드백 반영 *
-//        Mono<Tuple2<String, LocalDateTime>> lastMessageMono = chatMessageRepository.findById(lastMessage.getMessageId())
-//                .map(chatMessage -> {
-//                    String msgContent = lastMessage.getIsDelete()
-//                            ? "삭제된 메시지입니다."
-//                            : chatMessage.getMsg();
-//                    return Tuples.of(msgContent, lastMessage.getRegDate());
-//                });
         Mono<Tuple2<String, LocalDateTime>> lastMessageMono = chatMessageRepository.findById(lastMessage.getMessageId())
                 .map(chatMessage -> Tuples.of(chatMessage.getMsg(), lastMessage.getRegDate()));
 
@@ -172,6 +198,12 @@ public class ChatService {
         return chatRoomRepository.findById(roomId)
                 .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));
     }
+
+    public List<ChatRoom> findChatRoomsByPhoneNumber(String phoneNumber) {
+        return chatRoomRepository.findByPhoneNumber(phoneNumber)
+                .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));
+    }
+
     @Transactional
     public void increaseNumberInChatRoom(Long roomId){
         ChatRoom chatRoom = chatRoomRepository.findById(roomId)

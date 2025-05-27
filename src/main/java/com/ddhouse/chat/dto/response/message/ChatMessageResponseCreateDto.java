@@ -1,4 +1,4 @@
-package com.ddhouse.chat.dto.response.ChatMessage;
+package com.ddhouse.chat.dto.response.message;
 
 import com.ddhouse.chat.domain.UserChatRoom;
 import lombok.Getter;

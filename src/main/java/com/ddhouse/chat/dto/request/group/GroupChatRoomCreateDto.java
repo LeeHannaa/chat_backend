@@ -1,4 +1,4 @@
-package com.ddhouse.chat.dto.request;
+package com.ddhouse.chat.dto.request.group;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -10,6 +10,7 @@ import java.util.List;
 @Setter
 @Builder
 public class GroupChatRoomCreateDto {
+    // 단체 채팅방을 생성할 때
     List<Long> userIds;
     String chatRoomName;
 }

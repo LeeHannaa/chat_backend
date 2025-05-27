@@ -1,7 +1,8 @@
 package com.ddhouse.chat.domain;
 
 import com.ddhouse.chat.BaseEntity;
-import com.ddhouse.chat.dto.info.ChatRoomDto;
+import com.ddhouse.chat.dto.ChatRoomCreateDto;
+import com.ddhouse.chat.dto.ChatRoomDto;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -24,7 +25,7 @@ public class UserChatRoom extends BaseEntity {
     private LocalDateTime entryTime;
 
     @ManyToOne
-    @JoinColumn(name = "userId", nullable = false) // 매물 문의자
+    @JoinColumn(name = "userId", nullable = false)
     private User user;
 
     @ManyToOne
@@ -39,11 +40,30 @@ public class UserChatRoom extends BaseEntity {
                 .chatRoom(chatRoom)
                 .build();
     }
-    public static UserChatRoom otherFrom(ChatRoomDto dto, ChatRoom chatRoom) {
+
+    public static UserChatRoom person(ChatRoomDto dto, ChatRoom chatRoom) {
         return UserChatRoom.builder()
                 .isInRoom(Boolean.TRUE)
                 .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
-                .user(dto.getApt().getUser())
+                .user(dto.getUser())
+                .chatRoom(chatRoom)
+                .build();
+    }
+//    public static UserChatRoom otherFrom(UserChatRoom userChatRoom, ChatRoom chatRoom) {
+//        return UserChatRoom.builder()
+//                .isInRoom(Boolean.TRUE)
+//                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+//                .user(dto.getApt().getUser())
+//                .chatRoom(chatRoom)
+//                .build();
+//    }
+
+    public static UserChatRoom from(ChatRoomCreateDto chatRoomCreateDto, ChatRoom chatRoom) {
+        // 비회원이 매물 문의했을 때 채팅 방이 생성되는 경우
+        return UserChatRoom.builder()
+                .isInRoom(Boolean.TRUE)
+                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .user(chatRoomCreateDto.getUser())
                 .chatRoom(chatRoom)
                 .build();
     }

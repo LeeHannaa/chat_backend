@@ -1,4 +1,4 @@
-package com.ddhouse.chat.dto.request;
+package com.ddhouse.chat.dto.request.message;
 
 import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.domain.User;
@@ -13,20 +13,16 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 public class ChatMessageRequestDto{
+    // 유저가 채팅방에서 채팅을 서버로 전송할 때
     private Long roomId;
+    private Long aptId;
     private String chatName;
     private Long writerId;
     private String writerName;
     private String msg;
     private LocalDateTime regDate;
 
-    public static ChatMessageRequestDto from(ChatRoom chatRoom, User user, String text) {
-        return ChatMessageRequestDto.builder()
-                .roomId(chatRoom.getId())
-                .chatName(chatRoom.getName())
-                .writerId(user.getId())
-                .writerName(user.getName())
-                .msg(text)
-                .build();
+    public void addRoomId(Long roomId) {
+        this.roomId = roomId;
     }
 }

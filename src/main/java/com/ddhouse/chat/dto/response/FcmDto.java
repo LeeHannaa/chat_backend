@@ -1,4 +1,4 @@
-package com.ddhouse.chat.dto;
+package com.ddhouse.chat.dto.response;
 
 import lombok.Builder;
 import lombok.Getter;
@@ -21,14 +21,6 @@ public class FcmDto {
                 .body(body)
                 .roomId(roomId)
                 .roomName(roomName)
-                .build();
-    }
-
-    public static FcmDto note(String targetToken, String body) {
-        return FcmDto.builder()
-                .targetToken(targetToken)
-                .title("새로운 문의 쪽지 도착!")
-                .body(body)
                 .build();
     }
 }

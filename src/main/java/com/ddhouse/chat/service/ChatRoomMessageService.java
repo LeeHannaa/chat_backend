@@ -1,7 +1,8 @@
 package com.ddhouse.chat.service;
 
 import com.ddhouse.chat.domain.*;
-import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
+import com.ddhouse.chat.dto.SaveMessageDto;
+import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.ChatRoomMessageRepository;
 import com.ddhouse.chat.repository.ChatRoomRepository;
@@ -28,13 +29,16 @@ public class ChatRoomMessageService {
                 .orElseThrow(() -> new NotFoundException("messageId에 해당하는 ChatRoomMessage가 없습니다."));
     }
 
-    public Mono<ChatRoomMessage> saveChatRoomMessage(ChatMessageRequestDto chatMessageRequestDto, UUID msgId){
-        User user = userRepository.findById(chatMessageRequestDto.getWriterId())
-                .orElseThrow(() -> new NotFoundException("해당 사용자를 찾을 수 없습니다."));
-        ChatRoom chatRoom = chatRoomRepository.findById(chatMessageRequestDto.getRoomId())
+    public Mono<ChatRoomMessage> saveChatRoomMessage(SaveMessageDto saveMessageDto, UUID msgId){
+        // TODO : 비회원인 경우 userId -> null
+        User user = null;
+        if(saveMessageDto.getWriterId() != null) {
+            user = userRepository.findById(saveMessageDto.getWriterId())
+                    .orElseThrow(() -> new NotFoundException("해당 사용자를 찾을 수 없습니다."));
+        }
+        ChatRoom chatRoom = chatRoomRepository.findById(saveMessageDto.getRoomId())
                         .orElseThrow(() -> new NotFoundException("해당 채팅방을 찾을 수 없습니다."));
         ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(msgId, user, chatRoom, MessageType.TEXT);
-
         return Mono.just(chatRoomMessageRepository.save(chatRoomMessage));
     }
 

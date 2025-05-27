@@ -1,19 +1,17 @@
 package com.ddhouse.chat.service;
 
 import com.ddhouse.chat.domain.*;
-import com.ddhouse.chat.dto.request.UserChatRoomAddDto;
-import com.ddhouse.chat.dto.response.ChatMessage.ChatMessageResponseToChatRoomDto;
+import com.ddhouse.chat.dto.request.group.UserChatRoomAddDto;
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Mono;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -57,4 +55,26 @@ public class UserChatRoomService {
 
 
     }
+
+    public UserChatRoom findByUserAndChatRoom(List<ChatRoom> chatRooms, User user) {
+        // TODO : 여기서 확인하고 있으면 넘겨주고 아니면 null 넘겨줘야함!! (모두 다 1:1 개인 연락 시 방찾는 경우)
+        for (ChatRoom chatRoom : chatRooms) {
+            if(!chatRoom.getIsGroup()){
+                Optional<UserChatRoom> userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(user.getId(), chatRoom.getId());
+                if (userChatRoom.isPresent()) {
+                    return userChatRoom.get();
+                }
+            }
+        }
+        return null;
+    }
+
+
+    public List<ChatRoom> findChatRoomsByUserId(Long userId) {
+        List<UserChatRoom> chatRooms = userChatRoomRepository.findByUserId(userId);
+        return chatRooms.stream()
+                .map(UserChatRoom::getChatRoom)
+                .collect(Collectors.toList());
+    }
+
 }

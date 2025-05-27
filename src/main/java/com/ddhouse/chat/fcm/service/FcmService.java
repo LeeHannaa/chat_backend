@@ -1,6 +1,6 @@
 package com.ddhouse.chat.fcm.service;
 
-import com.ddhouse.chat.dto.FcmDto;
+import com.ddhouse.chat.dto.response.FcmDto;
 import com.ddhouse.chat.fcm.dto.FcmMessage;
 import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;

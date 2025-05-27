@@ -1,9 +1,10 @@
-package com.ddhouse.chat.dto.response.ChatMessage;
+package com.ddhouse.chat.dto.response.message;
 
 import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.domain.ChatRoomMessage;
 import com.ddhouse.chat.domain.MessageType;
-import com.ddhouse.chat.dto.request.ChatMessageRequestDto;
+import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
+import com.ddhouse.chat.dto.request.message.GuestMessageRequestDto;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;
@@ -18,6 +19,7 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
     private UUID id;
     private String chatName;
     private String writerName;
+    private Long roomId;
     private Long writerId;
     private MessageType type;
     private String msg;
@@ -25,10 +27,10 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
     private LocalDateTime createdDate;
     private int unreadCount;
 
-    public static ChatMessageResponseToChatRoomDto from (ChatMessage chatMessage, ChatMessageRequestDto chatMessageRequestDto, int unreadCount, MessageType messageType) {
+    public static ChatMessageResponseToChatRoomDto from (ChatMessage chatMessage, String userName, ChatMessageRequestDto chatMessageRequestDto, int unreadCount, MessageType messageType) {
         return ChatMessageResponseToChatRoomDto.builder()
                 .id(chatMessage.getId())
-                .chatName(chatMessageRequestDto.getChatName())
+                .chatName(userName != null ? userName : chatMessageRequestDto.getChatName())
                 .roomId(chatMessageRequestDto.getRoomId())
                 .writerId(chatMessageRequestDto.getWriterId())
                 .writerName(chatMessageRequestDto.getWriterName())
@@ -36,6 +38,19 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
                 .msg(chatMessage.getMsg())
                 .createdDate(chatMessageRequestDto.getRegDate())
                 .unreadCount(unreadCount)
+                .build();
+    }
+
+    public static ChatMessageResponseToChatRoomDto guest (ChatMessage chatMessage, GuestMessageRequestDto guestMessageRequestDto, Long roomId, MessageType messageType) {
+        return ChatMessageResponseToChatRoomDto.builder()
+                .id(chatMessage.getId())
+                .chatName(guestMessageRequestDto.getPhoneNumber())
+                .roomId(roomId)
+                .writerName(guestMessageRequestDto.getPhoneNumber())
+                .type(messageType)
+                .msg(chatMessage.getMsg())
+                .createdDate(guestMessageRequestDto.getRegDate())
+                .unreadCount(0)
                 .build();
     }
 
