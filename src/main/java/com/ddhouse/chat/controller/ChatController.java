@@ -88,7 +88,6 @@ public class ChatController {
             UserChatRoom newUserChatRoom = chatService.createChatRoomByConnecting(userId, myId);
             return ResponseEntity.ok().body(newUserChatRoom.getChatRoom().getId());
         }
-
     }
 
     @GetMapping("/unread/count/{chatRoomId}")

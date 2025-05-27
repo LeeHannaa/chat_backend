@@ -19,6 +19,7 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
     private UUID id;
     private String chatName;
     private String writerName;
+    private Long roomId;
     private Long writerId;
     private MessageType type;
     private String msg;
