@@ -9,7 +9,6 @@ import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Getter
@@ -18,7 +17,8 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ChatRoomMessage {
     private Long id;
-    private UUID messageId; // Cassandra
+//    private UUID messageId; // Cassandra
+    private String msg;
     private Boolean isDelete; // 전체 삭제 여부
     private String deleteUsers; // ,를 기준으로 유저 아이디 저장
     private MessageType type;
@@ -26,9 +26,9 @@ public class ChatRoomMessage {
     private ChatRoom chatRoom;
     private User user;
 
-    public static ChatRoomMessage save(UUID msgId, User user, ChatRoom chatRoom, MessageType messageType) {
+    public static ChatRoomMessage save(String msg, User user, ChatRoom chatRoom, MessageType messageType) {
         return ChatRoomMessage.builder()
-                .messageId(msgId)
+                .msg(msg)
                 .chatRoom(chatRoom)
                 .type(messageType)
                 .isDelete(false)

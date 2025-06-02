@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="chatroommessageMapper">
-    <select id="findRecentMessages" parameterType="map" resultType="ChatRoomMessage">
+    <select id="findRecentMessages" parameterType="map" resultType="chatRoomMessage">
         SELECT *
         FROM chat_room_message
         WHERE chat_room_id = #{roomId}
@@ -11,20 +11,20 @@
             LIMIT 100
     </select>
 
-    <select id="findByMessageId" resultType="ChatRoomMessage" parameterType="java.util.UUID">
-        select * from chat_room_message WHERE message_id = #{messageId}
+    <select id="findById" resultType="chatRoomMessage" parameterType="Long">
+        select * from chat_room_message WHERE id = #{chatRoomMessageId}
     </select>
 
-    <insert id="save" parameterType="ChatRoomMessage" useGeneratedKeys="true" keyProperty="id">
-        insert into chat_room_message(message_id, is_delete, delete_users, type, reg_date, chat_room_id, user_id)
-        values(#{messageId}, #{isDelete}, #{deleteUsers}, #{type}, #{regDate}, #{chatRoom}, #{user})
+    <insert id="save" parameterType="chatRoomMessage" useGeneratedKeys="true" keyProperty="id">
+        insert into chat_room_message(msg, is_delete, delete_users, type, reg_date, chat_room_id, user_id)
+        values(#{msg}, #{isDelete}, #{deleteUsers}, #{type}, #{regDate}, #{chatRoom.id}, #{user.id})
     </insert>
 
-    <select id="findAllByChatRoomId" resultType="ChatRoomMessage" parameterType="Long">
+    <select id="findAllByChatRoomId" resultType="chatRoomMessage" parameterType="Long">
         select * from chat_room_message where chat_room_id = #{roomId}
     </select>
 
-    <select id="existsByChatRoomId" resultType="int" parameterType="map">
+    <select id="existsByChatRoomId" resultType="int" parameterType="Long">
         SELECT COUNT(*)
         FROM chat_room_message
         WHERE chat_room_id = #{roomId}

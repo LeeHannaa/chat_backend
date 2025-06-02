@@ -1,6 +1,5 @@
 package com.ddhouse.chat.dto.response.message;
 
-import com.ddhouse.chat.domain.ChatMessage;
 import com.ddhouse.chat.vo.ChatRoomMessage;
 import com.ddhouse.chat.vo.MessageType;
 import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
@@ -16,47 +15,47 @@ import java.util.UUID;
 @Setter
 @SuperBuilder
 public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
-    private UUID id;
+    private Long id;
     private String chatName;
     private String writerName;
     private Long roomId;
     private Long writerId;
     private MessageType type;
     private String msg;
-    private UUID beforeMsgId;
+    private Long beforeMsgId;
     private LocalDateTime createdDate;
     private int unreadCount;
 
-    public static ChatMessageResponseToChatRoomDto from (ChatMessage chatMessage, String userName, ChatMessageRequestDto chatMessageRequestDto, int unreadCount, MessageType messageType) {
+    public static ChatMessageResponseToChatRoomDto from (ChatRoomMessage chatRoomMessage, String userName, ChatMessageRequestDto chatMessageRequestDto, int unreadCount, MessageType messageType) {
         return ChatMessageResponseToChatRoomDto.builder()
-                .id(chatMessage.getId())
+                .id(chatRoomMessage.getId())
                 .chatName(userName != null ? userName : chatMessageRequestDto.getChatName())
                 .roomId(chatMessageRequestDto.getRoomId())
                 .writerId(chatMessageRequestDto.getWriterId())
                 .writerName(chatMessageRequestDto.getWriterName())
                 .type(messageType)
-                .msg(chatMessage.getMsg())
+                .msg(chatRoomMessage.getMsg())
                 .createdDate(chatMessageRequestDto.getRegDate())
                 .unreadCount(unreadCount)
                 .build();
     }
 
-    public static ChatMessageResponseToChatRoomDto guest (ChatMessage chatMessage, GuestMessageRequestDto guestMessageRequestDto, Long roomId, MessageType messageType) {
+    public static ChatMessageResponseToChatRoomDto guest (GuestMessageRequestDto guestMessageRequestDto, Long roomId, MessageType messageType, ChatRoomMessage chatRoomMessage) {
         return ChatMessageResponseToChatRoomDto.builder()
-                .id(chatMessage.getId())
+                .id(chatRoomMessage.getId())
                 .chatName(guestMessageRequestDto.getPhoneNumber())
                 .roomId(roomId)
                 .writerName(guestMessageRequestDto.getPhoneNumber())
                 .type(messageType)
-                .msg(chatMessage.getMsg())
+                .msg(chatRoomMessage.getMsg())
                 .createdDate(guestMessageRequestDto.getRegDate())
                 .unreadCount(0)
                 .build();
     }
 
-    public static ChatMessageResponseToChatRoomDto deleteInviteFrom (ChatRoomMessage chatRoomMessage, String msg, UUID beforeMsgId) {
+    public static ChatMessageResponseToChatRoomDto deleteInviteFrom (ChatRoomMessage chatRoomMessage, String msg, Long beforeMsgId) {
         return ChatMessageResponseToChatRoomDto.builder()
-                .id(chatRoomMessage.getMessageId())
+                .id(chatRoomMessage.getId())
                 .chatName(chatRoomMessage.getChatRoom().getName())
                 .roomId(chatRoomMessage.getChatRoom().getId())
                 .writerId(chatRoomMessage.getUser().getId())
@@ -71,7 +70,7 @@ public class ChatMessageResponseToChatRoomDto extends ChatMessageResponseDto{
 
     public static ChatMessageResponseToChatRoomDto deleteFrom (ChatRoomMessage chatRoomMessage, String msg) {
         return ChatMessageResponseToChatRoomDto.builder()
-                .id(chatRoomMessage.getMessageId())
+                .id(chatRoomMessage.getId())
                 .chatName(chatRoomMessage.getChatRoom().getName())
                 .roomId(chatRoomMessage.getChatRoom().getId())
                 .writerId(chatRoomMessage.getUser().getId())

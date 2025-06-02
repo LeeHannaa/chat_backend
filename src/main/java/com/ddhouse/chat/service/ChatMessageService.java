@@ -1,6 +1,5 @@
 package com.ddhouse.chat.service;
 
-import com.ddhouse.chat.domain.*;
 import com.ddhouse.chat.dto.ChatRoomCreateDto;
 import com.ddhouse.chat.dto.SaveMessageDto;
 import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
@@ -21,8 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -34,8 +31,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Service
 public class ChatMessageService {
-    private final ChatRoomRepository chatRoomRepository;
-    private final ChatMessageRepository chatMessageRepository;
     private final UserChatRoomRepository userChatRoomRepository;
     private final ChatService chatService;
     private final UserService userService;
@@ -48,7 +43,7 @@ public class ChatMessageService {
     private final FcmService fcmService;
     private final SimpMessageSendingOperations template;
 
-    public Mono<List<ChatMessageResponseDto>> findChatMessages(Long roomId, Long myId) {
+    public List<ChatMessageResponseDto> findChatMessages(Long roomId, Long myId) {
         // 해당 방에 있는 모든 채팅 메시지
         List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findAllByChatRoomId(roomId);
         if(chatRoomMessages.isEmpty()){
@@ -56,46 +51,36 @@ public class ChatMessageService {
             ChatMessageResponseCreateDto chatMessageResponseCreateDto = ChatMessageResponseCreateDto.create(
                     userChatRoomRepository.findByUserIdAndChatRoomId(myId, roomId)
             );
-            return Mono.just(Collections.singletonList(chatMessageResponseCreateDto));
+            return Collections.singletonList(chatMessageResponseCreateDto);
         }
         LocalDateTime standardTime = userChatRoomRepository
                 .findByUserIdAndChatRoomId(myId, roomId)
                 .getEntryTime();
 
-        Mono<List<ChatMessageResponseDto>> chatRoomMessagesMono = Flux.fromIterable(chatRoomMessages)
+        List<ChatMessageResponseDto> chatRoomMessagesFiltered = chatRoomMessages.stream()
                 .filter(chatRoomMessage -> chatRoomMessage.getRegDate().isAfter(standardTime)) // standardTime 이후만
                 // 내 기기에서 삭제된 메시지는 제외하긴 하는데 그 경우 userId가 나의 id와 동일한 경우에만 제외
                 .filter(chatRoomMessage -> !chatRoomMessage.getDeleteUserList().contains(myId))
-                .flatMap(chatRoomMessage -> {
-                    UUID msgId = chatRoomMessage.getMessageId();
-                    return chatMessageRepository.findById(msgId)
-                            .flatMap(chatMessage -> {
-                                if(chatRoomMessage.getType() == MessageType.TEXT){
-                                    // TODO G **: 각 메시지마다 읽지 않은 유저의 수를 함께 전달
-                                    int unreadCountByMsgId = messageUnreadService.getUnreadCountByMsgId(chatRoomMessage.getChatRoom().getId().toString(), msgId.toString());
-                                    if (chatRoomMessage.getIsDelete()) {
-                                        // 전체 삭제된 메시지 처리
-                                        //        * like kakaoTalk (전체 삭제일 경우도 그냥 아예 삭제하는 피드백 반영 *
-                                        // return Mono.just(ChatMessageResponseToFindMsgDto.fromAllDelete(chatMessage, chatRoomMessage, unreadCountByMsgId));
-                                        return Mono.empty();
-                                    } else {
-                                        return Mono.just(ChatMessageResponseToFindMsgDto.from(chatMessage, chatRoomMessage, unreadCountByMsgId));
-                                    }
-                                }
-                                // SYSTEM 타입의 메시지일 경우 -> isDelete가 true면 유저가 다시 초대되었다는 뜻!!!!!
-                                return Mono.just(ChatMessageResponseToFindMsgDto.deleteFrom(chatMessage, chatRoomMessage));
-                            });
+                .map(chatRoomMessage -> {
+                    if(chatRoomMessage.getType() == MessageType.TEXT){
+                        // TODO G **: 각 메시지마다 읽지 않은 유저의 수를 함께 전달
+                        int unreadCountByMsgId = messageUnreadService.getUnreadCountByMsgId(chatRoomMessage.getChatRoom().getId().toString(), chatRoomMessage.getId().toString());
+                        if (chatRoomMessage.getIsDelete()) {
+                            // 전체 삭제된 메시지 처리
+                            //        * like kakaoTalk (전체 삭제일 경우도 그냥 아예 삭제하는 피드백 반영 *
+                            // return Mono.just(ChatMessageResponseToFindMsgDto.fromAllDelete(chatMessage, chatRoomMessage, unreadCountByMsgId));
+                            return null;
+                        } else {
+                            return ChatMessageResponseToFindMsgDto.from(chatRoomMessage, unreadCountByMsgId);
+                        }
+                    }
+                    // SYSTEM 타입의 메시지일 경우 -> isDelete가 true면 유저가 다시 초대되었다는 뜻!!!!!
+                    return ChatMessageResponseToFindMsgDto.deleteFrom(chatRoomMessage);
                 })
-                .collectList()
-                .map(chatMessages -> {
-                    // 오래된 날짜 순서대로
-                    chatMessages.sort(Comparator.comparing(ChatMessageResponseToFindMsgDto::getCreatedDate));
-                    List<ChatMessageResponseDto> result = chatMessages.stream()
-                            .map(msg -> (ChatMessageResponseDto) msg)  // 상속 관계를 이용한 형 변환
-                            .collect(Collectors.toList());
-                    return result;
-            });
-        return chatRoomMessagesMono;
+                .filter(Objects::nonNull) // null 값 제거
+                .sorted(Comparator.comparing(ChatMessageResponseToFindMsgDto::getCreatedDate)) // 날짜 오름차순 정렬
+                .collect(Collectors.toList());
+        return chatRoomMessagesFiltered;
     }
 
     public List<Long> findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기
@@ -115,19 +100,13 @@ public class ChatMessageService {
         userChatRoomRepository.save(userChatRoom);
     }
 
-    public Mono<ChatMessage> saveChatMessage(SaveMessageDto saveMessageDto) {
-        ChatMessage chatMessage = ChatMessage.from(saveMessageDto.getMsg());
-        return chatMessageRepository.save(chatMessage)
-                .flatMap(savedMessage -> {
-                    UUID msgId = savedMessage.getId();
-                    return chatRoomMessageService.saveChatRoomMessage(saveMessageDto, msgId)
-                            .doOnSuccess(unused -> System.out.println("chatRoomMessage 저장 완료"))
-                            .thenReturn(savedMessage);
-                })
-                .doOnError(e -> System.err.println("saveChatMessage 에러: " + e.getMessage()));
+    public ChatRoomMessage saveChatMessage(SaveMessageDto saveMessageDto) {
+        ChatRoomMessage chatRoomMessage = chatRoomMessageService.saveChatRoomMessage(saveMessageDto);
+        System.out.println("chatRoomMessage 저장 완료");
+        return chatRoomMessage;
     }
 
-    public Mono<ChatMessage> sendMessageGuest(GuestMessageRequestDto guestMessageRequestDto){
+    public ChatRoomMessage sendMessageGuest(GuestMessageRequestDto guestMessageRequestDto){
         Apt apt = aptService.findByAptId(guestMessageRequestDto.getAptId());
         User user = apt.getUser();
         // 해당 비회원의 채팅방이 존재하는지 여부
@@ -137,38 +116,36 @@ public class ChatMessageService {
             if(userChatRoom != null){
                 // 기존 방이 존재하는 경우
                 // 메시지 저장
-                Mono<ChatMessage> chatMessageMono = saveChatMessage(SaveMessageDto.guest(guestMessageRequestDto, userChatRoom.getChatRoom().getId()));
+                ChatRoomMessage chatRoomMessage = saveChatMessage(SaveMessageDto.guest(guestMessageRequestDto, userChatRoom.getChatRoom().getId()));
                 // 기존의 채팅방이 존재하는 경우 현재 방에 사용자가 있는지 확인
                 int countInRoom = roomUserCountService.getUserCount(userChatRoom.getChatRoom().getId());
-                return chatMessageMono.flatMap(chatMessage -> {
+//                return chatMessageMono.flatMap(chatMessage -> {
                     if(countInRoom < 1) {
                         // 채팅방에 사용자가 없는 경우
-                        sendSocketChatListAndFcmToGuest(userChatRoom, guestMessageRequestDto, chatMessage);
+                        sendSocketChatListAndFcmToGuest(userChatRoom, guestMessageRequestDto, chatRoomMessage);
                     } else{
                         // 채팅방에 사용자가 들어와 있는 경우
                         template.convertAndSend("/topic/chatroom/" + userChatRoom.getChatRoom().getId(),
                                 Map.of(
                                         "type", "CHAT",
-                                        "message", ChatMessageResponseToChatRoomDto.guest(chatMessage, guestMessageRequestDto, userChatRoom.getChatRoom().getId(), MessageType.TEXT)
+                                        "message", ChatMessageResponseToChatRoomDto.guest(guestMessageRequestDto, userChatRoom.getChatRoom().getId(), MessageType.TEXT, chatRoomMessage)
                                 )
                         );
                     }
-                    return Mono.just(chatMessage);
-                });
+                    return chatRoomMessage;
             }
         }
         // 방을 생성해야하는 경우
         UserChatRoom createdChatRoom = chatService.createChatRoomByGuest(ChatRoomCreateDto.guest(guestMessageRequestDto, user));
-        Mono<ChatMessage> chatMessageMono = saveChatMessage(SaveMessageDto.guest(guestMessageRequestDto, createdChatRoom.getChatRoom().getId()));
-        return chatMessageMono.flatMap(chatMessage -> {
-            sendSocketChatListAndFcmToGuest(createdChatRoom, guestMessageRequestDto, chatMessage);
-            return Mono.just(chatMessage);
-        });
+        ChatRoomMessage chatRoomMessage = saveChatMessage(SaveMessageDto.guest(guestMessageRequestDto, createdChatRoom.getChatRoom().getId()));
+        sendSocketChatListAndFcmToGuest(createdChatRoom, guestMessageRequestDto, chatRoomMessage);
+        return chatRoomMessage;
+
     }
 
-    public void sendSocketChatListAndFcmToGuest(UserChatRoom userChatRoom, GuestMessageRequestDto guestMessageRequestDto, ChatMessage chatMessage){
+    public void sendSocketChatListAndFcmToGuest(UserChatRoom userChatRoom, GuestMessageRequestDto guestMessageRequestDto, ChatRoomMessage chatRoomMessage){
         // 메시지 안읽음 처리
-        messageUnreadService.addUnreadChat(userChatRoom.getChatRoom().getId().toString(), userChatRoom.getUser().getId().toString(), chatMessage.getId());
+        messageUnreadService.addUnreadChat(userChatRoom.getChatRoom().getId().toString(), userChatRoom.getUser().getId().toString(), chatRoomMessage.getId().toString());
         Long unreadCount = messageUnreadService.getUnreadMessageCount(userChatRoom.getChatRoom().getId().toString(),  userChatRoom.getUser().getId().toString());
         template.convertAndSend(
                 "/topic/user/" + userChatRoom.getUser().getId(),
@@ -178,7 +155,7 @@ public class ChatMessageService {
                 ));
         // FCM 알림 전송
         String fcmToken = userService.findFcmTokenByUserId(userChatRoom.getUser().getId());
-        String body = "비회원 : " + chatMessage.getMsg();
+        String body = "비회원 : " + chatRoomMessage.getMsg();
         if (fcmToken != null) {
             try {
                 fcmService.sendMessageTo(
@@ -212,7 +189,7 @@ public class ChatMessageService {
             System.out.println("채팅방으로 이동해도 된다는 메시지 전달 완료!!");
     }
 
-    public Mono<ResponseEntity<Void>> sendSocketChatListAndFcmToUser(ChatMessageRequestDto chatMessageRequestDto){
+    public ResponseEntity<Void> sendSocketChatListAndFcmToUser(ChatMessageRequestDto chatMessageRequestDto){
         AtomicBoolean isInquiry = new AtomicBoolean(false);
         if(chatMessageRequestDto.getRoomId() == null && chatMessageRequestDto.getAptId() != null){
             messageFromInquiry(chatMessageRequestDto);
@@ -227,9 +204,9 @@ public class ChatMessageService {
         ChatRoom chatRoom = chatService.findChatRoomByRoomId(chatMessageRequestDto.getRoomId());
         String senderName = userService.findByUserId(chatMessageRequestDto.getWriterId()).getName(); // 1:1인 경우 채팅방 이름
 
-        Mono<ChatMessage> chatMessageMono = saveChatMessage(SaveMessageDto.from(chatMessageRequestDto));
+        ChatRoomMessage chatRoomMessage =  saveChatMessage(SaveMessageDto.from(chatMessageRequestDto));
         System.out.println("채팅 메시지 저장함");
-        return chatMessageMono.flatMap(message -> {
+//        return chatMessageMono.flatMap(message -> {
             if(!chatRoom.getIsGroup()) { // 1:1 채팅방
                 UserChatRoom userChatRoom = getUserInChatRoom(receiverIds.get(0), chatMessageRequestDto.getRoomId());
                 if(!userChatRoom.getIsInRoom()) { // 방을 나갔으면 다시 방에 들어오게 되는 로직
@@ -254,10 +231,10 @@ public class ChatMessageService {
                 template.convertAndSend("/topic/chatroom/" + chatMessageRequestDto.getRoomId(),
                         Map.of(
                                 "type", "CHAT",
-                                "message", chatRoom.getIsGroup() ? ChatMessageResponseToChatRoomDto.from(message, null, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
+                                "message", chatRoom.getIsGroup() ? ChatMessageResponseToChatRoomDto.from(chatRoomMessage, null, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
                                         // 개인 매물 문의 시 채팅 방안에 사람이 있는 경우 (상대방이 있는것) -> 안읽은 메시지 표시 x
-                                        : isInquiry.get() ? ChatMessageResponseToChatRoomDto.from(message, senderName, chatMessageRequestDto, unreadCountByMsgId -1 , MessageType.TEXT)
-                                        : ChatMessageResponseToChatRoomDto.from(message, senderName, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
+                                        : isInquiry.get() ? ChatMessageResponseToChatRoomDto.from(chatRoomMessage, senderName, chatMessageRequestDto, unreadCountByMsgId -1 , MessageType.TEXT)
+                                        : ChatMessageResponseToChatRoomDto.from(chatRoomMessage, senderName, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
                         )
                 );
             }
@@ -265,7 +242,7 @@ public class ChatMessageService {
         receiverIds.removeIf(userId -> userIdsInRoom.contains(userId));
         receiverIds.forEach(userId -> {
             // Redis에 해당 메시지 중 안읽은 사람의 id 저장
-            messageUnreadService.addUnreadChat(chatMessageRequestDto.getRoomId().toString(), userId.toString(), message.getId());
+            messageUnreadService.addUnreadChat(chatMessageRequestDto.getRoomId().toString(), userId.toString(), chatRoomMessage.getId().toString());
             // 현재 채팅방에 없는 사람들을 기준으로 확인
             Long unreadCount = messageUnreadService.getUnreadMessageCount(chatMessageRequestDto.getRoomId().toString(), userId.toString());
             template.convertAndSend(
@@ -289,7 +266,6 @@ public class ChatMessageService {
                 }
             }
         });
-            return Mono.just(ResponseEntity.ok().build());
-        });
+        return ResponseEntity.ok().build();
     }
 }

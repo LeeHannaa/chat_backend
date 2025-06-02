@@ -3,34 +3,34 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="userchatroomMapper">
     <select id="findByUserId" parameterType="Long" resultType="userChatRoom">
-        select * from userChatRoom WHERE user_id = #{userId}
+        select * from user_chat_room WHERE user_id = #{userId}
     </select>
 
     <select id="findByUserIdAndChatRoomId" resultType="userChatRoom" parameterType="map">
-        select * from userChatRoom WHERE user_id = #{userId} AND chat_room_id = #{chatRoomId}
+        select * from user_chat_room WHERE user_id = #{userId} AND chat_room_id = #{chatRoomId}
     </select>
 
     <delete id="deleteByChatRoomId" parameterType="Long">
-        delete from userChatRoom where chat_room_id = #{roomId}
+        delete from user_chat_room where chat_room_id = #{roomId}
     </delete>
 
     <delete id="deleteById" parameterType="Long">
-        delete from userChatRoom where id = #{id}
+        delete from user_chat_room where id = #{id}
     </delete>
 
     <select id="findAllByChatRoomId" resultType="Long">
-        select * from userChatRoom where chat_room_id = #{roomId}
+        select * from user_chat_room where chat_room_id = #{roomId}
     </select>
 
     <select id="existsByUserAndChatRoom" resultType="int" parameterType="map">
         SELECT COUNT(*)
-        FROM userChatRoom
+        FROM user_chat_room
         WHERE user_id = #{userId}
           AND chat_room_id = #{chatRoomId}
     </select>
 
     <insert id="save" parameterType="userChatRoom" useGeneratedKeys="true" keyProperty="id">
-        insert into userChatRoom(is_in_room, entryTime, reg_date, user_id, chat_room_id)
+        insert into user_chat_room(is_in_room, entryTime, reg_date, user_id, chat_room_id)
         values(#{isInRoom}, #{entryTime}, #{regDate}, #{userId}, #{chatRoomId})
     </insert>
 

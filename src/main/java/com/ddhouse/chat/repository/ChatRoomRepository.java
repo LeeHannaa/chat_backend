@@ -2,16 +2,10 @@ package com.ddhouse.chat.repository;
 
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.vo.ChatRoom;
-import com.ddhouse.chat.vo.User;
 import lombok.RequiredArgsConstructor;
 import org.mybatis.spring.SqlSessionTemplate;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 @RequiredArgsConstructor

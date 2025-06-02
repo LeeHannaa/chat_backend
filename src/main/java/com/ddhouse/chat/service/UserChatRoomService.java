@@ -9,10 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
-
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -22,10 +20,7 @@ public class UserChatRoomService {
     private final UserChatRoomRepository userChatRoomRepository;
     private final UserRepository userRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final ChatMessageRepository chatMessageRepository;
     private final ChatService chatService;
-    private final SimpMessageSendingOperations template;
-    private final ChatRoomMessageRepository chatRoomMessageRepository;
 
 
     public void addUsersInChatRoom(UserChatRoomAddDto userChatRoomAddDto){

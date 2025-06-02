@@ -7,10 +7,8 @@ import org.springframework.data.redis.core.Cursor;
 import org.springframework.data.redis.core.ScanOptions;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
-
 import java.util.Collections;
 import java.util.Set;
-import java.util.UUID;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -19,7 +17,7 @@ public class MessageUnreadService {
     private final StringRedisTemplate redisTemplate;
     private static final String PREFIX = "unread";
 
-    public void addUnreadChat(String roomId, String receiverId, UUID msgId) {
+    public void addUnreadChat(String roomId, String receiverId, String msgId) {
         // TODO G **: 안읽은 메시지 저장할때는 msgId를 저장하고 거기 value로 receiverId(List)를 저장
         String key = PREFIX + ":" + roomId + ":" + msgId;
         redisTemplate.opsForSet().add(key, receiverId);

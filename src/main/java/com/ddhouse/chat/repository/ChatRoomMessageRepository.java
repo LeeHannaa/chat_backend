@@ -25,8 +25,8 @@ public class ChatRoomMessageRepository{
         return sql.selectList("chatroommessageMapper.findRecentMessages", params);
     }
 
-    public ChatRoomMessage findByMessageId(UUID messageId) {
-        ChatRoomMessage chatRoomMessage = sql.selectOne("chatroommessageMapper.findByMessageId", messageId);
+    public ChatRoomMessage findById(Long chatRoomMessageId) {
+        ChatRoomMessage chatRoomMessage = sql.selectOne("chatroommessageMapper.findById", chatRoomMessageId);
         if (chatRoomMessage == null) {
             throw new NotFoundException("해당 유저 정보와 채팅방 정보를 가진 ChatRoomMessage 정보를 찾을 수 없습니다: ");
         }

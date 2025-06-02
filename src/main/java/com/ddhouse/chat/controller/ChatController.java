@@ -16,10 +16,13 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.util.function.Tuple3;
 
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -52,24 +55,23 @@ public class ChatController {
 
 
     @GetMapping
-    public Mono<ResponseEntity<List<ChatRoomListResponseDto>>> getMyChatRoomList(@RequestParam("myId") Long myId) {
+    public ResponseEntity<List<ChatRoomListResponseDto>> getMyChatRoomList(@RequestParam("myId") Long myId) {
         List<ChatRoomListResponseDto> responses = chatService.findMyChatRoomList(myId);
         if (responses.isEmpty()) {
             System.out.println("현재 내가 들어가있는 채팅방 없음!!!!");
-            return Mono.just(ResponseEntity.ok(Collections.emptyList()));
+            return ResponseEntity.ok(Collections.emptyList());
         }
-        return Flux.fromIterable(responses)
-                .flatMap(chatRoomDto ->
-                        chatService.getLastMessageWithUnreadCount(chatRoomDto.getRoomId(), myId)
-                                .map(tuple -> {
-                                    chatRoomDto.setLastMsg(tuple.getT1());
-                                    chatRoomDto.setUpdateLastMsgTime(tuple.getT2());
-                                    chatRoomDto.setUnreadCount(tuple.getT3());
-                                    return chatRoomDto;
-                                })
-                )
-                .collectList()
-                .map(ResponseEntity::ok);
+        List<ChatRoomListResponseDto> updatedResponses = responses.stream()
+                .map(chatRoomDto -> {
+                    // 동기 메서드 호출 가정
+                    Tuple3<String, LocalDateTime, Long> tuple = chatService.getLastMessageWithUnreadCount(chatRoomDto.getRoomId(), myId);
+                    chatRoomDto.setLastMsg(tuple.getT1());
+                    chatRoomDto.setUpdateLastMsgTime(tuple.getT2());
+                    chatRoomDto.setUnreadCount(tuple.getT3());
+                    return chatRoomDto;
+                })
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(updatedResponses);
     }
 
     @GetMapping("/connect/{userId}")

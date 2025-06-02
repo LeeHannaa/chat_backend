@@ -6,14 +6,11 @@ import com.ddhouse.chat.vo.User;
 import com.ddhouse.chat.vo.UserChatRoom;
 import lombok.RequiredArgsConstructor;
 import org.mybatis.spring.SqlSessionTemplate;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+
 @Repository
 @RequiredArgsConstructor
 public class UserChatRoomRepository {
