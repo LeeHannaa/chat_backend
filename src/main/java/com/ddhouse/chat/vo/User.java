@@ -1,26 +1,21 @@
-package com.ddhouse.chat.domain;
+package com.ddhouse.chat.vo;
 
-import com.ddhouse.chat.BaseEntity;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-@Entity
+import java.time.LocalDateTime;
+
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User extends BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class User {
     private Long id;
     private String name;  // 비유저 전화번호 쪽지위해 임시 데이터
     private String fcmToken;
+    private LocalDateTime regDate;
 
     public void setUpdateFcmToken(String fcmToken) {
         this.fcmToken = fcmToken;

@@ -1,8 +1,8 @@
 package com.ddhouse.chat.dto.response.chatRoom;
 
-import com.ddhouse.chat.domain.ChatRoom;
 import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.request.message.GuestMessageRequestDto;
+import com.ddhouse.chat.vo.ChatRoom;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;

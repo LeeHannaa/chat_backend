@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE configuration PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+<configuration>
+    <settings>
+        <setting name="mapUnderscoreToCamelCase" value="true"/>
+    </settings>
+    <typeAliases>
+        <typeAlias type="com.ddhouse.chat.vo.User" alias="User"></typeAlias>
+        <typeAlias type="com.ddhouse.chat.vo.ChatRoomMessage" alias="ChatRoomMessage"></typeAlias>
+        <typeAlias type="com.ddhouse.chat.vo.Apt" alias="Apt"></typeAlias>
+        <typeAlias type="com.ddhouse.chat.vo.ChatRoom" alias="ChatRoom"></typeAlias>
+        <typeAlias type="com.ddhouse.chat.vo.UserChatRoom" alias="UserChatRoom"></typeAlias>
+    </typeAliases>
+    <typeHandlers>
+        <typeHandler handler="com.ddhouse.chat.handler.MessageTypeHandler"/>
+    </typeHandlers>
+</configuration>

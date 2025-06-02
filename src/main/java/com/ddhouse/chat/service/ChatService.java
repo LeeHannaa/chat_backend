@@ -9,8 +9,8 @@ import com.ddhouse.chat.dto.request.group.GroupChatRoomCreateDto;
 import com.ddhouse.chat.dto.request.group.InviteGroupRequestDto;
 import com.ddhouse.chat.dto.response.message.ChatMessageResponseToChatRoomDto;
 import com.ddhouse.chat.dto.response.chatRoom.ChatRoomListResponseDto;
-import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.*;
+import com.ddhouse.chat.vo.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
@@ -67,8 +67,7 @@ public class ChatService {
         chatRoomRepository.save(chatRoom);
 
         List<UserChatRoom> userChatRooms = groupChatRoomCreateDto.getUserIds().stream()
-                .map(userId -> UserChatRoom.group(chatRoom, userRepository.findById(userId)
-                        .orElseThrow(() -> new NotFoundException("해당 아이디를 가진 유저를 찾지 못했습니다."))))
+                .map(userId -> UserChatRoom.group(chatRoom, userRepository.findById(userId)))
                 .collect(Collectors.toList());
         userChatRoomRepository.saveAll(userChatRooms);
         return chatRoom;
@@ -152,11 +151,10 @@ public class ChatService {
 
     public Mono<Tuple3<String, LocalDateTime, Long>> getLastMessageWithUnreadCount(Long roomId, Long myId) {
         // entry_time 입장 시간 보고 라스트 채팅 가져오기
-        UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(myId, roomId)
-                .orElseThrow(() -> new NotFoundException("채팅방에서 해당 유저의 정보를 찾을 수 없습니다."));
+        UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(myId, roomId);
         LocalDateTime entryTime = userChatRoom.getEntryTime();
 
-        List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findTop100ByChatRoomIdAndRegDateAfterOrderByRegDateDesc(roomId, entryTime);
+        List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findRecentMessages(roomId, entryTime);
         Optional<ChatRoomMessage> lastMessageOpt = Optional.empty();
         for (ChatRoomMessage message : chatRoomMessages) {
             String deleteUsers = message.getDeleteUsers();
@@ -195,19 +193,16 @@ public class ChatService {
     }
 
     public ChatRoom findChatRoomByRoomId(Long roomId) {
-        return chatRoomRepository.findById(roomId)
-                .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));
+        return chatRoomRepository.findById(roomId);
     }
 
     public List<ChatRoom> findChatRoomsByPhoneNumber(String phoneNumber) {
-        return chatRoomRepository.findByPhoneNumber(phoneNumber)
-                .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));
+        return chatRoomRepository.findByPhoneNumber(phoneNumber);
     }
 
     @Transactional
     public void increaseNumberInChatRoom(Long roomId){
-        ChatRoom chatRoom = chatRoomRepository.findById(roomId)
-                        .orElseThrow(() -> new NotFoundException("해당 채팅방 정보를 찾을 수 없습니다."));
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId);
         chatRoom.increaseMemberNum();
         chatRoomRepository.save(chatRoom);
     }
@@ -215,46 +210,44 @@ public class ChatService {
     @Transactional
     public void deleteChatRoom(Long roomId, Long myId){
         // 채팅 이용자가 0명인 경우 전체 대화 삭제
-        Optional<ChatRoom> chatRoomOptional = chatRoomRepository.findById(roomId);
-        chatRoomOptional.ifPresent(chatRoom -> {
-            chatRoom.decreaseMemberNum(); // memberNum 감소
-            if (chatRoom.getMemberNum() == 0) {
-                // roomId를 가진 UserChatRoom 데이터 전체 삭제 & ChatRoomMessage 데이터 전체 삭제
-                userChatRoomRepository.deleteByChatRoomId(roomId);
-                chatRoomMessageRepository.deleteByChatRoomId(roomId);
-                chatRoomRepository.deleteById(roomId);
-            }
-            else {
-                UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(myId, roomId)
-                        .orElseThrow(() -> new NotFoundException("해당 채팅방에 존재하는 유저의 정보를 알 수 없습니다."));
-                if(chatRoom.getIsGroup()){
-                    userChatRoomRepository.deleteById(userChatRoom.getId());
-                    User user = userService.findByUserId(myId);
-                    String deleteMsg = user.getName() + "님이 채팅방을 나갔습니다.";
-                    AtomicReference<UUID> msgId = new AtomicReference<>();
-                    chatMessageRepository.save(ChatMessage.from(deleteMsg))
-                            .flatMap(savedMessage -> {
-                                msgId.set(savedMessage.getId());
-                                ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(msgId.get(), user, chatRoom, MessageType.SYSTEM);
-                                ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteFrom(chatRoomMessage, deleteMsg);
-                                Map<String, Object> leaveUser = Map.of(
-                                        "type", "LEAVE",
-                                        "message", chatMessageResponseToChatRoomDto,
-                                        "msgToReadCount", messageUnreadService.getUnreadMessageCount(roomId.toString(), myId.toString())
-                                );
-                                // TODO G **: 실시간으로 해당 유저가 방을 나갔음을 알림
-                                template.convertAndSend("/topic/chatroom/" + roomId, leaveUser);
-                                System.out.println("채팅방에 유저가 나감 : " + deleteMsg);
-                                messageUnreadService.removeUnread(roomId.toString(), myId.toString());
-                                return Mono.fromCallable(() -> chatRoomMessageRepository.save(chatRoomMessage));
-                            })
-                            .subscribe();
-                }else{
-                    // 1대1 채팅방일 경우 -> UserChatRoom에 leaveTheChatRoom 실행 (isInRoom을 F로, entryTime 시간 업데이트)
-                    userChatRoom.leaveTheChatRoom();
-                    userChatRoomRepository.save(userChatRoom); // 변경사항 저장
+        ChatRoom chatRoom = chatRoomRepository.findById(roomId);
+        if(chatRoom != null) {
+                chatRoom.decreaseMemberNum(); // memberNum 감소
+                if (chatRoom.getMemberNum() == 0) {
+                    // roomId를 가진 UserChatRoom 데이터 전체 삭제 & ChatRoomMessage 데이터 전체 삭제
+                    userChatRoomRepository.deleteByChatRoomId(roomId);
+                    chatRoomMessageRepository.deleteByChatRoomId(roomId);
+                    chatRoomRepository.deleteById(roomId);
+                } else {
+                    UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(myId, roomId);
+                    if (chatRoom.getIsGroup()) {
+                        userChatRoomRepository.deleteById(userChatRoom.getId());
+                        User user = userService.findByUserId(myId);
+                        String deleteMsg = user.getName() + "님이 채팅방을 나갔습니다.";
+                        AtomicReference<UUID> msgId = new AtomicReference<>();
+                        chatMessageRepository.save(ChatMessage.from(deleteMsg))
+                                .flatMap(savedMessage -> {
+                                    msgId.set(savedMessage.getId());
+                                    ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(msgId.get(), user, chatRoom, MessageType.SYSTEM);
+                                    ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteFrom(chatRoomMessage, deleteMsg);
+                                    Map<String, Object> leaveUser = Map.of(
+                                            "type", "LEAVE",
+                                            "message", chatMessageResponseToChatRoomDto,
+                                            "msgToReadCount", messageUnreadService.getUnreadMessageCount(roomId.toString(), myId.toString())
+                                    );
+                                    // TODO G **: 실시간으로 해당 유저가 방을 나갔음을 알림
+                                    template.convertAndSend("/topic/chatroom/" + roomId, leaveUser);
+                                    System.out.println("채팅방에 유저가 나감 : " + deleteMsg);
+                                    messageUnreadService.removeUnread(roomId.toString(), myId.toString());
+                                    return Mono.fromCallable(() -> chatRoomMessageRepository.save(chatRoomMessage));
+                                })
+                                .subscribe();
+                    } else {
+                        // 1대1 채팅방일 경우 -> UserChatRoom에 leaveTheChatRoom 실행 (isInRoom을 F로, entryTime 시간 업데이트)
+                        userChatRoom.leaveTheChatRoom();
+                        userChatRoomRepository.save(userChatRoom); // 변경사항 저장
+                    }
                 }
-            }
-        });
+        }
     }
 }

@@ -1,7 +1,5 @@
 package com.ddhouse.chat.dto.response;
 
-import com.ddhouse.chat.domain.Apt;
-import com.ddhouse.chat.dto.AptDto;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.SuperBuilder;

@@ -1,9 +1,9 @@
 package com.ddhouse.chat.service;
 
-import com.ddhouse.chat.domain.User;
 import com.ddhouse.chat.fcm.dto.FcmTokenSaveRequest;
 import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.UserRepository;
+import com.ddhouse.chat.vo.User;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -17,9 +17,7 @@ public class UserService {
     private final UserRepository userRepository;
 
     public User findByUserId(Long myId){
-        User userInfo = userRepository.findById(myId)
-                .orElseThrow(() -> new NotFoundException("해당 유저의 정보를 찾을 수 없습니다."));
-        return userInfo;
+        return userRepository.findById(myId);
     }
 
     public List<User> findUserAll(){
@@ -44,9 +42,7 @@ public class UserService {
 
     public ResponseEntity<Void> addFcmToken(FcmTokenSaveRequest fcmTokenRequest){
         try {
-            User user = userRepository.findById(fcmTokenRequest.getUserId())
-                    .orElseThrow(() -> new NotFoundException("유저를 찾을 수 없습니다."));
-
+            User user = userRepository.findById(fcmTokenRequest.getUserId());
             user.setUpdateFcmToken(fcmTokenRequest.getFcmToken());
             userRepository.save(user);
 

@@ -1,7 +1,7 @@
 package com.ddhouse.chat.controller;
 
-import com.ddhouse.chat.domain.User;
 import com.ddhouse.chat.service.UserService;
+import com.ddhouse.chat.vo.User;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 

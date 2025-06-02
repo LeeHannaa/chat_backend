@@ -13,9 +13,9 @@ import com.ddhouse.chat.dto.response.message.ChatMessageResponseCreateDto;
 import com.ddhouse.chat.dto.response.message.ChatMessageResponseDto;
 import com.ddhouse.chat.dto.ChatRoomDto;
 import com.ddhouse.chat.dto.response.message.ChatMessageResponseToFindMsgDto;
-import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.fcm.service.FcmService;
 import com.ddhouse.chat.repository.*;
+import com.ddhouse.chat.vo.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -48,23 +48,18 @@ public class ChatMessageService {
     private final FcmService fcmService;
     private final SimpMessageSendingOperations template;
 
-    public int getRoomMemberNum(Long roomId){
-        return chatRoomRepository.findById(roomId).get().getMemberNum();
-    }
-
     public Mono<List<ChatMessageResponseDto>> findChatMessages(Long roomId, Long myId) {
         // 해당 방에 있는 모든 채팅 메시지
         List<ChatRoomMessage> chatRoomMessages = chatRoomMessageRepository.findAllByChatRoomId(roomId);
         if(chatRoomMessages.isEmpty()){
             System.out.println("채팅 내역이 없는 경우 (채팅방만 존재) -> 채팅방의 정보만 보내기! ");
             ChatMessageResponseCreateDto chatMessageResponseCreateDto = ChatMessageResponseCreateDto.create(
-                    userChatRoomRepository.findByChatRoomIdAndUserId(roomId, myId).orElseThrow(() -> new NotFoundException("해당 채팅방의 정보를 찾을 수 없습니다."))
+                    userChatRoomRepository.findByUserIdAndChatRoomId(myId, roomId)
             );
             return Mono.just(Collections.singletonList(chatMessageResponseCreateDto));
         }
         LocalDateTime standardTime = userChatRoomRepository
                 .findByUserIdAndChatRoomId(myId, roomId)
-                .orElseThrow(() -> new NotFoundException("채팅방 정보가 없습니다."))
                 .getEntryTime();
 
         Mono<List<ChatMessageResponseDto>> chatRoomMessagesMono = Flux.fromIterable(chatRoomMessages)
@@ -112,8 +107,7 @@ public class ChatMessageService {
     }
 
     public UserChatRoom getUserInChatRoom(Long userId, Long roomId){
-        return userChatRoomRepository.findByUserIdAndChatRoomId(userId, roomId)
-                .orElseThrow(() -> new NotFoundException("채팅방에 해당 유저가 존재하지 않습니다."));
+        return userChatRoomRepository.findByUserIdAndChatRoomId(userId, roomId);
     }
 
     public void saveReEntryUserInChatRoom(UserChatRoom userChatRoom){

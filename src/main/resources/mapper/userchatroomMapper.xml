@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="userchatroomMapper">
+    <select id="findByUserId" parameterType="Long" resultType="userChatRoom">
+        select * from userChatRoom WHERE user_id = #{userId}
+    </select>
+
+    <select id="findByUserIdAndChatRoomId" resultType="userChatRoom" parameterType="map">
+        select * from userChatRoom WHERE user_id = #{userId} AND chat_room_id = #{chatRoomId}
+    </select>
+
+    <delete id="deleteByChatRoomId" parameterType="Long">
+        delete from userChatRoom where chat_room_id = #{roomId}
+    </delete>
+
+    <delete id="deleteById" parameterType="Long">
+        delete from userChatRoom where id = #{id}
+    </delete>
+
+    <select id="findAllByChatRoomId" resultType="Long">
+        select * from userChatRoom where chat_room_id = #{roomId}
+    </select>
+
+    <select id="existsByUserAndChatRoom" resultType="int" parameterType="map">
+        SELECT COUNT(*)
+        FROM userChatRoom
+        WHERE user_id = #{userId}
+          AND chat_room_id = #{chatRoomId}
+    </select>
+
+    <insert id="save" parameterType="userChatRoom" useGeneratedKeys="true" keyProperty="id">
+        insert into userChatRoom(is_in_room, entryTime, reg_date, user_id, chat_room_id)
+        values(#{isInRoom}, #{entryTime}, #{regDate}, #{userId}, #{chatRoomId})
+    </insert>
+
+    <insert id="saveAll" parameterType="list">
+        INSERT INTO user_chat_room (user_id, chat_room_id)
+        VALUES
+        <foreach collection="list" item="ucr" separator=",">
+            (#{ucr.user.id}, #{ucr.chatRoom.id})
+        </foreach>
+    </insert>
+
+    <select id="findOpponent" resultType="UserChatRoom" parameterType="map">
+        SELECT *
+        FROM user_chat_room
+        WHERE chat_room_id = #{chatRoomId}
+          AND user_id != #{myId}
+            LIMIT 1
+    </select>
+</mapper>

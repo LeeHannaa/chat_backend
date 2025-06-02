@@ -1,12 +1,33 @@
 package com.ddhouse.chat.repository;
 
-import com.ddhouse.chat.domain.Apt;
+import com.ddhouse.chat.exception.NotFoundException;
+import com.ddhouse.chat.vo.Apt;
+import com.ddhouse.chat.vo.User;
+import lombok.RequiredArgsConstructor;
+import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
 
 @Repository
-public interface AptRepository extends JpaRepository<Apt, Long> {
-    List<Apt> findByUserId(Long userId);
+@RequiredArgsConstructor
+public class AptRepository{
+    private final SqlSessionTemplate sql;
+
+    public List<Apt> findByUserId(Long userId) {
+        return sql.selectList("aptMapper.findByUserId", userId);
+    }
+
+    public List<Apt> findAll() {
+        return sql.selectList("aptMapper.findAll");
+    }
+
+    public Apt findById(Long id) {
+        Apt apt = sql.selectOne("aptMapper.findById", id);
+        if (apt == null) {
+            throw new NotFoundException("해당 ID의 매물을 찾을 수 없습니다: " + id);
+        }
+        return apt;
+    }
 }

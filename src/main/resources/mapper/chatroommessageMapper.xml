@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="chatroommessageMapper">
+    <select id="findRecentMessages" parameterType="map" resultType="ChatRoomMessage">
+        SELECT *
+        FROM chat_room_message
+        WHERE chat_room_id = #{roomId}
+          AND reg_date > #{regDate}
+        ORDER BY reg_date DESC
+            LIMIT 100
+    </select>
+
+    <select id="findByMessageId" resultType="ChatRoomMessage" parameterType="java.util.UUID">
+        select * from chat_room_message WHERE message_id = #{messageId}
+    </select>
+
+    <insert id="save" parameterType="ChatRoomMessage" useGeneratedKeys="true" keyProperty="id">
+        insert into chat_room_message(message_id, is_delete, delete_users, type, reg_date, chat_room_id, user_id)
+        values(#{messageId}, #{isDelete}, #{deleteUsers}, #{type}, #{regDate}, #{chatRoom}, #{user})
+    </insert>
+
+    <select id="findAllByChatRoomId" resultType="ChatRoomMessage" parameterType="Long">
+        select * from chat_room_message where chat_room_id = #{roomId}
+    </select>
+
+    <select id="existsByChatRoomId" resultType="int" parameterType="map">
+        SELECT COUNT(*)
+        FROM chat_room_message
+        WHERE chat_room_id = #{roomId}
+    </select>
+
+    <delete id="deleteByChatRoomId" parameterType="Long">
+        delete from chat_room_message where chat_room_id = #{roomId}
+    </delete>
+
+</mapper>
