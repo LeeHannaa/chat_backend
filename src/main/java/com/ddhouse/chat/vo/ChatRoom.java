@@ -18,16 +18,15 @@ public class ChatRoom {
     private String name; // nullble -> 1:1 채팅인 경우 서로 상대의 이름으로 채팅방 이름 보이도록 설정 | 단체 채팅 시 이름 지정
     private int memberNum;
     private Boolean isGroup;
-    private MessageType type;
     private String phoneNumber; // 비회원 채팅방
     private LocalDateTime regDate;
-    private Apt apt;
 
     public static ChatRoom from (ChatRoomDto dto) {
         // 아파트 문의하기를 통해 방이 생성된 경우 -> 1:1 채팅
         return ChatRoom.builder()
                 .name(dto.getName())
                 .memberNum(dto.getMemberNum())
+                .regDate(dto.getRegDate())
 //                .apt(dto.getApt())
                 .isGroup(Boolean.FALSE)
                 .build();
@@ -39,6 +38,7 @@ public class ChatRoom {
 //                .name(chatRoomCreateDto.getName())
                 .memberNum(chatRoomCreateDto.getMemberNum())
                 .isGroup(Boolean.FALSE)
+                .regDate(chatRoomCreateDto.getRegDate())
                 .phoneNumber(chatRoomCreateDto.getPhoneNumber())
                 .build();
     }
@@ -49,6 +49,7 @@ public class ChatRoom {
                 .name(name)
                 .memberNum(count)
                 .isGroup(Boolean.TRUE)
+                .regDate(LocalDateTime.now())
                 .build();
     }
     public void decreaseMemberNum() {

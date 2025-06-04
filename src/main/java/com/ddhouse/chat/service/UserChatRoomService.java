@@ -55,6 +55,7 @@ public class UserChatRoomService {
         // TODO : 여기서 확인하고 있으면 넘겨주고 아니면 null 넘겨줘야함!! (모두 다 1:1 개인 연락 시 방찾는 경우)
         for (ChatRoom chatRoom : chatRooms) {
             if(!chatRoom.getIsGroup()){
+                System.out.println("findByUserIdAndChatRoomId : " + user.getId() + ", " + chatRoom.getId());
                 UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(user.getId(), chatRoom.getId());
                 if (userChatRoom != null) {
                     return userChatRoom;

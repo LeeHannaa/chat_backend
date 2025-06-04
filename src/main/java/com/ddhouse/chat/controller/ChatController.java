@@ -33,12 +33,6 @@ public class ChatController {
     private final UserChatRoomService userChatRoomService;
     private final UserService userService;
 
-//    @PostMapping("/create") // 직접적으로 사용하지 않음
-//    public ResponseEntity<Void> createChatRoom(@RequestBody ChatRoomDto chatRoomDto) {
-//        chatService.createChatRoom(chatRoomDto);
-//        return ResponseEntity.ok().build();
-//    }
-
     @PostMapping("/create/group") // 단체 채팅방 생성
     // TODO : 단체 채팅방 만들기 객체 설정해서 진행하면 됨!!!!
     public ResponseEntity<ChatRoom> createGroupChatRoom(@RequestBody GroupChatRoomCreateDto groupChatRoomCreateDto) {
@@ -64,6 +58,7 @@ public class ChatController {
         List<ChatRoomListResponseDto> updatedResponses = responses.stream()
                 .map(chatRoomDto -> {
                     // 동기 메서드 호출 가정
+                    System.out.println("채팅방 이름 확인해보기 : " + chatRoomDto.getName());
                     Tuple3<String, LocalDateTime, Long> tuple = chatService.getLastMessageWithUnreadCount(chatRoomDto.getRoomId(), myId);
                     chatRoomDto.setLastMsg(tuple.getT1());
                     chatRoomDto.setUpdateLastMsgTime(tuple.getT2());

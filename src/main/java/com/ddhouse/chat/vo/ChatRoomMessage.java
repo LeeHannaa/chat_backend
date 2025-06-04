@@ -1,5 +1,6 @@
 package com.ddhouse.chat.vo;
 
+import com.ddhouse.chat.dto.SaveMessageDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -17,7 +18,6 @@ import java.util.stream.Collectors;
 @AllArgsConstructor
 public class ChatRoomMessage {
     private Long id;
-//    private UUID messageId; // Cassandra
     private String msg;
     private Boolean isDelete; // 전체 삭제 여부
     private String deleteUsers; // ,를 기준으로 유저 아이디 저장
@@ -26,12 +26,24 @@ public class ChatRoomMessage {
     private ChatRoom chatRoom;
     private User user;
 
+    public static ChatRoomMessage save(SaveMessageDto saveMessageDto, User user, ChatRoom chatRoom, MessageType messageType) {
+        return ChatRoomMessage.builder()
+                .msg(saveMessageDto.getMsg())
+                .chatRoom(chatRoom)
+                .type(messageType)
+                .isDelete(false)
+                .regDate(saveMessageDto.getRegDate())
+                .user(user)
+                .build();
+    }
+
     public static ChatRoomMessage save(String msg, User user, ChatRoom chatRoom, MessageType messageType) {
         return ChatRoomMessage.builder()
                 .msg(msg)
                 .chatRoom(chatRoom)
                 .type(messageType)
                 .isDelete(false)
+                .regDate(LocalDateTime.now())
                 .user(user)
                 .build();
     }

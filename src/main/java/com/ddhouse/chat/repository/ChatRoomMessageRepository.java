@@ -18,10 +18,10 @@ import java.util.*;
 public class ChatRoomMessageRepository{
     private final SqlSessionTemplate sql;
 
-    public List<ChatRoomMessage> findRecentMessages(Long roomId, LocalDateTime regDate){
+    public List<ChatRoomMessage> findRecentMessages(Long roomId, LocalDateTime entryTime){
         Map<String, Object> params = new HashMap<>();
         params.put("roomId", roomId);
-        params.put("regDate", regDate);
+        params.put("entryTime", entryTime);
         return sql.selectList("chatroommessageMapper.findRecentMessages", params);
     }
 
@@ -43,8 +43,8 @@ public class ChatRoomMessageRepository{
     }
 
     public boolean existsByChatRoomId(Long roomId){
-        Integer result = sql.selectOne("chatroommessageMapper.existsByChatRoomId", roomId);
-        return result != null && result > 0;
+        int result = sql.selectOne("chatroommessageMapper.existsByChatRoomId", roomId);
+        return result > 0;
     }
 
     public void deleteByChatRoomId(Long roomId) {

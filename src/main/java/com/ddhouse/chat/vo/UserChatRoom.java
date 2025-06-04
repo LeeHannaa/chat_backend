@@ -25,9 +25,10 @@ public class UserChatRoom {
     public static UserChatRoom from(ChatRoomDto dto, ChatRoom chatRoom) {
         return UserChatRoom.builder()
                 .isInRoom(Boolean.TRUE)
-                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .entryTime(dto.getRegDate())
                 .user(dto.getUser())
                 .chatRoom(chatRoom)
+                .regDate(dto.getRegDate())
                 .build();
     }
 
@@ -36,6 +37,7 @@ public class UserChatRoom {
                 .isInRoom(Boolean.TRUE)
                 .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .user(dto.getUser())
+                .regDate(dto.getRegDate())
                 .chatRoom(chatRoom)
                 .build();
     }
@@ -43,8 +45,9 @@ public class UserChatRoom {
         // 비회원이 매물 문의했을 때 채팅 방이 생성되는 경우
         return UserChatRoom.builder()
                 .isInRoom(Boolean.TRUE)
-                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .entryTime(chatRoom.getRegDate())
                 .user(chatRoomCreateDto.getUser())
+                .regDate(chatRoom.getRegDate())
                 .chatRoom(chatRoom)
                 .build();
     }
@@ -54,6 +57,7 @@ public class UserChatRoom {
                 .isInRoom(Boolean.TRUE)
                 .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .user(user)
+                .regDate(chatRoom.getRegDate())
                 .chatRoom(chatRoom)
                 .build();
     }

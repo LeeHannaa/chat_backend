@@ -7,6 +7,8 @@ import com.ddhouse.chat.vo.UserChatRoom;
 import lombok.RequiredArgsConstructor;
 import org.mybatis.spring.SqlSessionTemplate;
 import org.springframework.stereotype.Repository;
+
+import java.sql.SQLOutput;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -25,18 +27,15 @@ public class UserChatRoomRepository {
                 "userId", userId,
                 "chatRoomId", chatRoomId
         ));
-        if (userChatRoom == null) {
-            throw new NotFoundException("해당 유저 정보와 채팅방 정보를 가진 UserChatRoom 정보를 찾을 수 없습니다: ");
-        }
         return userChatRoom;
     }
 
-    public Optional<UserChatRoom> findOpponent(Long myId, Long chatRoomId) {
+    public UserChatRoom findOpponent(Long myId, Long chatRoomId) {
         Map<String, Object> params = Map.of(
                 "myId", myId,
                 "chatRoomId", chatRoomId
         );
-        return Optional.ofNullable(sql.selectOne("userchatroomMapper.findOpponent", params));
+        return sql.selectOne("userchatroomMapper.findOpponent", params);
     }
 
     public void deleteByChatRoomId(Long roomId) {

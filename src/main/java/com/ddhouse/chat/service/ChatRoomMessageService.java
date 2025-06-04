@@ -33,7 +33,7 @@ public class ChatRoomMessageService {
             user = userRepository.findById(saveMessageDto.getWriterId());
         }
         ChatRoom chatRoom = chatRoomRepository.findById(saveMessageDto.getRoomId());
-        ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(saveMessageDto.getMsg(), user, chatRoom, MessageType.TEXT);
+        ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(saveMessageDto, user, chatRoom, MessageType.TEXT);
         return chatRoomMessageRepository.save(chatRoomMessage);
     }
 

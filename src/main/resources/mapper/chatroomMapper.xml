@@ -2,20 +2,20 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="chatroomMapper">
-    <select id="findByPhoneNumber" parameterType="String" resultType="chatRoom">
-        select id, name, memberNum, isGroup, phoneNumber, regDate, apt  from chatRoom WHERE phone_number = #{phoneNumber}
+    <select id="findByPhoneNumber" parameterType="String" resultType="ChatRoom">
+        select * from chat_room WHERE phone_number = #{phoneNumber}
     </select>
 
-    <insert id="save" parameterType="chatRoom" useGeneratedKeys="true" keyProperty="id">
-        insert into chatRoom(name, member_num, is_group, phone_number, reg_date, apt_id)
-        values(#{name}, #{memberNum}, #{isGroup}, #{phoneNumber}, #{regDate}, #{aptId})
+    <insert id="save" parameterType="ChatRoom" useGeneratedKeys="true" keyProperty="id">
+        insert into chat_room(name, member_num, is_group, phone_number, reg_date)
+        values(#{name}, #{memberNum}, #{isGroup}, #{phoneNumber}, #{regDate})
     </insert>
 
-    <select id="findById" parameterType="Long" resultType="chatRoom">
-        select id, name, member_num, is_group, phone_number, reg_date, apt_id from chatRoom WHERE id = #{id}
+    <select id="findById" parameterType="Long" resultType="ChatRoom">
+        select * from chat_room WHERE id = #{id}
     </select>
     <delete id="deleteById" parameterType="Long">
-        delete from chatRoom where id = #{id}
+        delete from chat_room where id = #{id}
     </delete>
 
 </mapper>

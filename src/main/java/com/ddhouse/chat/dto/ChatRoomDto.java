@@ -35,6 +35,7 @@ public class ChatRoomDto {
                 .memberNum(2)
 //                .apt(apt)
                 .user(user) // UserChatRoom때 사용
+                .regDate(chatMessageRequestDto.getRegDate())
                 .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .lastMsg(chatMessageRequestDto.getMsg())
                 .build();

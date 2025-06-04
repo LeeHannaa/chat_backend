@@ -13,7 +13,7 @@ import java.util.UUID;
 @Setter
 @SuperBuilder
 public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
-    private Long chatRoomMessageId;
+    private Long id;
     private String writerName;
     private Long writerId;
     private String msg;
@@ -24,7 +24,7 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
 
     public static ChatMessageResponseToFindMsgDto from (ChatRoomMessage chatRoomMessage, int unreadCount) {
         return ChatMessageResponseToFindMsgDto.builder()
-                .chatRoomMessageId(chatRoomMessage.getId())
+                .id(chatRoomMessage.getId())
                 .roomId(chatRoomMessage.getChatRoom().getId())
                 .writerId(chatRoomMessage.getUser() != null ? chatRoomMessage.getUser().getId() : null)
                 .writerName(chatRoomMessage.getUser() != null ? chatRoomMessage.getUser().getName() : chatRoomMessage.getChatRoom().getPhoneNumber())
@@ -38,7 +38,7 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
 
     public static ChatMessageResponseToFindMsgDto deleteFrom (ChatRoomMessage chatRoomMessage) {
         return ChatMessageResponseToFindMsgDto.builder()
-                .chatRoomMessageId(chatRoomMessage.getId())
+                .id(chatRoomMessage.getId())
                 .roomId(chatRoomMessage.getChatRoom().getId())
                 .writerId(chatRoomMessage.getUser().getId())
                 .writerName(chatRoomMessage.getUser().getName())
@@ -51,7 +51,7 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
 
     public static ChatMessageResponseToFindMsgDto fromAllDelete (ChatRoomMessage chatRoomMessage, int unreadCount) {
         return ChatMessageResponseToFindMsgDto.builder()
-                .chatRoomMessageId(chatRoomMessage.getId())
+                .id(chatRoomMessage.getId())
                 .roomId(chatRoomMessage.getChatRoom().getId())
                 .writerId(chatRoomMessage.getUser().getId())
                 .writerName(chatRoomMessage.getUser().getName())

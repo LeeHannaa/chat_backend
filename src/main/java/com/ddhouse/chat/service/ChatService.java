@@ -3,7 +3,6 @@ package com.ddhouse.chat.service;
 
 import com.ddhouse.chat.dto.ChatRoomCreateDto;
 import com.ddhouse.chat.dto.ChatRoomDto;
-import com.ddhouse.chat.dto.ChatRoomForAptDto;
 import com.ddhouse.chat.dto.request.group.GroupChatRoomCreateDto;
 import com.ddhouse.chat.dto.request.group.InviteGroupRequestDto;
 import com.ddhouse.chat.dto.response.message.ChatMessageResponseToChatRoomDto;
@@ -15,7 +14,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple2;
 import reactor.util.function.Tuple3;
 import reactor.util.function.Tuples;
@@ -107,11 +105,14 @@ public class ChatService {
     public List<ChatRoomListResponseDto> findMyChatRoomList(Long myId) {
         // 내가 문의자로 들어간 채팅방 or 내가 관리자로 있는 채팅방
         List<UserChatRoom> userChatRooms = userChatRoomRepository.findByUserId(myId);
+//        System.out.println("나의 채팅방 숫자 : " + userChatRooms.size());
         return userChatRooms.stream()
                 .filter(UserChatRoom::getIsInRoom) // 나가기 하지 않은 채팅방만
                 .map(UserChatRoom::getChatRoom)
-                .filter(chatRoom -> chatRoomMessageRepository.existsByChatRoomId(chatRoom.getId())) // 메시지가 존재하는 경우만 필터링
+                .filter(chatRoom ->
+                    chatRoomMessageRepository.existsByChatRoomId(chatRoom.getId())) // 메시지가 존재하는 경우만 필터링
                 .map(chatRoom -> {
+//                    System.out.println("chatRoom 정보 : " + chatRoom.getId());
                     if(chatRoom.getIsGroup()){
                         // 단톡이었으면 -> 채팅방 이름으로
                         return ChatRoomListResponseDto.group(chatRoom);
@@ -120,31 +121,19 @@ public class ChatService {
                         return ChatRoomListResponseDto.one(chatRoom, chatRoom.getPhoneNumber());
                     } else{
                         // 개인톡 -> 상대방 이름으로
-                        Optional<UserChatRoom> opponent = userChatRoomRepository.findOpponent(myId, chatRoom.getId());
+                        UserChatRoom opponent = userChatRoomRepository.findOpponent(myId, chatRoom.getId());
+                        String chatName = "알 수 없음";
 
-                        String chatName = opponent.stream()
-                                .map(UserChatRoom::getUser)
-                                .map(User::getName)
-                                .findFirst()
-                                .orElse("알 수 없음");
+                        if (opponent != null && opponent.getUser() != null) {
+                            chatName = opponent.getUser().getName();
+                            System.out.println("개인톡인 경우 상대방 이름으로 넘기기 : " + chatName);
+                        }
 
                         return ChatRoomListResponseDto.one(chatRoom, chatName);
                     }
                 })
                 .collect(Collectors.toList());
     }
-
-    public List<ChatRoomForAptDto> findMyChatRoomListForApt(Long myId) {
-        // 내가 문의자로 들어간 채팅방 or 내가 관리자로 있는 채팅방
-        List<UserChatRoom> chatRooms = userChatRoomRepository.findByUserId(myId);
-        return chatRooms.stream()
-                .filter(UserChatRoom::getIsInRoom) // 나가기 하지 않은 채팅방만
-                .map(UserChatRoom::getChatRoom)
-                .filter(chatRoom -> chatRoomMessageRepository.existsByChatRoomId(chatRoom.getId())) // 메시지가 존재하는 경우만 필터링
-                .map(ChatRoomForAptDto::from)
-                .collect(Collectors.toList());
-    }
-
 
     public Tuple3<String, LocalDateTime, Long> getLastMessageWithUnreadCount(Long roomId, Long myId) {
         // entry_time 입장 시간 보고 라스트 채팅 가져오기

@@ -36,9 +36,6 @@ public class ChatMessageController {
     public ResponseEntity<List<ChatMessageResponseDto>> findMessageByChatRoomId(@PathVariable("chatRoomId") Long roomId, @RequestParam("myId") Long myId) {
         System.out.println("채팅방 채팅 내역 확인하기");
         List<ChatMessageResponseDto> messages = chatMessageService.findChatMessages(roomId, myId);
-        if (messages == null || messages.isEmpty()) {
-            return ResponseEntity.notFound().build();
-        }
         System.out.println("해당 채팅방의 메시지들 가져오기 결과 : " + messages);
         return ResponseEntity.ok(messages);
     }

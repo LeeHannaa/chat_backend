@@ -56,9 +56,8 @@ public class ChatMessageService {
         LocalDateTime standardTime = userChatRoomRepository
                 .findByUserIdAndChatRoomId(myId, roomId)
                 .getEntryTime();
-
         List<ChatMessageResponseDto> chatRoomMessagesFiltered = chatRoomMessages.stream()
-                .filter(chatRoomMessage -> chatRoomMessage.getRegDate().isAfter(standardTime)) // standardTime 이후만
+                .filter(chatRoomMessage -> !chatRoomMessage.getRegDate().isBefore(standardTime)) // standardTime 이후만
                 // 내 기기에서 삭제된 메시지는 제외하긴 하는데 그 경우 userId가 나의 id와 동일한 경우에만 제외
                 .filter(chatRoomMessage -> !chatRoomMessage.getDeleteUserList().contains(myId))
                 .map(chatRoomMessage -> {
@@ -185,6 +184,7 @@ public class ChatMessageService {
                 // 방을 생성해야하는 경우
                 UserChatRoom createdChatRoom = chatService.createChatRoom(ChatRoomDto.createChatRoomDto(chatMessageRequestDto, user), ChatRoomDto.createChatRoomDto(chatMessageRequestDto, me));
                 chatMessageRequestDto.addRoomId(createdChatRoom.getChatRoom().getId());
+                System.out.println("채팅방 생성 완료ㅕ!!  : " + chatMessageRequestDto.getRoomId());
             }
             System.out.println("채팅방으로 이동해도 된다는 메시지 전달 완료!!");
     }
@@ -192,10 +192,10 @@ public class ChatMessageService {
     public ResponseEntity<Void> sendSocketChatListAndFcmToUser(ChatMessageRequestDto chatMessageRequestDto){
         AtomicBoolean isInquiry = new AtomicBoolean(false);
         if(chatMessageRequestDto.getRoomId() == null && chatMessageRequestDto.getAptId() != null){
-            messageFromInquiry(chatMessageRequestDto);
+            System.out.println("매물 문의가 온 경우!!!");
+            messageFromInquiry(chatMessageRequestDto); // 문의 온 경우
             isInquiry.set(true);
         }
-        // TODO
         // 채팅방에 나 빼고 존재하는 유저들
         List<Long> receiverIds = findReceiverId(chatMessageRequestDto);
         // 현재 채팅방에 입장한 유저들 (나빼고)
@@ -204,40 +204,39 @@ public class ChatMessageService {
         ChatRoom chatRoom = chatService.findChatRoomByRoomId(chatMessageRequestDto.getRoomId());
         String senderName = userService.findByUserId(chatMessageRequestDto.getWriterId()).getName(); // 1:1인 경우 채팅방 이름
 
+        if(!chatRoom.getIsGroup()) { // 1:1 채팅방
+            UserChatRoom userChatRoom = getUserInChatRoom(receiverIds.get(0), chatMessageRequestDto.getRoomId());
+            if(!userChatRoom.getIsInRoom()) { // 방을 나갔으면 다시 방에 들어오게 되는 로직
+                saveReEntryUserInChatRoom(userChatRoom);
+                chatService.increaseNumberInChatRoom(chatMessageRequestDto.getRoomId());
+            }
+        }
         ChatRoomMessage chatRoomMessage =  saveChatMessage(SaveMessageDto.from(chatMessageRequestDto));
-        System.out.println("채팅 메시지 저장함");
-//        return chatMessageMono.flatMap(message -> {
-            if(!chatRoom.getIsGroup()) { // 1:1 채팅방
-                UserChatRoom userChatRoom = getUserInChatRoom(receiverIds.get(0), chatMessageRequestDto.getRoomId());
-                if(!userChatRoom.getIsInRoom()) { // 방을 나갔으면 다시 방에 들어오게 되는 로직
-                    saveReEntryUserInChatRoom(userChatRoom);
-                    chatService.increaseNumberInChatRoom(chatMessageRequestDto.getRoomId());
-                }
-            }
-            int countInRoom = roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId());
-            int unreadCountByMsgId = chatService.findChatRoomByRoomId(chatMessageRequestDto.getRoomId()).getMemberNum() - countInRoom;
-            // [ 현재 채팅방에 접속한 경우 필요한 데이터 실시간 전달 ]
-            if(isInquiry.get()){
-                String userName = userService.findByUserId(receiverIds.get(0)).getName();
-                // TODO : 매물 문의한 다음 채팅 페이지 이동 시 채팅 내역을 소켓 메시지로 전달받지 못하는 이슈 -> MessageInquiryDto를 만들어서 해당 문의 메시지는 미리 전달
-                template.convertAndSend("/topic/user/" + chatMessageRequestDto.getWriterId(),
-                        Map.of(
-                                "type", "CLEAR_ROOM",
-                                "message", CreatedChatRoomFromAptDto.from(chatMessageRequestDto.getRoomId(), userName)
-                        )
-                );
-            }
-            if(countInRoom > 0){
-                template.convertAndSend("/topic/chatroom/" + chatMessageRequestDto.getRoomId(),
-                        Map.of(
-                                "type", "CHAT",
-                                "message", chatRoom.getIsGroup() ? ChatMessageResponseToChatRoomDto.from(chatRoomMessage, null, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
-                                        // 개인 매물 문의 시 채팅 방안에 사람이 있는 경우 (상대방이 있는것) -> 안읽은 메시지 표시 x
-                                        : isInquiry.get() ? ChatMessageResponseToChatRoomDto.from(chatRoomMessage, senderName, chatMessageRequestDto, unreadCountByMsgId -1 , MessageType.TEXT)
-                                        : ChatMessageResponseToChatRoomDto.from(chatRoomMessage, senderName, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
-                        )
-                );
-            }
+
+        int countInRoom = roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId());
+        int unreadCountByMsgId = chatService.findChatRoomByRoomId(chatMessageRequestDto.getRoomId()).getMemberNum() - countInRoom;
+        // [ 현재 채팅방에 접속한 경우 필요한 데이터 실시간 전달 ]
+        if(isInquiry.get()){
+            String userName = userService.findByUserId(receiverIds.get(0)).getName();
+            // TODO : 매물 문의한 다음 채팅 페이지 이동 시 채팅 내역을 소켓 메시지로 전달받지 못하는 이슈 -> MessageInquiryDto를 만들어서 해당 문의 메시지는 미리 전달
+            template.convertAndSend("/topic/user/" + chatMessageRequestDto.getWriterId(),
+                    Map.of(
+                            "type", "CLEAR_ROOM",
+                            "message", CreatedChatRoomFromAptDto.from(chatMessageRequestDto.getRoomId(), userName)
+                    )
+            );
+        }
+        if(countInRoom > 0){
+            template.convertAndSend("/topic/chatroom/" + chatMessageRequestDto.getRoomId(),
+                    Map.of(
+                            "type", "CHAT",
+                            "message", chatRoom.getIsGroup() ? ChatMessageResponseToChatRoomDto.from(chatRoomMessage, null, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
+                                    // 개인 매물 문의 시 채팅 방안에 사람이 있는 경우 (상대방이 있는것) -> 안읽은 메시지 표시 x
+                                    : isInquiry.get() ? ChatMessageResponseToChatRoomDto.from(chatRoomMessage, senderName, chatMessageRequestDto, unreadCountByMsgId -1 , MessageType.TEXT)
+                                    : ChatMessageResponseToChatRoomDto.from(chatRoomMessage, senderName, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
+                    )
+            );
+        }
         // 채팅방 인원 중 현재 채팅방에 들어와있지 않은 유저들
         receiverIds.removeIf(userId -> userIdsInRoom.contains(userId));
         receiverIds.forEach(userId -> {
