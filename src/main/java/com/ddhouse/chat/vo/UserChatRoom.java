@@ -1,9 +1,7 @@
-package com.ddhouse.chat.domain;
+package com.ddhouse.chat.vo;
 
-import com.ddhouse.chat.BaseEntity;
 import com.ddhouse.chat.dto.ChatRoomCreateDto;
 import com.ddhouse.chat.dto.ChatRoomDto;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -12,58 +10,44 @@ import lombok.NoArgsConstructor;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
-@Entity
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UserChatRoom extends BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class UserChatRoom {
     private Long id;
     private Boolean isInRoom;
     private LocalDateTime entryTime;
-
-    @ManyToOne
-    @JoinColumn(name = "userId", nullable = false)
+    private LocalDateTime regDate;
     private User user;
-
-    @ManyToOne
-    @JoinColumn(name = "chatRoomId", nullable = false)
     private ChatRoom chatRoom;
 
     public static UserChatRoom from(ChatRoomDto dto, ChatRoom chatRoom) {
         return UserChatRoom.builder()
                 .isInRoom(Boolean.TRUE)
-                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .entryTime(chatRoom.getRegDate())
                 .user(dto.getUser())
                 .chatRoom(chatRoom)
+                .regDate(chatRoom.getRegDate())
                 .build();
     }
 
     public static UserChatRoom person(ChatRoomDto dto, ChatRoom chatRoom) {
         return UserChatRoom.builder()
                 .isInRoom(Boolean.TRUE)
-                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .entryTime(chatRoom.getRegDate())
                 .user(dto.getUser())
+                .regDate(chatRoom.getRegDate())
                 .chatRoom(chatRoom)
                 .build();
     }
-//    public static UserChatRoom otherFrom(UserChatRoom userChatRoom, ChatRoom chatRoom) {
-//        return UserChatRoom.builder()
-//                .isInRoom(Boolean.TRUE)
-//                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
-//                .user(dto.getApt().getUser())
-//                .chatRoom(chatRoom)
-//                .build();
-//    }
-
     public static UserChatRoom from(ChatRoomCreateDto chatRoomCreateDto, ChatRoom chatRoom) {
         // 비회원이 매물 문의했을 때 채팅 방이 생성되는 경우
         return UserChatRoom.builder()
                 .isInRoom(Boolean.TRUE)
-                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .entryTime(chatRoom.getRegDate())
                 .user(chatRoomCreateDto.getUser())
+                .regDate(chatRoom.getRegDate())
                 .chatRoom(chatRoom)
                 .build();
     }
@@ -73,6 +57,7 @@ public class UserChatRoom extends BaseEntity {
                 .isInRoom(Boolean.TRUE)
                 .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .user(user)
+                .regDate(chatRoom.getRegDate())
                 .chatRoom(chatRoom)
                 .build();
     }
@@ -90,4 +75,3 @@ public class UserChatRoom extends BaseEntity {
         }
     }
 }
-

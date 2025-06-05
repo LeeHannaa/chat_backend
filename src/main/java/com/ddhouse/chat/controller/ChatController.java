@@ -1,9 +1,5 @@
 package com.ddhouse.chat.controller;
 
-import com.ddhouse.chat.domain.ChatRoom;
-import com.ddhouse.chat.domain.User;
-import com.ddhouse.chat.domain.UserChatRoom;
-import com.ddhouse.chat.dto.ChatRoomDto;
 import com.ddhouse.chat.dto.request.group.GroupChatRoomCreateDto;
 import com.ddhouse.chat.dto.request.group.InviteGroupRequestDto;
 import com.ddhouse.chat.dto.response.chatRoom.ChatRoomListResponseDto;
@@ -11,15 +7,17 @@ import com.ddhouse.chat.service.ChatService;
 import com.ddhouse.chat.service.MessageUnreadService;
 import com.ddhouse.chat.service.UserChatRoomService;
 import com.ddhouse.chat.service.UserService;
+import com.ddhouse.chat.vo.ChatRoom;
+import com.ddhouse.chat.vo.User;
+import com.ddhouse.chat.vo.UserChatRoom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
-
+import reactor.util.function.Tuple3;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @RestController
 @RequiredArgsConstructor
@@ -29,12 +27,6 @@ public class ChatController {
     private final MessageUnreadService messageUnreadService;
     private final UserChatRoomService userChatRoomService;
     private final UserService userService;
-
-//    @PostMapping("/create") // 직접적으로 사용하지 않음
-//    public ResponseEntity<Void> createChatRoom(@RequestBody ChatRoomDto chatRoomDto) {
-//        chatService.createChatRoom(chatRoomDto);
-//        return ResponseEntity.ok().build();
-//    }
 
     @PostMapping("/create/group") // 단체 채팅방 생성
     // TODO : 단체 채팅방 만들기 객체 설정해서 진행하면 됨!!!!
@@ -52,24 +44,24 @@ public class ChatController {
 
 
     @GetMapping
-    public Mono<ResponseEntity<List<ChatRoomListResponseDto>>> getMyChatRoomList(@RequestParam("myId") Long myId) {
+    public ResponseEntity<List<ChatRoomListResponseDto>> getMyChatRoomList(@RequestParam("myId") Long myId) {
         List<ChatRoomListResponseDto> responses = chatService.findMyChatRoomList(myId);
         if (responses.isEmpty()) {
             System.out.println("현재 내가 들어가있는 채팅방 없음!!!!");
-            return Mono.just(ResponseEntity.ok(Collections.emptyList()));
+            return ResponseEntity.ok(Collections.emptyList());
         }
-        return Flux.fromIterable(responses)
-                .flatMap(chatRoomDto ->
-                        chatService.getLastMessageWithUnreadCount(chatRoomDto.getRoomId(), myId)
-                                .map(tuple -> {
-                                    chatRoomDto.setLastMsg(tuple.getT1());
-                                    chatRoomDto.setUpdateLastMsgTime(tuple.getT2());
-                                    chatRoomDto.setUnreadCount(tuple.getT3());
-                                    return chatRoomDto;
-                                })
-                )
-                .collectList()
-                .map(ResponseEntity::ok);
+        List<ChatRoomListResponseDto> updatedResponses = responses.stream()
+                .map(chatRoomDto -> {
+                    // 동기 메서드 호출 가정
+                    System.out.println("채팅방 이름 확인해보기 : " + chatRoomDto.getName());
+                    Tuple3<String, LocalDateTime, Long> tuple = chatService.getLastMessageWithUnreadCount(chatRoomDto.getRoomId(), myId);
+                    chatRoomDto.setLastMsg(tuple.getT1());
+                    chatRoomDto.setUpdateLastMsgTime(tuple.getT2());
+                    chatRoomDto.setUnreadCount(tuple.getT3());
+                    return chatRoomDto;
+                })
+                .collect(Collectors.toList());
+        return ResponseEntity.ok(updatedResponses);
     }
 
     @GetMapping("/connect/{userId}")

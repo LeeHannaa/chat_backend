@@ -1,13 +1,11 @@
 package com.ddhouse.chat.service;
 
-import com.ddhouse.chat.domain.Apt;
 import com.ddhouse.chat.dto.AptDto;
-import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.AptRepository;
+import com.ddhouse.chat.vo.Apt;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
 @Slf4j
@@ -21,15 +19,12 @@ public class AptService {
     }
 
     public AptDto getAptById(Long id) {
-        Apt apt = aptRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("아파트 ID " + id + "에 해당하는 데이터가 없습니다."));
-
+        Apt apt = aptRepository.findById(id);
         return AptDto.from(apt);
     }
 
     public Apt findByAptId(Long id) {
-        Apt apt = aptRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("아파트 ID " + id + "에 해당하는 데이터가 없습니다."));
+        Apt apt = aptRepository.findById(id);
         return apt;
     }
 

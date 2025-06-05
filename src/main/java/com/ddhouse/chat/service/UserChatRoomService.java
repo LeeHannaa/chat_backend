@@ -1,17 +1,15 @@
 package com.ddhouse.chat.service;
 
-import com.ddhouse.chat.domain.*;
 import com.ddhouse.chat.dto.request.group.UserChatRoomAddDto;
-import com.ddhouse.chat.exception.NotFoundException;
 import com.ddhouse.chat.repository.*;
+import com.ddhouse.chat.vo.ChatRoom;
+import com.ddhouse.chat.vo.User;
+import com.ddhouse.chat.vo.UserChatRoom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
-
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -21,10 +19,7 @@ public class UserChatRoomService {
     private final UserChatRoomRepository userChatRoomRepository;
     private final UserRepository userRepository;
     private final ChatRoomRepository chatRoomRepository;
-    private final ChatMessageRepository chatMessageRepository;
     private final ChatService chatService;
-    private final SimpMessageSendingOperations template;
-    private final ChatRoomMessageRepository chatRoomMessageRepository;
 
 
     public void addUsersInChatRoom(UserChatRoomAddDto userChatRoomAddDto){
@@ -42,8 +37,7 @@ public class UserChatRoomService {
                 .filter(s -> !s.isBlank())
                 .map(Long::valueOf)
                 .map(userId -> {
-                    User user = userRepository.findById(userId)
-                            .orElseThrow(() -> new NotFoundException("해당 아이디를 가진 유저를 찾지 못했습니다."));
+                    User user = userRepository.findById(userId);
                     return UserChatRoom.group(chatRoom, user);
                 })
                 .collect(Collectors.toList());
@@ -60,9 +54,10 @@ public class UserChatRoomService {
         // TODO : 여기서 확인하고 있으면 넘겨주고 아니면 null 넘겨줘야함!! (모두 다 1:1 개인 연락 시 방찾는 경우)
         for (ChatRoom chatRoom : chatRooms) {
             if(!chatRoom.getIsGroup()){
-                Optional<UserChatRoom> userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(user.getId(), chatRoom.getId());
-                if (userChatRoom.isPresent()) {
-                    return userChatRoom.get();
+                System.out.println("findByUserIdAndChatRoomId : " + user.getId() + ", " + chatRoom.getId());
+                UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(user.getId(), chatRoom.getId());
+                if (userChatRoom != null) {
+                    return userChatRoom;
                 }
             }
         }

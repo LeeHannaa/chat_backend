@@ -1,8 +1,8 @@
 package com.ddhouse.chat.controller;
 
-import com.ddhouse.chat.domain.Apt;
 import com.ddhouse.chat.dto.AptDto;
 import com.ddhouse.chat.service.AptService;
+import com.ddhouse.chat.vo.Apt;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;

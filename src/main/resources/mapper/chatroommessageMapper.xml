@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="chatroommessageMapper">
+    <resultMap id="ChatRoomMessageMap" type="ChatRoomMessage">
+        <id property="id" column="crm_id"/>
+        <result property="msg" column="crm_msg"/>
+        <result property="isDelete" column="crm_is_delete"/>
+        <result property="deleteUsers" column="crm_delete_users"/>
+        <result property="type" column="crm_type"/>
+        <result property="regDate" column="crm_reg_date"/>
+
+        <association property="user" javaType="User">
+            <id property="id" column="u_id"/>
+            <result property="name" column="u_name"/>
+            <result property="fcmToken" column="u_fcm_token"/>
+            <result property="regDate" column="u_reg_date"/>
+        </association>
+
+        <association property="chatRoom" javaType="ChatRoom">
+            <id property="id" column="cr_id"/>
+            <result property="name" column="cr_name"/>
+            <result property="memberNum" column="cr_member_num"/>
+            <result property="isGroup" column="cr_is_group"/>
+            <result property="phoneNumber" column="cr_phone_number"/>
+            <result property="regDate" column="cr_reg_date"/>
+        </association>
+    </resultMap>
+
+    <select id="findRecentMessages" parameterType="map" resultMap="ChatRoomMessageMap">
+        SELECT
+            crm.id AS crm_id,
+            crm.msg AS crm_msg,
+            crm.is_delete AS crm_is_delete,
+            crm.delete_users AS crm_delete_users,
+            crm.type AS crm_type,
+            crm.reg_date AS crm_reg_date,
+
+            cr.id AS cr_id,
+            cr.name AS cr_name,
+            cr.member_num AS cr_member_num,
+            cr.is_group AS cr_is_group,
+            cr.phone_number AS cr_phone_number,
+            cr.reg_date AS cr_reg_date,
+
+            u.id AS u_id,
+            u.name AS u_name
+        FROM chat_room_message crm
+                 JOIN chat_room cr ON crm.chat_room_id = cr.id
+                 LEFT JOIN user u ON crm.user_id = u.id
+        WHERE crm.chat_room_id = #{roomId}
+          AND crm.reg_date >= #{entryTime}
+        ORDER BY crm.reg_date DESC
+            LIMIT 100
+    </select>
+
+    <select id="findAllByChatRoomId" resultMap="ChatRoomMessageMap" parameterType="Long">
+        SELECT
+            crm.id AS crm_id,
+            crm.msg AS crm_msg,
+            crm.is_delete AS crm_is_delete,
+            crm.delete_users AS crm_delete_users,
+            crm.type AS crm_type,
+            crm.reg_date AS crm_reg_date,
+
+            cr.id AS cr_id,
+            cr.name AS cr_name,
+            cr.member_num AS cr_member_num,
+            cr.is_group AS cr_is_group,
+            cr.phone_number AS cr_phone_number,
+            cr.reg_date AS cr_reg_date,
+
+            u.id AS u_id,
+            u.name AS u_name
+        FROM chat_room_message crm
+                 JOIN chat_room cr ON crm.chat_room_id = cr.id
+                 LEFT JOIN user u ON crm.user_id = u.id
+        WHERE crm.chat_room_id = #{roomId}
+    </select>
+
+
+    <select id="findById" resultMap="ChatRoomMessageMap" parameterType="Long">
+        SELECT
+            crm.id AS crm_id,
+            crm.msg AS crm_msg,
+            crm.is_delete AS crm_is_delete,
+            crm.delete_users AS crm_delete_users,
+            crm.type AS crm_type,
+            crm.reg_date AS crm_reg_date,
+
+            cr.id AS cr_id,
+            cr.name AS cr_name,
+            cr.member_num AS cr_member_num,
+            cr.is_group AS cr_is_group,
+            cr.phone_number AS cr_phone_number,
+            cr.reg_date AS cr_reg_date,
+
+            u.id AS u_id,
+            u.name AS u_name
+        FROM chat_room_message crm
+                 JOIN chat_room cr ON crm.chat_room_id = cr.id
+                 LEFT JOIN user u ON crm.user_id = u.id
+        WHERE crm.id = #{chatRoomMessageId}
+    </select>
+
+    <insert id="save" parameterType="chatRoomMessage" useGeneratedKeys="true" keyProperty="id">
+        insert into chat_room_message(msg, is_delete, delete_users, type, reg_date, chat_room_id, user_id)
+        values(#{msg}, #{isDelete}, #{deleteUsers}, #{type}, #{regDate}, #{chatRoom.id}, #{user.id})
+    </insert>
+
+    <update id="update" parameterType="chatRoomMessage">
+        UPDATE chat_room_message
+        SET
+            is_delete = #{isDelete},
+            delete_users = #{deleteUsers}
+        WHERE id = #{id}
+    </update>
+
+
+    <select id="existsByChatRoomId" resultType="int" parameterType="Long">
+        SELECT EXISTS (
+                       SELECT 1 FROM chat_room_message WHERE chat_room_id = #{roomId}
+                   )
+    </select>
+
+    <delete id="deleteByChatRoomId" parameterType="Long">
+        delete from chat_room_message where chat_room_id = #{roomId}
+    </delete>
+
+</mapper>

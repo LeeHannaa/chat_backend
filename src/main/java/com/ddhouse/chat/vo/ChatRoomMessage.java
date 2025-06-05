@@ -1,45 +1,49 @@
-package com.ddhouse.chat.domain;
+package com.ddhouse.chat.vo;
 
-import com.ddhouse.chat.BaseEntity;
-import jakarta.persistence.*;
+import com.ddhouse.chat.dto.SaveMessageDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.util.*;
+import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
-@Entity
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class ChatRoomMessage extends BaseEntity {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class ChatRoomMessage {
     private Long id;
-
-    private UUID messageId; // Cassandra
+    private String msg;
     private Boolean isDelete; // 전체 삭제 여부
     private String deleteUsers; // ,를 기준으로 유저 아이디 저장
-    @Enumerated(EnumType.STRING)
     private MessageType type;
-
-    @ManyToOne
-    @JoinColumn(name = "chatRoomId", nullable = false)
+    private LocalDateTime regDate;
     private ChatRoom chatRoom;
-
-    @ManyToOne
-    @JoinColumn(name = "userId", nullable = true) // 회원, 비회원
     private User user;
 
-    public static ChatRoomMessage save(UUID msgId, User user, ChatRoom chatRoom, MessageType messageType) {
+    public static ChatRoomMessage save(SaveMessageDto saveMessageDto, User user, ChatRoom chatRoom, MessageType messageType) {
         return ChatRoomMessage.builder()
-                .messageId(msgId)
+                .msg(saveMessageDto.getMsg())
                 .chatRoom(chatRoom)
                 .type(messageType)
                 .isDelete(false)
+                .regDate(saveMessageDto.getRegDate())
+                .user(user)
+                .build();
+    }
+
+    public static ChatRoomMessage save(String msg, User user, ChatRoom chatRoom, MessageType messageType) {
+        return ChatRoomMessage.builder()
+                .msg(msg)
+                .chatRoom(chatRoom)
+                .type(messageType)
+                .isDelete(false)
+                .regDate(LocalDateTime.now())
                 .user(user)
                 .build();
     }

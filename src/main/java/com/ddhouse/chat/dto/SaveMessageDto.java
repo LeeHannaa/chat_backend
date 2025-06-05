@@ -1,12 +1,12 @@
 package com.ddhouse.chat.dto;
 
-import com.ddhouse.chat.domain.UserChatRoom;
 import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.request.message.GuestMessageRequestDto;
-import com.ddhouse.chat.dto.response.message.ChatMessageResponseCreateDto;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -16,12 +16,14 @@ public class SaveMessageDto {
     private Long roomId;
     private Long writerId;
     private String msg;
+    private LocalDateTime regDate;
 
     public static SaveMessageDto from (ChatMessageRequestDto chatMessageRequestDto) {
         return SaveMessageDto.builder()
                 .roomId(chatMessageRequestDto.getRoomId())
                 .writerId(chatMessageRequestDto.getWriterId())
                 .msg(chatMessageRequestDto.getMsg())
+                .regDate(chatMessageRequestDto.getRegDate())
                 .build();
     }
 
@@ -29,6 +31,7 @@ public class SaveMessageDto {
         return SaveMessageDto.builder()
                 .roomId(roomId)
                 .msg(guestMessageRequestDto.getNoteText())
+                .regDate(guestMessageRequestDto.getRegDate())
                 .build();
     }
 }
