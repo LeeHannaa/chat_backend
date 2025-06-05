@@ -1,6 +1,5 @@
 package com.ddhouse.chat.dto;
 
-import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.request.message.GuestMessageRequestDto;
 import com.ddhouse.chat.vo.User;
 import lombok.Builder;

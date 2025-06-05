@@ -1,13 +1,9 @@
 package com.ddhouse.chat.repository;
 
 import com.ddhouse.chat.exception.NotFoundException;
-import com.ddhouse.chat.vo.ChatRoom;
 import com.ddhouse.chat.vo.ChatRoomMessage;
-import com.ddhouse.chat.vo.User;
-import com.ddhouse.chat.vo.UserChatRoom;
 import lombok.RequiredArgsConstructor;
 import org.mybatis.spring.SqlSessionTemplate;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;

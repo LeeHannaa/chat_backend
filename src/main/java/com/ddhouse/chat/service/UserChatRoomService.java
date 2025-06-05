@@ -7,7 +7,6 @@ import com.ddhouse.chat.vo.User;
 import com.ddhouse.chat.vo.UserChatRoom;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.messaging.simp.SimpMessageSendingOperations;
 import org.springframework.stereotype.Service;
 import java.util.Arrays;
 import java.util.List;

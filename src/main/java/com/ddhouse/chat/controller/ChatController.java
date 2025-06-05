@@ -1,6 +1,5 @@
 package com.ddhouse.chat.controller;
 
-import com.ddhouse.chat.dto.ChatRoomDto;
 import com.ddhouse.chat.dto.request.group.GroupChatRoomCreateDto;
 import com.ddhouse.chat.dto.request.group.InviteGroupRequestDto;
 import com.ddhouse.chat.dto.response.chatRoom.ChatRoomListResponseDto;
@@ -14,14 +13,10 @@ import com.ddhouse.chat.vo.UserChatRoom;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import reactor.core.publisher.Flux;
-import reactor.core.publisher.Mono;
 import reactor.util.function.Tuple3;
-
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 @RestController
