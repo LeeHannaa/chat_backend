@@ -96,7 +96,7 @@ public class ChatMessageService {
 
     public void saveReEntryUserInChatRoom(UserChatRoom userChatRoom){
         userChatRoom.reEntryInChatRoom();
-        userChatRoomRepository.save(userChatRoom);
+        userChatRoomRepository.update(userChatRoom);
     }
 
     public ChatRoomMessage saveChatMessage(SaveMessageDto saveMessageDto) {
@@ -214,7 +214,9 @@ public class ChatMessageService {
         ChatRoomMessage chatRoomMessage =  saveChatMessage(SaveMessageDto.from(chatMessageRequestDto));
 
         int countInRoom = roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId());
+        System.out.println("현재 방에 입장한 인원 수 : " + countInRoom);
         int unreadCountByMsgId = chatService.findChatRoomByRoomId(chatMessageRequestDto.getRoomId()).getMemberNum() - countInRoom;
+        System.out.println("메시지 전달 시 읽지 않은 메시지 확인 : " + unreadCountByMsgId);
         // [ 현재 채팅방에 접속한 경우 필요한 데이터 실시간 전달 ]
         if(isInquiry.get()){
             String userName = userService.findByUserId(receiverIds.get(0)).getName();

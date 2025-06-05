@@ -25,19 +25,19 @@ public class UserChatRoom {
     public static UserChatRoom from(ChatRoomDto dto, ChatRoom chatRoom) {
         return UserChatRoom.builder()
                 .isInRoom(Boolean.TRUE)
-                .entryTime(dto.getRegDate())
+                .entryTime(chatRoom.getRegDate())
                 .user(dto.getUser())
                 .chatRoom(chatRoom)
-                .regDate(dto.getRegDate())
+                .regDate(chatRoom.getRegDate())
                 .build();
     }
 
     public static UserChatRoom person(ChatRoomDto dto, ChatRoom chatRoom) {
         return UserChatRoom.builder()
                 .isInRoom(Boolean.TRUE)
-                .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .entryTime(chatRoom.getRegDate())
                 .user(dto.getUser())
-                .regDate(dto.getRegDate())
+                .regDate(chatRoom.getRegDate())
                 .chatRoom(chatRoom)
                 .build();
     }

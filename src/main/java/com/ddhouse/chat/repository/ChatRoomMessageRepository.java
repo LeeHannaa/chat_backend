@@ -38,6 +38,11 @@ public class ChatRoomMessageRepository{
         return chatRoomMessage;
     }
 
+    public ChatRoomMessage update(ChatRoomMessage chatRoomMessage) {
+        sql.update("chatroommessageMapper.update", chatRoomMessage);
+        return chatRoomMessage;
+    }
+
     public List<ChatRoomMessage> findAllByChatRoomId(Long roomId) {
         return sql.selectList("chatroommessageMapper.findAllByChatRoomId", roomId);
     }

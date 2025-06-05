@@ -79,8 +79,28 @@
     </select>
 
 
-    <select id="findById" resultType="chatRoomMessage" parameterType="Long">
-        select * from chat_room_message WHERE id = #{chatRoomMessageId}
+    <select id="findById" resultMap="ChatRoomMessageMap" parameterType="Long">
+        SELECT
+            crm.id AS crm_id,
+            crm.msg AS crm_msg,
+            crm.is_delete AS crm_is_delete,
+            crm.delete_users AS crm_delete_users,
+            crm.type AS crm_type,
+            crm.reg_date AS crm_reg_date,
+
+            cr.id AS cr_id,
+            cr.name AS cr_name,
+            cr.member_num AS cr_member_num,
+            cr.is_group AS cr_is_group,
+            cr.phone_number AS cr_phone_number,
+            cr.reg_date AS cr_reg_date,
+
+            u.id AS u_id,
+            u.name AS u_name
+        FROM chat_room_message crm
+                 JOIN chat_room cr ON crm.chat_room_id = cr.id
+                 LEFT JOIN user u ON crm.user_id = u.id
+        WHERE crm.id = #{chatRoomMessageId}
     </select>
 
     <insert id="save" parameterType="chatRoomMessage" useGeneratedKeys="true" keyProperty="id">
@@ -88,6 +108,13 @@
         values(#{msg}, #{isDelete}, #{deleteUsers}, #{type}, #{regDate}, #{chatRoom.id}, #{user.id})
     </insert>
 
+    <update id="update" parameterType="chatRoomMessage">
+        UPDATE chat_room_message
+        SET
+            is_delete = #{isDelete},
+            delete_users = #{deleteUsers}
+        WHERE id = #{id}
+    </update>
 
 
     <select id="existsByChatRoomId" resultType="int" parameterType="Long">

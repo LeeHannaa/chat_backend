@@ -11,6 +11,11 @@
         values(#{name}, #{memberNum}, #{isGroup}, #{phoneNumber}, #{regDate})
     </insert>
 
+    <update id="memberNumUpdate" parameterType="ChatRoom">
+        UPDATE chat_room SET member_num = #{memberNum} WHERE id = #{id}
+    </update>
+
+
     <select id="findById" parameterType="Long" resultType="ChatRoom">
         select * from chat_room WHERE id = #{id}
     </select>

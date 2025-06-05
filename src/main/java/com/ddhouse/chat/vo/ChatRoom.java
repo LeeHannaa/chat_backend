@@ -2,6 +2,7 @@ package com.ddhouse.chat.vo;
 
 import com.ddhouse.chat.dto.ChatRoomCreateDto;
 import com.ddhouse.chat.dto.ChatRoomDto;
+import com.ddhouse.chat.dto.request.group.GroupChatRoomCreateDto;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,7 +28,6 @@ public class ChatRoom {
                 .name(dto.getName())
                 .memberNum(dto.getMemberNum())
                 .regDate(dto.getRegDate())
-//                .apt(dto.getApt())
                 .isGroup(Boolean.FALSE)
                 .build();
     }
@@ -43,13 +43,13 @@ public class ChatRoom {
                 .build();
     }
 
-    public static ChatRoom group(String name, int count){
+    public static ChatRoom group(GroupChatRoomCreateDto groupChatRoomCreateDto){
         // 그룹 단체 채팅방 생성
         return ChatRoom.builder()
-                .name(name)
-                .memberNum(count)
+                .name(groupChatRoomCreateDto.getChatRoomName())
+                .memberNum(groupChatRoomCreateDto.getUserIds().size())
                 .isGroup(Boolean.TRUE)
-                .regDate(LocalDateTime.now())
+                .regDate(groupChatRoomCreateDto.getRegDate())
                 .build();
     }
     public void decreaseMemberNum() {

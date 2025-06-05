@@ -21,6 +21,12 @@ public class ChatRoomRepository {
         return chatRoom;
     }
 
+    public ChatRoom memberNumUpdate(ChatRoom chatRoom) {
+        sql.update("chatroomMapper.memberNumUpdate", chatRoom);
+        return chatRoom;
+    }
+
+
     public ChatRoom findById(Long id) {
         ChatRoom chatRoom = sql.selectOne("chatroomMapper.findById", id);
         if (chatRoom == null) {

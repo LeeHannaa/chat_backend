@@ -62,6 +62,11 @@ public class UserChatRoomRepository {
         return userChatRoom;
     }
 
+    public UserChatRoom update(UserChatRoom userChatRoom) {
+        sql.update("userchatroomMapper.update", userChatRoom);
+        return userChatRoom;
+    }
+
     public void saveAll(List<UserChatRoom> userChatRooms) {
         sql.insert("userchatroomMapper.saveAll", userChatRooms);
     }

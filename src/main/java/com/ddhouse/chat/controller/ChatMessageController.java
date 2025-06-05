@@ -52,7 +52,7 @@ public class ChatMessageController {
         // 전체 삭제 시 해당 메시지 실시간 채팅방에서 삭제 처리
         Map<String, Object> deleteMessage = Map.of(
                 "type", "DELETE",
-                "messageId", msgId.toString()
+                "messageId", msgId
         );
         template.convertAndSend("/topic/chatroom/" + roomIdToDeleteMsg, deleteMessage);
         return ResponseEntity.ok().build();

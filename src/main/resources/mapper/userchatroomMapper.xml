@@ -128,11 +128,19 @@
         values(#{isInRoom}, #{entryTime}, #{regDate}, #{user.id}, #{chatRoom.id})
     </insert>
 
+    <update id="update" parameterType="UserChatRoom">
+        UPDATE user_chat_room
+        SET is_in_room = #{isInRoom},
+            entry_time = #{entryTime},
+            reg_date = #{regDate}
+        WHERE user_id = #{user.id} AND chat_room_id = #{chatRoom.id}
+    </update>
+
     <insert id="saveAll" parameterType="list">
-        INSERT INTO user_chat_room (user_id, chat_room_id)
+        INSERT INTO user_chat_room (user_id, chat_room_id, is_in_room, entry_time, reg_date)
         VALUES
         <foreach collection="list" item="ucr" separator=",">
-            (#{ucr.user.id}, #{ucr.chatRoom.id})
+            (#{ucr.user.id}, #{ucr.chatRoom.id}, #{ucr.isInRoom}, #{ucr.entryTime}, #{ucr.regDate})
         </foreach>
     </insert>
 </mapper>

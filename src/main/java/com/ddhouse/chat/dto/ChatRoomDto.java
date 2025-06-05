@@ -45,6 +45,7 @@ public class ChatRoomDto {
         return ChatRoomDto.builder()
                 .memberNum(2)
                 .user(user)
+                .regDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .lastMsg("")
                 .build();
@@ -53,6 +54,7 @@ public class ChatRoomDto {
     public static ChatRoomDto from() {
         return ChatRoomDto.builder()
                 .memberNum(2)
+                .regDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .lastMsg("")
                 .build();

@@ -58,7 +58,7 @@ public class ChatService {
 
     public ChatRoom createGroupChatRoom(GroupChatRoomCreateDto groupChatRoomCreateDto){
         // 채팅방 저장
-        ChatRoom chatRoom = ChatRoom.group(groupChatRoomCreateDto.getChatRoomName(), groupChatRoomCreateDto.getUserIds().size());
+        ChatRoom chatRoom = ChatRoom.group(groupChatRoomCreateDto);
         chatRoomRepository.save(chatRoom);
 
         List<UserChatRoom> userChatRooms = groupChatRoomCreateDto.getUserIds().stream()
@@ -78,15 +78,13 @@ public class ChatService {
         } else{
             // 채팅방 인원 증가
             chatRoom.increaseMemberNum();
-            chatRoomRepository.save(chatRoom);
+            chatRoomRepository.memberNumUpdate(chatRoom);
             String inviteMsg = user.getName() + "님이 초대되었습니다.";
             // TODO G : 채팅방을 나갔다는 메시지의 id를 받아와서 해당 메시지의 isDelete를 true로 저장
-            ChatRoomMessage beforeChatRoomMessage = chatRoomMessageService.findById(inviteGroupRequestDto.getChatRoomMessageId());
+            ChatRoomMessage beforeChatRoomMessage = chatRoomMessageService.findById(inviteGroupRequestDto.getMsgId());
             beforeChatRoomMessage.updateInvite(Boolean.TRUE);
-            chatRoomMessageRepository.save(beforeChatRoomMessage);
+            chatRoomMessageRepository.update(beforeChatRoomMessage);
             // TODO G : 채팅방에 유저 초대하면 누가 누구를 초대했는지 시스템타입으로 메시지 저장
-//            chatMessageRepository.save(ChatMessage.from(inviteMsg))
-//                    .flatMap(savedMessage -> {
                         ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(inviteMsg, user, chatRoom, MessageType.SYSTEM);
                         ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteInviteFrom(chatRoomMessage, inviteMsg, beforeChatRoomMessage.getId());
                         Map<String, Object> inviteUser = Map.of(
@@ -95,9 +93,6 @@ public class ChatService {
                                 );
                         // TODO G **: 실시간으로 해당 유저가 방에 다시 들어왔음을 알림
                         template.convertAndSend("/topic/chatroom/" + chatRoom.getId(), inviteUser);
-//                        return Mono.fromCallable(() -> chatRoomMessageRepository.save(chatRoomMessage));
-//                    })
-//                    .subscribe();
         }
         return userChatRoomRepository.save(UserChatRoom.group(chatRoom, user));
     }
@@ -186,7 +181,7 @@ public class ChatService {
     public void increaseNumberInChatRoom(Long roomId){
         ChatRoom chatRoom = chatRoomRepository.findById(roomId);
         chatRoom.increaseMemberNum();
-        chatRoomRepository.save(chatRoom);
+        chatRoomRepository.memberNumUpdate(chatRoom);
     }
 
     @Transactional
@@ -221,8 +216,9 @@ public class ChatService {
                     } else {
                         // 1대1 채팅방일 경우 -> UserChatRoom에 leaveTheChatRoom 실행 (isInRoom을 F로, entryTime 시간 업데이트)
                         userChatRoom.leaveTheChatRoom();
-                        userChatRoomRepository.save(userChatRoom); // 변경사항 저장
+                        userChatRoomRepository.update(userChatRoom); // 변경사항 저장
                     }
+                    chatRoomRepository.memberNumUpdate(chatRoom);
                 }
         }
     }

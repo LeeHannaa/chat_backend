@@ -51,7 +51,7 @@ public class ChatRoomMessageService {
             throw new IllegalArgumentException("사용자가 작성한 메시지가 아니므로 지울 수 없습니다.");
         } else{
             chatRoomMessage.deleteMessageAll();
-            chatRoomMessageRepository.save(chatRoomMessage);
+            chatRoomMessageRepository.update(chatRoomMessage);
             return chatRoomMessage.getChatRoom().getId();
         }
     }
