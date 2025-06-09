@@ -53,9 +53,11 @@ public class ChatMessageService {
             );
             return Collections.singletonList(chatMessageResponseCreateDto);
         }
-        LocalDateTime standardTime = userChatRoomRepository
-                .findByUserIdAndChatRoomId(myId, roomId)
-                .getEntryTime();
+        UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(myId, roomId);
+        if (userChatRoom == null) {
+            throw new IllegalStateException("UserChatRoom not found for userId=" + myId + ", roomId=" + roomId);
+        }
+        LocalDateTime standardTime = userChatRoom.getEntryTime();
         List<ChatMessageResponseDto> chatRoomMessagesFiltered = chatRoomMessages.stream()
                 .filter(chatRoomMessage -> !chatRoomMessage.getRegDate().isBefore(standardTime)) // standardTime 이후만
                 // 내 기기에서 삭제된 메시지는 제외하긴 하는데 그 경우 userId가 나의 id와 동일한 경우에만 제외
@@ -118,7 +120,6 @@ public class ChatMessageService {
                 ChatRoomMessage chatRoomMessage = saveChatMessage(SaveMessageDto.guest(guestMessageRequestDto, userChatRoom.getChatRoom().getId()));
                 // 기존의 채팅방이 존재하는 경우 현재 방에 사용자가 있는지 확인
                 int countInRoom = roomUserCountService.getUserCount(userChatRoom.getChatRoom().getId());
-//                return chatMessageMono.flatMap(chatMessage -> {
                     if(countInRoom < 1) {
                         // 채팅방에 사용자가 없는 경우
                         sendSocketChatListAndFcmToGuest(userChatRoom, guestMessageRequestDto, chatRoomMessage);

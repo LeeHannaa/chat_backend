@@ -16,6 +16,10 @@ public class UserRepository{
         sql.insert("userMapper.save", user);
     }
 
+    public void updateFcm(User user) {
+        sql.update("userMapper.updateFcm", user);
+    }
+
     public List<User> findAll() {
         return sql.selectList("userMapper.findAll");
     }

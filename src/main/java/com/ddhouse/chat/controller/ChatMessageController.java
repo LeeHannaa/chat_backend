@@ -61,7 +61,6 @@ public class ChatMessageController {
     @PostMapping("/send/guest")
     public ResponseEntity<Void> sendNoteNonMember(@RequestBody GuestMessageRequestDto guestMessageRequestDto) {
         // 비회원 유저가 쪽지 문의 남기는 경우
-        // 리턴값을 활용해서 리액티브 체인을 계속 연결
         ChatRoomMessage message = chatMessageService.sendMessageGuest(guestMessageRequestDto);
         if (message != null) {
             return ResponseEntity.ok().build();

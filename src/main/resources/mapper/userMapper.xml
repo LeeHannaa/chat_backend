@@ -6,6 +6,13 @@
         insert into user(name, fcm_token, reg_date)
         values(#{name}, #{fcmToken}, #{regDate})
     </insert>
+
+    <insert id="updateFcm" parameterType="User">
+        UPDATE user
+        SET fcm_token = #{fcmToken}
+        WHERE id = #{id}
+    </insert>
+
     <select id="findAll" resultType="User">
         select id, name, fcm_token, reg_date from user
     </select>

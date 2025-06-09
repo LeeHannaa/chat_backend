@@ -53,7 +53,6 @@ public class ChatController {
         List<ChatRoomListResponseDto> updatedResponses = responses.stream()
                 .map(chatRoomDto -> {
                     // 동기 메서드 호출 가정
-                    System.out.println("채팅방 이름 확인해보기 : " + chatRoomDto.getName());
                     Tuple3<String, LocalDateTime, Long> tuple = chatService.getLastMessageWithUnreadCount(chatRoomDto.getRoomId(), myId);
                     chatRoomDto.setLastMsg(tuple.getT1());
                     chatRoomDto.setUpdateLastMsgTime(tuple.getT2());
