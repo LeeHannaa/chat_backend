@@ -117,7 +117,6 @@ public class ChatService {
 
                         if (opponent != null && opponent.getUser() != null) {
                             chatName = opponent.getUser().getName();
-                            System.out.println("개인톡인 경우 상대방 이름으로 넘기기 : " + chatName);
                         }
 
                         return ChatRoomListResponseDto.one(chatRoom, chatName);

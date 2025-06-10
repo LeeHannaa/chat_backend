@@ -44,7 +44,7 @@ public class UserService {
         try {
             User user = userRepository.findById(fcmTokenRequest.getUserId());
             user.setUpdateFcmToken(fcmTokenRequest.getFcmToken());
-            userRepository.save(user);
+            userRepository.updateFcm(user);
 
             return ResponseEntity.ok().build();
         } catch (EntityNotFoundException e) {
