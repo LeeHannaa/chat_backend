@@ -27,7 +27,6 @@ public class ChatRoomMessageService {
     }
 
     public ChatRoomMessage saveChatRoomMessage(SaveMessageDto saveMessageDto){
-        // TODO : 비회원인 경우 userId -> null
         User user = null;
         if(saveMessageDto.getWriterId() != null) {
             user = userRepository.findById(saveMessageDto.getWriterId());

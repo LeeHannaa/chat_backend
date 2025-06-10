@@ -29,14 +29,12 @@ public class ChatController {
     private final UserService userService;
 
     @PostMapping("/create/group") // 단체 채팅방 생성
-    // TODO : 단체 채팅방 만들기 객체 설정해서 진행하면 됨!!!!
     public ResponseEntity<ChatRoom> createGroupChatRoom(@RequestBody GroupChatRoomCreateDto groupChatRoomCreateDto) {
         ChatRoom newChatRoom = chatService.createGroupChatRoom(groupChatRoomCreateDto);
         return ResponseEntity.ok().body(newChatRoom);
     }
 
     @PostMapping("/invite/user/group")
-    // TODO : userId, roomId 이렇게 받아오기
     public ResponseEntity<UserChatRoom> inviteUserGroupChatRoom(@RequestBody InviteGroupRequestDto inviteGroupRequestDto) {
         UserChatRoom userChatRoom = chatService.inviteGroupChatRoom(inviteGroupRequestDto);
         return ResponseEntity.ok().body(userChatRoom);
@@ -52,7 +50,6 @@ public class ChatController {
         }
         List<ChatRoomListResponseDto> updatedResponses = responses.stream()
                 .map(chatRoomDto -> {
-                    // 동기 메서드 호출 가정
                     Tuple3<String, LocalDateTime, Long> tuple = chatService.getLastMessageWithUnreadCount(chatRoomDto.getRoomId(), myId);
                     chatRoomDto.setLastMsg(tuple.getT1());
                     chatRoomDto.setUpdateLastMsgTime(tuple.getT2());
@@ -65,17 +62,14 @@ public class ChatController {
 
     @GetMapping("/connect/{userId}")
     public ResponseEntity<Long> getRoomIdByConnectingPerson(@PathVariable("userId") Long userId, @RequestParam("myId") Long myId){
-        // TODO : 확인해야하는 부분!!! 여기서부터 시작하면됨!!!!!!
-        // 나와 상대의 채팅방이 있는지 확인 후
-            // 있으면 해당 roomId 전달
-            // 없으면 채팅방 생성 후 roomId 전달
+        // 상대에게 직접 연락하는 경우
         List<ChatRoom> chatRooms = userChatRoomService.findChatRoomsByUserId(myId);
         User user = userService.findByUserId(userId);
         UserChatRoom userChatRoom = userChatRoomService.findByUserAndChatRoom(chatRooms, user);
         if(userChatRoom != null) {
             return ResponseEntity.ok().body(userChatRoom.getChatRoom().getId());
         } else {
-            // 방생성
+            // 기존 채팅방이 없는 경우 방생성 후 방아이디 전달
             UserChatRoom newUserChatRoom = chatService.createChatRoomByConnecting(userId, myId);
             return ResponseEntity.ok().body(newUserChatRoom.getChatRoom().getId());
         }
@@ -83,6 +77,7 @@ public class ChatController {
 
     @GetMapping("/unread/count/{chatRoomId}")
     public ResponseEntity<Long> getUnreadCountByRoom(@PathVariable("chatRoomId") Long roomId, @RequestParam("myId") Long myId){
+        // 채팅방 들어왔을 때 읽음 처리 해야하는 채팅 개수
         Long unreadCount = messageUnreadService.getUnreadMessageCount(roomId.toString(), myId.toString());
         return ResponseEntity.ok().body(unreadCount);
     }

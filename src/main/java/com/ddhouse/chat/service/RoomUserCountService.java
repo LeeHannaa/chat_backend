@@ -42,14 +42,12 @@ public class RoomUserCountService {
     }
 
     public int getUserCount(Long roomId) {
-        // TODO G **: 현재 접속한 사람의 수
         String key = "chat:room:usercount:" + roomId.toString();
         int size = redisTemplate.opsForSet().size(key).intValue();
         return size;
     }
 
     public List<Long> getUserIdsInChatRoom(Long roomId, Long myId){
-        // TODO G **: 현재 접속한 사람의 ids (나빼고)
         String key = "chat:room:usercount:" + roomId.toString();
         Set<String> userIdStrings = redisTemplate.opsForSet().members(key);
         if (userIdStrings == null) {

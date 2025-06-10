@@ -20,7 +20,6 @@ public class StompChannelInterceptor implements ChannelInterceptor {
     private final MessageUnreadService messageUnreadService;
     private final ApplicationEventPublisher eventPublisher;
 
-    // TODO [ERROR] : 상황에 따라 myId를 잘 못가져오고 있음 -> 다 필요없고 roomId랑 userId를 헤더에 정확히 심어서 보내고 그 값을 그대로 빼서 확인하자!!
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);

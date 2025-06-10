@@ -2,6 +2,7 @@ package com.ddhouse.chat.controller;
 
 import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.request.message.GuestMessageRequestDto;
+import com.ddhouse.chat.dto.response.chatRoom.ChatRoomListResponseDto;
 import com.ddhouse.chat.dto.response.message.ChatMessageResponseDto;
 import com.ddhouse.chat.service.*;
 import com.ddhouse.chat.vo.ChatRoomMessage;
@@ -21,6 +22,7 @@ import java.util.Map;
 public class ChatMessageController {
     private final ChatMessageService chatMessageService;
     private final ChatRoomMessageService chatRoomMessageService;
+    private final RoomUserCountService roomUserCountService;
     private final SimpMessageSendingOperations template;
 
 
@@ -36,7 +38,6 @@ public class ChatMessageController {
     public ResponseEntity<List<ChatMessageResponseDto>> findMessageByChatRoomId(@PathVariable("chatRoomId") Long roomId, @RequestParam("myId") Long myId) {
         System.out.println("채팅방 채팅 내역 확인하기");
         List<ChatMessageResponseDto> messages = chatMessageService.findChatMessages(roomId, myId);
-        System.out.println("해당 채팅방의 메시지들 가져오기 결과 : " + messages);
         return ResponseEntity.ok(messages);
     }
 
@@ -55,12 +56,32 @@ public class ChatMessageController {
                 "messageId", msgId
         );
         template.convertAndSend("/topic/chatroom/" + roomIdToDeleteMsg, deleteMessage);
+        // TODO : 채팅리스트에서도 전달할 수 있도록!!!
+        /*
+        1. roomId가 존재 -> 해당 방에 존재하는 모든 유저의 id를 받아오기
+            1-2.  List<Long> receiverIds = findReceiverId(chatMessageRequestDto);
+        2. 현재 채팅방에 입장한 유저들
+        3. 채팅방 인원 중 현재 채팅방에 들어와있지 않은 유저들
+        4. -> 패팅방에 없는 사람들을 기준으로 CHATLIST 전달
+        */
+        List<Long> receiverIds = chatMessageService.findReceiverId(roomIdToDeleteMsg, myId);
+        List<Long> userIdsInRoom = roomUserCountService.getUserIdsInChatRoom(roomIdToDeleteMsg, myId);
+        receiverIds.removeIf(userId -> userIdsInRoom.contains(userId));
+        receiverIds.forEach(userId -> {
+            template.convertAndSend(
+                    "/topic/user/" + userId,
+                    Map.of(
+                            "type", "CHATLIST",
+                            "message", ChatRoomListResponseDto.delete(roomIdToDeleteMsg)
+                    ));
+        });
+
         return ResponseEntity.ok().build();
     }
 
     @PostMapping("/send/guest")
     public ResponseEntity<Void> sendNoteNonMember(@RequestBody GuestMessageRequestDto guestMessageRequestDto) {
-        // 비회원 유저가 쪽지 문의 남기는 경우
+        // 비회원 유저가 문의 남기는 경우
         ChatRoomMessage message = chatMessageService.sendMessageGuest(guestMessageRequestDto);
         if (message != null) {
             return ResponseEntity.ok().build();
