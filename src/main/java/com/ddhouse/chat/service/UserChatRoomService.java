@@ -23,16 +23,11 @@ public class UserChatRoomService {
 
 
     public void addUsersInChatRoom(UserChatRoomAddDto userChatRoomAddDto){
-        /*
-        1. SYSTEM 메시지로 초대 메시지 내역 저장
-        2. 실시간으로 어떤 유저들이 초대되었는지 전달되어야 함.
-        */
         ChatRoom chatRoom = chatService.findChatRoomByRoomId(userChatRoomAddDto.getChatRoomId());
         // 채팅방이 아니었던 경우 채팅방으로 변경
         if(!chatRoom.getIsGroup()){
             chatRoom.updateGroup(Boolean.TRUE);
         }
-        String inviteMsg = "";
         List<UserChatRoom> userChatRooms = Arrays.stream(userChatRoomAddDto.getUserIds().split(","))
                 .filter(s -> !s.isBlank())
                 .map(Long::valueOf)
@@ -51,7 +46,6 @@ public class UserChatRoomService {
     }
 
     public UserChatRoom findByUserAndChatRoom(List<ChatRoom> chatRooms, User user) {
-        // TODO : 여기서 확인하고 있으면 넘겨주고 아니면 null 넘겨줘야함!! (모두 다 1:1 개인 연락 시 방찾는 경우)
         for (ChatRoom chatRoom : chatRooms) {
             if(!chatRoom.getIsGroup()){
                 System.out.println("findByUserIdAndChatRoomId : " + user.getId() + ", " + chatRoom.getId());

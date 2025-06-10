@@ -48,7 +48,14 @@ public class ChatRoomListResponseDto {
                 .build();
     }
 
-    // TODO
+    public static ChatRoomListResponseDto delete (Long roomId) {
+        return ChatRoomListResponseDto.builder()
+                .roomId(roomId)
+                .lastMsg("삭제된 메시지입니다.")
+                .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .build();
+    }
+
     public static ChatRoomListResponseDto guest (GuestMessageRequestDto guestMessageRequestDto, Long count, ChatRoom chatRoom) {
         return ChatRoomListResponseDto.builder()
                 .roomId(chatRoom.getId())

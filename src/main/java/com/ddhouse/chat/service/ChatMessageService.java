@@ -62,12 +62,9 @@ public class ChatMessageService {
                 .filter(chatRoomMessage -> !chatRoomMessage.getDeleteUserList().contains(myId))
                 .map(chatRoomMessage -> {
                     if(chatRoomMessage.getType() == MessageType.TEXT){
-                        // TODO G **: 각 메시지마다 읽지 않은 유저의 수를 함께 전달
                         int unreadCountByMsgId = messageUnreadService.getUnreadCountByMsgId(chatRoomMessage.getChatRoom().getId().toString(), chatRoomMessage.getId().toString());
                         if (chatRoomMessage.getIsDelete()) {
                             // 전체 삭제된 메시지 처리
-                            //        * like kakaoTalk (전체 삭제일 경우도 그냥 아예 삭제하는 피드백 반영 *
-                            // return Mono.just(ChatMessageResponseToFindMsgDto.fromAllDelete(chatMessage, chatRoomMessage, unreadCountByMsgId));
                             return null;
                         } else {
                             return ChatMessageResponseToFindMsgDto.from(chatRoomMessage, unreadCountByMsgId);
@@ -76,17 +73,17 @@ public class ChatMessageService {
                     // SYSTEM 타입의 메시지일 경우 -> isDelete가 true면 유저가 다시 초대되었다는 뜻!!!!!
                     return ChatMessageResponseToFindMsgDto.deleteFrom(chatRoomMessage);
                 })
-                .filter(Objects::nonNull) // null 값 제거
+                .filter(Objects::nonNull)
                 .sorted(Comparator.comparing(ChatMessageResponseToFindMsgDto::getCreatedDate)) // 날짜 오름차순 정렬
                 .collect(Collectors.toList());
         return chatRoomMessagesFiltered;
     }
 
-    public List<Long> findReceiverId(ChatMessageRequestDto chatMessageRequestDto){ // 소켓 통신할 때 수신자 id 찾기
-        return userChatRoomRepository.findAllByChatRoomId(chatMessageRequestDto.getRoomId())
+    public List<Long> findReceiverId(Long chatRoomId, Long writerId){ // 소켓 통신할 때 수신자 id 찾기
+        return userChatRoomRepository.findAllByChatRoomId(chatRoomId)
                 .stream()
                 .map(userChatRoom -> userChatRoom.getUser().getId())
-                .filter(userId -> !userId.equals(chatMessageRequestDto.getWriterId()))
+                .filter(userId -> !userId.equals(writerId))
                 .collect(Collectors.toList());
     }
 
@@ -197,7 +194,7 @@ public class ChatMessageService {
             isInquiry.set(true);
         }
         // 채팅방에 나 빼고 존재하는 유저들
-        List<Long> receiverIds = findReceiverId(chatMessageRequestDto);
+        List<Long> receiverIds = findReceiverId(chatMessageRequestDto.getRoomId(), chatMessageRequestDto.getWriterId());
         // 현재 채팅방에 입장한 유저들 (나빼고)
         List<Long> userIdsInRoom = roomUserCountService.getUserIdsInChatRoom(chatMessageRequestDto.getRoomId(), chatMessageRequestDto.getWriterId());
         // 해당 채팅방
@@ -220,7 +217,6 @@ public class ChatMessageService {
         // [ 현재 채팅방에 접속한 경우 필요한 데이터 실시간 전달 ]
         if(isInquiry.get()){
             String userName = userService.findByUserId(receiverIds.get(0)).getName();
-            // TODO : 매물 문의한 다음 채팅 페이지 이동 시 채팅 내역을 소켓 메시지로 전달받지 못하는 이슈 -> MessageInquiryDto를 만들어서 해당 문의 메시지는 미리 전달
             template.convertAndSend("/topic/user/" + chatMessageRequestDto.getWriterId(),
                     Map.of(
                             "type", "CLEAR_ROOM",

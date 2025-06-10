@@ -35,7 +35,6 @@ public class ChatRoom {
     public static ChatRoom from (ChatRoomCreateDto chatRoomCreateDto) {
         // 비회원이 문의 시 채팅방이 생성되는 경우
         return ChatRoom.builder()
-//                .name(chatRoomCreateDto.getName())
                 .memberNum(chatRoomCreateDto.getMemberNum())
                 .isGroup(Boolean.FALSE)
                 .regDate(chatRoomCreateDto.getRegDate())

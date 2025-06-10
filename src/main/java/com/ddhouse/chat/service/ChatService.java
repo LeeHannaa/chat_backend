@@ -80,18 +80,15 @@ public class ChatService {
             chatRoom.increaseMemberNum();
             chatRoomRepository.memberNumUpdate(chatRoom);
             String inviteMsg = user.getName() + "님이 초대되었습니다.";
-            // TODO G : 채팅방을 나갔다는 메시지의 id를 받아와서 해당 메시지의 isDelete를 true로 저장
             ChatRoomMessage beforeChatRoomMessage = chatRoomMessageService.findById(inviteGroupRequestDto.getMsgId());
             beforeChatRoomMessage.updateInvite(Boolean.TRUE);
             chatRoomMessageRepository.update(beforeChatRoomMessage);
-            // TODO G : 채팅방에 유저 초대하면 누가 누구를 초대했는지 시스템타입으로 메시지 저장
                         ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(inviteMsg, user, chatRoom, MessageType.SYSTEM);
                         ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteInviteFrom(chatRoomMessage, inviteMsg, beforeChatRoomMessage.getId());
                         Map<String, Object> inviteUser = Map.of(
                                 "type", "INVITE",
                                 "message", chatMessageResponseToChatRoomDto
                                 );
-                        // TODO G **: 실시간으로 해당 유저가 방에 다시 들어왔음을 알림
                         template.convertAndSend("/topic/chatroom/" + chatRoom.getId(), inviteUser);
         }
         return userChatRoomRepository.save(UserChatRoom.group(chatRoom, user));
@@ -100,7 +97,6 @@ public class ChatService {
     public List<ChatRoomListResponseDto> findMyChatRoomList(Long myId) {
         // 내가 문의자로 들어간 채팅방 or 내가 관리자로 있는 채팅방
         List<UserChatRoom> userChatRooms = userChatRoomRepository.findByUserId(myId);
-//        System.out.println("나의 채팅방 숫자 : " + userChatRooms.size());
         return userChatRooms.stream()
                 .filter(UserChatRoom::getIsInRoom) // 나가기 하지 않은 채팅방만
                 .map(UserChatRoom::getChatRoom)
@@ -208,7 +204,6 @@ public class ChatService {
                                 "message", chatMessageResponseToChatRoomDto,
                                 "msgToReadCount", messageUnreadService.getUnreadMessageCount(roomId.toString(), myId.toString())
                         );
-                        // TODO G **: 실시간으로 해당 유저가 방을 나갔음을 알림
                         template.convertAndSend("/topic/chatroom/" + roomId, leaveUser);
                         System.out.println("채팅방에 유저가 나감 : " + deleteMsg);
                         messageUnreadService.removeUnread(roomId.toString(), myId.toString());

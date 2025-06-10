@@ -12,7 +12,7 @@ import java.util.List;
 @Builder
 public class GroupChatRoomCreateDto {
     // 단체 채팅방을 생성할 때
-    List<Long> userIds;
-    String chatRoomName;
-    LocalDateTime regDate;
+    private List<Long> userIds;
+    private String chatRoomName;
+    private LocalDateTime regDate;
 }

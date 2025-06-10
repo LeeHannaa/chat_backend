@@ -16,7 +16,6 @@ public class MessageUnreadService {
     private static final String PREFIX = "unread";
 
     public void addUnreadChat(String roomId, String receiverId, String msgId) {
-        // TODO G **: 안읽은 메시지 저장할때는 msgId를 저장하고 거기 value로 receiverId(List)를 저장
         String key = PREFIX + ":" + roomId + ":" + msgId;
         redisTemplate.opsForSet().add(key, receiverId);
         System.out.println("redis에 안읽은 채팅 내역들 저장 완료!!");

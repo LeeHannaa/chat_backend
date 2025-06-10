@@ -23,6 +23,7 @@ public class MybatisConfig {
 
     @Bean
     public SqlSessionTemplate sqlSessionTemplate(SqlSessionFactory sqlSessionFactory) {
+        // sql 실행만 담당
         return new SqlSessionTemplate(sqlSessionFactory); // SqlSessionTemplate 반환
     }
 
