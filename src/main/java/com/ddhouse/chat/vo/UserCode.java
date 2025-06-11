@@ -5,14 +5,17 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class UserCode {
+    private Long idx;
+    private String appCode;
+    private String sts; // I : 활성
     private Long userIdx;
-    private String userId;  // 비유저 전화번호 쪽지위해 임시 데이터
-    private LocalDateTime cdate;
+
+    public void setUpdateAppCode(String appCode) {
+        this.appCode = appCode;
+    }
 }

@@ -15,5 +15,6 @@ public class Apt {
     private Long id;
     private String name;
     private LocalDateTime regDate;
-    private User user;
+    private User user; // agency와 연결해야함
+
 }

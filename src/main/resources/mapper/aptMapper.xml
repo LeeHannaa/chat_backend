@@ -8,10 +8,9 @@
         <result property="regDate" column="a_reg_date"/>
 
         <association property="user" javaType="User">
-            <id property="id" column="u_id"/>
-            <result property="name" column="u_name"/>
-            <result property="fcmToken" column="u_fcm_token"/>
-            <result property="regDate" column="u_reg_date"/>
+            <id property="userIdx" column="u_user_idx"/>
+            <result property="userId" column="u_user_id"/>
+            <result property="cdate" column="u_cdate"/>
         </association>
     </resultMap>
 
@@ -21,24 +20,25 @@
             a.name AS a_name,
             a.reg_date AS a_reg_date,
 
-            u.id AS u_id,
-            u.name AS u_name
+            u.user_idx AS u_user_idx,
+            u.user_id AS u_user_id,
+            u.cdate AS u_cdate
         FROM APT  a
-                 JOIN user u ON a.user_id = u.id
+                 JOIN aa_dd_user u ON a.user_id = u.user_idx
         WHERE a.user_id = #{userId}
     </select>
 
-    <select id="findAll" resultMap="AptMap">
-        SELECT
-            a.id AS a_id,
-            a.name AS a_name,
-            a.reg_date AS a_reg_date,
+<!--    <select id="findAll" resultMap="AptMap">-->
+<!--        SELECT-->
+<!--            a.id AS a_id,-->
+<!--            a.name AS a_name,-->
+<!--            a.reg_date AS a_reg_date,-->
 
-            u.id AS u_id,
-            u.name AS u_name
-        FROM APT  a
-                 JOIN user u ON a.user_id = u.id
-    </select>
+<!--            u.id AS u_id,-->
+<!--            u.name AS u_name-->
+<!--        FROM APT  a-->
+<!--                 JOIN user u ON a.user_id = u.id-->
+<!--    </select>-->
 
     <select id="findById" parameterType="Long" resultMap="AptMap">
         SELECT
@@ -46,10 +46,177 @@
             a.name AS a_name,
             a.reg_date AS a_reg_date,
 
-            u.id AS u_id,
-            u.name AS u_name
+            u.user_idx AS u_user_idx,
+            u.user_id AS u_user_id,
+            u.cdate AS u_cdate
         FROM APT  a
-                 JOIN user u ON a.user_id = u.id
+                 JOIN aa_dd_user u ON a.user_id = u.user_idx
         WHERE a.id = #{id}
+    </select>
+
+    <select id="findAllTest" resultMap="AptMap">
+
+    SELECT
+
+    asset.*
+    FROM (
+    SELECT
+
+    asset.idx,
+    dd_dong.full_name                                                                   as loc_full_name,
+    asset.sub_meta_idx                                                                  as apt_idx,
+    meta_apt.category,
+    meta_apt.apt_name,
+    asset.pyung,
+    asset.pyung_type,
+    asset.dong,
+    meta_apt_dong.max_floor,
+    IFNULL(apt_ho.ho, asset.hosu) as ho,
+    apt_ho.hosu_type,
+    apt_ho.main_purps,
+    apt_ho.floor                                                                            AS ho_floor,
+    apt_ho.top_yn                                                                           AS ho_top_yn,
+    IFNULL(asset.floor, apt_ho.floor) as floor,
+    asset.is_floor_open,
+    asset.floor_sub,
+    asset.floor_top,
+    meta_apt_dong.dong_name                                                             as _dong_name,
+    meta_apt_dong.dong_idx,
+    meta_apt_dong.max_floor as dong_max_floor,
+    meta_apt_room.supply_area                                                           as _supply_area,
+    meta_apt_room.supply_area_p                                                         as _supply_area_p,
+    meta_apt_room.supply_area_p_type                                                    as _supply_area_p_type,
+    meta_apt_room.exclusive_area                                                        as _exclusive_area,
+    IFNULL(etc.room_count, meta_apt_room.room)                                                                  as room,
+    IFNULL(etc.bathroom_count, meta_apt_room.bathroom)                                                              as bathroom,
+    asset.room_count                                                                    as etc_room_count,
+    asset.bathroom_count                                                                as etc_bathroom_count,
+    asset.in_date_date,
+    IFNULL(etc.has_price_expand, false)                                                 as has_expand_price,
+    IFNULL(etc.price_expand, 0)                                                         as expand_price,
+    IFNULL(etc.has_price_option, false)                                                 as has_option_price,
+    IFNULL(etc.price_option, 0)                                                         as option_price,
+    asset.kind_m,
+    asset.kind_j,
+    asset.kind_w,
+    asset.kind_s,
+    IFNULL(asset.kind_b, 0)                                                             as kind_b,
+    asset.real_flag,
+    asset.is_recommend,
+    asset.is_only_user_open,
+    (select target_person_asset_idx from aa_dd_asset_open WHERE new_asset_idx = asset.idx) as open_target_asset_idx,
+    asset.singo_flag,
+    (CASE
+    WHEN asset.agency_idx IS NULL THEN 'person'
+    WHEN asset.agency_idx = NULL THEN 'me'
+    ELSE 'agency'
+    END) AS registered_by,
+    (SELECT asset_comment FROM aa_dd_asset_comment where asset_gubun = 1 AND agency_idx = NULL AND new_asset_idx = asset.idx) as my_memo,
+    asset.has_yungja,
+    asset.yungja_price,
+    asset.is_invest,
+    asset.invest_price,
+    asset.invest_indate,
+    asset.pic_approve_flag,
+    (SELECT url
+    FROM aa_dd_asset_picture
+    WHERE asset_gubun = 1
+    AND asset_idx = asset.idx
+    AND del is FALSE
+    ORDER BY ord
+    LIMIT 1)                                                                            as asset_pic,
+    (SELECT url
+    FROM aa_dd_meta_apt_picture
+    WHERE apt_idx = asset.sub_meta_idx
+    AND room_idx = asset.room_idx
+    AND del is FALSE
+    ORDER BY ord
+    LIMIT 1)                                                                            as meta_pic,
+    asset.customer_memo,
+    (SELECT is_blind
+    FROM aa_dd_asset_memo_blind
+    WHERE asset_idx = asset.idx
+    AND asset_type = 1)                                                                 as is_blind,
+    agency.mobile                                                                       as agency_tel,
+    agency.nick                                                                         as agency_name,
+    agency.cert_yn                                                                      as cert_yn,
+    agent.agent_name,
+    agent.biznum,
+    agent.tel                                                                           as agent_tel,
+    agent.ceo_name                                                                      as ceo_name,
+    agent.addr                                                                          as agent_addr,
+    agent.pic                                                                           as agent_pic,
+    agency.pic                                                                          as agency_pic,
+    bunyang.bunyang_type,
+    bunyang.indate                                                                      as bunyang_indate,
+    bunyang.bunyang_show_type                                                           as bunyang_show_type,
+    asset.price_m,
+    asset.price_j,
+    asset.price_w,
+    asset.price_wbo,
+    asset.price_s,
+    asset.price_sbo,
+    asset.price_p,
+    asset.renewal_flag,
+    hi.bunyang_price,
+    hi.member_bunyang_price,
+    asset.price_bunyang,
+    old_asset.date_order,
+
+    IF(clip.clip_idx IS NULL, FALSE, TRUE)                                          as clip,
+
+    DATE_FORMAT(asset.date_disp, '%y.%m.%d')                                            as date_disp,
+    DATE(asset.date_disp) = DATE(now()) AND DATE(asset.cdate) = DATE(now())             as today,
+    DATE_FORMAT(now(), '%y')                                                            as cur_year
+    FROM (SELECT asset.*, etc.room_idx, etc.dong_idx, etc.pyung, etc.pyung_type, etc.dong, etc.floor, etc.floor_sub,
+    etc.is_floor_open, etc.floor_top, etc.in_date_date, etc.has_price_expand, etc.price_expand,
+    etc.has_price_option, etc.price_option, etc.price_bunyang, etc.has_yungja, etc.yungja_price,
+    etc.invest_price, etc.is_invest, etc.invest_indate, etc.renewal_flag,
+    etc.room_count, etc.bathroom_count, etc.kind_b, etc.hosu, etc.in_date_flag, etc.old_in_date_data, etc.direction,
+    memo.customer_memo, memo.short_memo,
+    (SELECT asset_comment FROM aa_dd_asset_comment where asset_gubun = 1 AND agency_idx = NULL AND new_asset_idx = asset.idx) as my_memo
+    FROM new_dd_asset asset
+    LEFT JOIN new_dd_asset_apt_etc etc ON etc.asset_idx = asset.idx
+    LEFT JOIN new_dd_asset_ad_memo memo ON memo.asset_idx = asset.idx
+    WHERE asset_type = 1
+    AND asset.is_ad IS TRUE
+    AND asset.comp_flag NOT IN ('C', 'M', 'Z')
+    AND asset.is_deleted IS FALSE
+
+    AND asset.singo_flag NOT IN ('C')
+    AND asset.agency_idx IS NOT NULL
+
+    AND asset.date_disp >= DATE_SUB(CURRENT_DATE(), INTERVAL 2 MONTH)
+
+    AND asset.sub_meta_idx = 13231 ) asset
+    LEFT JOIN aa_dd_meta_apt as meta_apt ON (meta_apt.apt_idx = asset.sub_meta_idx)
+    LEFT JOIN aa_dd_dong as dd_dong ON (dd_dong.code = meta_apt.dong_code)
+    LEFT JOIN aa_dd_meta_apt_room as meta_apt_room ON (meta_apt_room.room_idx = asset.room_idx)
+    LEFT JOIN aa_dd_agency as agency ON (agency.agency_idx = asset.agency_idx)
+    LEFT JOIN aa_dd_agent as agent ON (agent.agent_idx = agency.agent_idx)
+    LEFT JOIN aa_dd_meta_apt_ho as apt_ho ON asset.meta_idx = apt_ho.ho_idx
+    LEFT JOIN aa_dd_meta_apt_ho_info apt_ho_info ON apt_ho.ho_idx = apt_ho_info.ho_idx
+    LEFT JOIN aa_dd_meta_apt_dong as meta_apt_dong ON (meta_apt_dong.dong_idx = asset.dong_idx)
+    LEFT JOIN aa_dd_meta_apt_bunyang as bunyang ON (asset.sub_meta_idx = bunyang.apt_idx
+    AND bunyang.is_complete = 0)
+    LEFT JOIN aa_dd_meta_apt_ho_info as hi ON asset.meta_idx = hi.ho_idx
+    LEFT JOIN new_dd_asset_apt_etc as etc ON etc.asset_idx = asset.idx
+    LEFT JOIN aa_dd_asset_apt as old_asset ON old_asset.idx = asset.old_idx
+
+    LEFT JOIN aa_dd_user_clip as clip ON (clip.clip_gubun = 1 AND clip.user_idx = -1 AND
+    clip.new_asset_idx = asset.idx AND clip.del = false)
+
+    ) AS asset
+
+    ORDER BY
+
+    date_disp
+    DESC ,
+
+    asset.date_disp DESC,
+    IF(asset.is_recommend IS TRUE, 0, 1),
+    IF(asset.real_flag = 'Y', 0, 1),
+    asset.date_order
+    LIMIT 0, 40;
     </select>
 </mapper>

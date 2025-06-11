@@ -7,6 +7,7 @@
     </settings>
     <typeAliases>
         <typeAlias type="com.ddhouse.chat.vo.User" alias="User"></typeAlias>
+        <typeAlias type="com.ddhouse.chat.vo.UserCode" alias="UserCode"></typeAlias>
         <typeAlias type="com.ddhouse.chat.vo.ChatRoomMessage" alias="ChatRoomMessage"></typeAlias>
         <typeAlias type="com.ddhouse.chat.vo.Apt" alias="Apt"></typeAlias>
         <typeAlias type="com.ddhouse.chat.vo.ChatRoom" alias="ChatRoom"></typeAlias>

@@ -1,7 +1,7 @@
 package com.ddhouse.chat.fcm.controller;
 
 import com.ddhouse.chat.fcm.dto.FcmTokenSaveRequest;
-import com.ddhouse.chat.service.UserService;
+import com.ddhouse.chat.service.UserCodeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -10,10 +10,10 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 @RequestMapping("/fcmtoken")
 public class FcmController {
-    private final UserService userService;
+    private final UserCodeService userCodeService;
 
     @PostMapping("/save")
     public ResponseEntity<Void> postFcmToken(@RequestBody FcmTokenSaveRequest fcmTokenSaveRequest){
-        return userService.addFcmToken(fcmTokenSaveRequest);
+        return userCodeService.addFcmToken(fcmTokenSaveRequest);
     }
 }

@@ -15,7 +15,7 @@ public class AptService {
     private final AptRepository aptRepository;
 
     public List<Apt> getAptList() {
-        return aptRepository.findAll();
+        return aptRepository.findAllTest();
     }
 
     public AptDto getAptById(Long id) {

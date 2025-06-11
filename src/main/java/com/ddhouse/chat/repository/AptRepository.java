@@ -17,8 +17,8 @@ public class AptRepository{
         return sql.selectList("aptMapper.findByUserId", userId);
     }
 
-    public List<Apt> findAll() {
-        return sql.selectList("aptMapper.findAll");
+    public List<Apt> findAllTest() {
+        return sql.selectList("aptMapper.findAllTest");
     }
 
     public Apt findById(Long id) {

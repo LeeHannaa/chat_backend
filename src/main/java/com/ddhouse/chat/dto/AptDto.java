@@ -20,7 +20,7 @@ public class AptDto {
         return AptDto.builder()
                 .id(apt.getId())
                 .name(apt.getName())
-                .userId(apt.getUser().getId())
+                .userId(apt.getUser().getUserIdx())
                 .regDate(apt.getRegDate())
                 .build();
     }
