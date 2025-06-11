@@ -13,18 +13,14 @@ import java.util.List;
 public class AptRepository{
     private final SqlSessionTemplate sql;
 
-    public List<Apt> findByUserId(Long userId) {
-        return sql.selectList("aptMapper.findByUserId", userId);
-    }
-
     public List<Apt> findAllTest() {
         return sql.selectList("aptMapper.findAllTest");
     }
 
-    public Apt findById(Long id) {
-        Apt apt = sql.selectOne("aptMapper.findById", id);
+    public Apt findByIdx(Long idx) {
+        Apt apt = sql.selectOne("aptMapper.findByIdx", idx);
         if (apt == null) {
-            throw new NotFoundException("해당 ID의 매물을 찾을 수 없습니다: " + id);
+            throw new NotFoundException("해당 ID의 매물을 찾을 수 없습니다: " + idx);
         }
         return apt;
     }

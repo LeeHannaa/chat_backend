@@ -13,18 +13,18 @@ import java.time.LocalDateTime;
 public class ChatMessageResponseCreateDto extends ChatMessageResponseDto{
     // 처음 방 생성한 경우
     private String roomName;
-    private LocalDateTime regDate;
+    private LocalDateTime cdate;
     private int memberNum;
     private Boolean isGroup;
 
 
     public static ChatMessageResponseCreateDto create (UserChatRoom userChatRoom) {
         return ChatMessageResponseCreateDto.builder()
-                .roomId(userChatRoom.getChatRoom().getId())
+                .roomId(userChatRoom.getChatRoom().getIdx())
                 .roomName(userChatRoom.getChatRoom().getName())
                 .memberNum(2)
                 .isGroup(userChatRoom.getChatRoom().getIsGroup())
-                .regDate(userChatRoom.getRegDate())
+                .cdate(userChatRoom.getCdate())
                 .build();
     }
 }

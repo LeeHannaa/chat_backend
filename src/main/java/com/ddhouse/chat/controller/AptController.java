@@ -26,7 +26,7 @@ public class AptController {
 
     @GetMapping("/detail/{aptId}")
     public ResponseEntity<AptDto> getAptDetailInfo(@PathVariable("aptId") Long id) {
-        AptDto response = aptService.getAptById(id);
+        AptDto response = aptService.getAptByIdx(id);
         return ResponseEntity.ok().body(response);
     }
 }

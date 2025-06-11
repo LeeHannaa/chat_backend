@@ -31,7 +31,7 @@ public class ChatRoomMessageService {
         if(saveMessageDto.getWriterId() != null) {
             user = userRepository.findByIdx(saveMessageDto.getWriterId());
         }
-        ChatRoom chatRoom = chatRoomRepository.findById(saveMessageDto.getRoomId());
+        ChatRoom chatRoom = chatRoomRepository.findByIdx(saveMessageDto.getRoomId());
         ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(saveMessageDto, user, chatRoom, MessageType.TEXT);
         return chatRoomMessageRepository.save(chatRoomMessage);
     }
@@ -51,7 +51,7 @@ public class ChatRoomMessageService {
         } else{
             chatRoomMessage.deleteMessageAll();
             chatRoomMessageRepository.update(chatRoomMessage);
-            return chatRoomMessage.getChatRoom().getId();
+            return chatRoomMessage.getChatRoom().getIdx();
         }
     }
 

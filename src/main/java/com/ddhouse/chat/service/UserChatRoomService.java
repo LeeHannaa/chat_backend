@@ -48,8 +48,8 @@ public class UserChatRoomService {
     public UserChatRoom findByUserAndChatRoom(List<ChatRoom> chatRooms, User user) {
         for (ChatRoom chatRoom : chatRooms) {
             if(!chatRoom.getIsGroup()){
-                System.out.println("findByUserIdAndChatRoomId : " + user.getUserIdx() + ", " + chatRoom.getId());
-                UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(user.getUserIdx(), chatRoom.getId());
+                System.out.println("findByUserIdAndChatRoomId : " + user.getUserIdx() + ", " + chatRoom.getIdx());
+                UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(user.getUserIdx(), chatRoom.getIdx());
                 if (userChatRoom != null) {
                     return userChatRoom;
                 }

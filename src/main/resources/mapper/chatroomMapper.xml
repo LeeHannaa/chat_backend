@@ -3,24 +3,24 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="chatroomMapper">
     <select id="findByPhoneNumber" parameterType="String" resultType="ChatRoom">
-        select * from chat_room WHERE phone_number = #{phoneNumber}
+        select * from aa_chat_room WHERE phone_number = #{phoneNumber}
     </select>
 
-    <insert id="save" parameterType="ChatRoom" useGeneratedKeys="true" keyProperty="id">
-        insert into chat_room(name, member_num, is_group, phone_number, reg_date)
-        values(#{name}, #{memberNum}, #{isGroup}, #{phoneNumber}, #{regDate})
+    <insert id="save" parameterType="ChatRoom" useGeneratedKeys="true" keyProperty="idx">
+        insert into aa_chat_room(name, member_num, is_group, phone_number, cdate)
+        values(#{name}, #{memberNum}, #{isGroup}, #{phoneNumber}, #{cdate})
     </insert>
 
     <update id="memberNumUpdate" parameterType="ChatRoom">
-        UPDATE chat_room SET member_num = #{memberNum} WHERE id = #{id}
+        UPDATE aa_chat_room SET member_num = #{memberNum} WHERE idx = #{idx}
     </update>
 
 
-    <select id="findById" parameterType="Long" resultType="ChatRoom">
-        select * from chat_room WHERE id = #{id}
+    <select id="findByIdx" parameterType="Long" resultType="ChatRoom">
+        select * from aa_chat_room WHERE idx = #{idx}
     </select>
-    <delete id="deleteById" parameterType="Long">
-        delete from chat_room where id = #{id}
+    <delete id="deleteByIdx" parameterType="Long">
+        delete from aa_chat_room where idx = #{idx}
     </delete>
 
 </mapper>

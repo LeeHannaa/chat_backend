@@ -17,12 +17,12 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatRoomMessage {
-    private Long id;
+    private Long idx;
     private String msg;
     private Boolean isDelete; // 전체 삭제 여부
     private String deleteUsers; // ,를 기준으로 유저 아이디 저장
     private MessageType type;
-    private LocalDateTime regDate;
+    private LocalDateTime cdate;
     private ChatRoom chatRoom;
     private User user;
 
@@ -32,7 +32,7 @@ public class ChatRoomMessage {
                 .chatRoom(chatRoom)
                 .type(messageType)
                 .isDelete(false)
-                .regDate(saveMessageDto.getRegDate())
+                .cdate(saveMessageDto.getCdate())
                 .user(user)
                 .build();
     }
@@ -43,7 +43,7 @@ public class ChatRoomMessage {
                 .chatRoom(chatRoom)
                 .type(messageType)
                 .isDelete(false)
-                .regDate(LocalDateTime.now())
+                .cdate(LocalDateTime.now())
                 .user(user)
                 .build();
     }

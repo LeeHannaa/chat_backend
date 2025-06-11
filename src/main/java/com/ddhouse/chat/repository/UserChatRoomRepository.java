@@ -48,7 +48,7 @@ public class UserChatRoomRepository {
     public boolean existsByUserAndChatRoom(User user, ChatRoom chatRoom){
         Integer result = sql.selectOne("userchatroomMapper.existsByUserAndChatRoom", Map.of(
                 "userId", user.getUserIdx(),
-                "chatRoomId", chatRoom.getId()
+                "chatRoomId", chatRoom.getIdx()
         ));
         return result != null && result > 0;
     }

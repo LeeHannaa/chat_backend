@@ -11,17 +11,15 @@ import java.time.LocalDateTime;
 @Setter
 @Builder
 public class AptDto {
-    private Long id;
-    private String name;
-    private LocalDateTime regDate;
+    private Long idx;
+    private LocalDateTime cdate;
     private Long userId;
 
     public static AptDto from(Apt apt) {
         return AptDto.builder()
-                .id(apt.getId())
-                .name(apt.getName())
-                .userId(apt.getUser().getUserIdx())
-                .regDate(apt.getRegDate())
+                .idx(apt.getIdx())
+                .userId(apt.getAgency().getUser().getUserIdx())
+                .cdate(apt.getCdate())
                 .build();
     }
 }
