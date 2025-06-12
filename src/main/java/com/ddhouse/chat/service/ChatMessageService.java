@@ -34,6 +34,7 @@ public class ChatMessageService {
     private final UserChatRoomRepository userChatRoomRepository;
     private final ChatService chatService;
     private final UserService userService;
+    private final UserCodeService userCodeService;
     private final AptService aptService;
     private final UserChatRoomService userChatRoomService;
     private final ChatRoomMessageRepository chatRoomMessageRepository;
@@ -151,17 +152,17 @@ public class ChatMessageService {
                         "message", ChatRoomListResponseDto.guest(guestMessageRequestDto, unreadCount, userChatRoom.getChatRoom())
                 ));
         // FCM 알림 전송
-//        String fcmToken = userService.findFcmTokenByUserId(userChatRoom.getUser().getId());
-//        String body = "비회원 : " + chatRoomMessage.getMsg();
-//        if (fcmToken != null) {
-//            try {
-//                fcmService.sendMessageTo(
-//                        FcmDto.chat(fcmToken, body, userChatRoom.getChatRoom().getId().toString(), guestMessageRequestDto.getPhoneNumber()));
-//                System.out.println("fcm 알림 전송 완료!");
-//            } catch (IOException e) {
-//                System.err.println("FCM 전송 실패: " + e.getMessage());
-//            }
-//        }
+        String fcmToken = userCodeService.findFcmTokenByUserId(userChatRoom.getUser().getUserIdx());
+        String body = "비회원 : " + chatRoomMessage.getMsg();
+        if (fcmToken != null) {
+            try {
+                fcmService.sendMessageTo(
+                        FcmDto.chat(fcmToken, body, userChatRoom.getChatRoom().getIdx().toString(), guestMessageRequestDto.getPhoneNumber()));
+                System.out.println("fcm 알림 전송 완료!");
+            } catch (IOException e) {
+                System.err.println("FCM 전송 실패: " + e.getMessage());
+            }
+        }
     }
 
     public void messageFromInquiry(ChatMessageRequestDto chatMessageRequestDto){
@@ -251,18 +252,18 @@ public class ChatMessageService {
                                     : ChatRoomListResponseDto.from(chatMessageRequestDto, senderName, unreadCount, chatRoom.getMemberNum())
                     ));
             // FCM 알림 전송
-//            String fcmToken = userService.findFcmTokenByUserId(userId);
-//            String body = userService.findNameByUserId(chatMessageRequestDto.getWriterId()) + " : " + chatMessageRequestDto.getMsg();
-//            if (roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId()) < 2 && fcmToken != null) {
-//                try {
-//                    fcmService.sendMessageTo(
-//                            chatRoom.getIsGroup() ? FcmDto.chat(fcmToken, body, chatMessageRequestDto.getRoomId().toString(), chatRoom.getName())
-//                                    : FcmDto.chat(fcmToken, body, chatMessageRequestDto.getRoomId().toString(), senderName));
-//                    System.out.println("fcm 알림 전송 완료!");
-//                } catch (IOException e) {
-//                    System.err.println("FCM 전송 실패: " + e.getMessage());
-//                }
-//            }
+            String fcmToken = userCodeService.findFcmTokenByUserId(userId);
+            String body = userService.findNameByUserId(chatMessageRequestDto.getWriterId()) + " : " + chatMessageRequestDto.getMsg();
+            if (roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId()) < 2 && fcmToken != null) {
+                try {
+                    fcmService.sendMessageTo(
+                            chatRoom.getIsGroup() ? FcmDto.chat(fcmToken, body, chatMessageRequestDto.getRoomId().toString(), chatRoom.getName())
+                                    : FcmDto.chat(fcmToken, body, chatMessageRequestDto.getRoomId().toString(), senderName));
+                    System.out.println("fcm 알림 전송 완료!");
+                } catch (IOException e) {
+                    System.err.println("FCM 전송 실패: " + e.getMessage());
+                }
+            }
         });
         return ResponseEntity.ok().build();
     }

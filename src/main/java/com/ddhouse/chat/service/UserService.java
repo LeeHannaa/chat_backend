@@ -17,6 +17,15 @@ public class UserService {
         return userRepository.findByIdx(myId);
     }
 
+    public String findNameByUserId(Long myId){
+        User user = findByUserId(myId);
+        String name = user.getUserId();
+        if (name == null) {
+            throw new NotFoundException("해당 유저의 이름이 없습니다.");
+        }
+        return name;
+    }
+
     public List<User> findTestUser(){
         List<User> users = userRepository.findTestUser();
         return users;
