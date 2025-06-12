@@ -115,7 +115,8 @@ public class ChatService {
                         UserChatRoom opponent = userChatRoomRepository.findOpponent(myId, chatRoom.getIdx());
                         String chatName = "알 수 없음";
 
-                        if (opponent != null && opponent.getUser() != null) {
+                        if (opponent != null && opponent.getUser() != null && "I".equals(opponent.getUser().getSts())) {
+                            // I인 상태만 쿼리에서 가져오면 마지막 조건 제거 -> 일단 sql에도 넣음
                             chatName = opponent.getUser().getUserId();
                         }
 

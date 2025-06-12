@@ -11,6 +11,7 @@
         <association property="user" javaType="User">
             <id property="userIdx" column="u_user_idx"/>
             <result property="userId" column="u_user_id"/>
+            <result property="sts" column="u_sts"/>
             <result property="cdate" column="u_cdate"/>
         </association>
 
@@ -38,7 +39,8 @@
             cr.cdate AS cr_cdate,
 
             u.user_idx AS u_user_idx,
-            u.user_id AS u_user_id
+            u.user_id AS u_user_id,
+            u.sts AS u_sts
         FROM aa_chat_room_user ucr
                  JOIN aa_chat_room cr ON ucr.chat_room_idx = cr.idx
                  JOIN aa_dd_user u ON ucr.user_idx = u.user_idx
@@ -53,11 +55,13 @@
             ucr.cdate AS ucr_cdate,
 
             u.user_idx AS u_user_idx,
-            u.user_id AS u_user_id
+            u.user_id AS u_user_id,
+            u.sts AS u_sts
         FROM aa_chat_room_user ucr
                  JOIN aa_dd_user u ON ucr.user_idx = u.user_idx
         WHERE ucr.chat_room_idx = #{chatRoomId}
           AND ucr.user_idx != #{myId}
+          AND u.sts = 'I'
             LIMIT 1
     </select>
 
@@ -76,7 +80,8 @@
             cr.cdate AS cr_cdate,
 
             u.user_idx AS u_user_idx,
-            u.user_id AS u_user_id
+            u.user_id AS u_user_id,
+            u.sts AS u_sts
         FROM aa_chat_room_user ucr
                  JOIN aa_chat_room cr ON ucr.chat_room_idx = cr.idx
                  JOIN aa_dd_user u ON ucr.user_idx = u.user_idx
@@ -98,7 +103,8 @@
             cr.cdate AS cr_cdate,
 
             u.user_idx AS u_user_idx,
-            u.user_id AS u_user_id
+            u.user_id AS u_user_id,
+            u.sts AS u_sts
         FROM aa_chat_room_user ucr
                  JOIN aa_chat_room cr ON ucr.chat_room_idx = cr.idx
                  JOIN aa_dd_user u ON ucr.user_idx = u.user_idx

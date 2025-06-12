@@ -26,7 +26,9 @@ public class ChatMessageResponseToFindMsgDto extends ChatMessageResponseDto{
                 .id(chatRoomMessage.getIdx())
                 .roomId(chatRoomMessage.getChatRoom().getIdx())
                 .writerId(chatRoomMessage.getUser() != null ? chatRoomMessage.getUser().getUserIdx() : null)
-                .writerName(chatRoomMessage.getUser() != null ? chatRoomMessage.getUser().getUserId() : chatRoomMessage.getChatRoom().getPhoneNumber())
+                .writerName(chatRoomMessage.getUser() != null ? (
+                        "I".equals(chatRoomMessage.getUser().getSts()) ? chatRoomMessage.getUser().getUserId() : "알 수 없음")
+                        : chatRoomMessage.getChatRoom().getPhoneNumber())
                 .msg(chatRoomMessage.getMsg())
                 .type(chatRoomMessage.getType())
                 .isDelete(chatRoomMessage.getIsDelete())
