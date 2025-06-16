@@ -5,14 +5,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDateTime;
-
 @Getter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class Apt {
+public class AptList {
     private Long idx;
-    private LocalDateTime cdate;
-    private Agency agency; // agency와 연결해야함
+    private String aptName;
 }

@@ -29,9 +29,9 @@ public class ChatRoomMessageService {
     public ChatRoomMessage saveChatRoomMessage(SaveMessageDto saveMessageDto){
         User user = null;
         if(saveMessageDto.getWriterId() != null) {
-            user = userRepository.findById(saveMessageDto.getWriterId());
+            user = userRepository.findByIdx(saveMessageDto.getWriterId());
         }
-        ChatRoom chatRoom = chatRoomRepository.findById(saveMessageDto.getRoomId());
+        ChatRoom chatRoom = chatRoomRepository.findByIdx(saveMessageDto.getRoomId());
         ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(saveMessageDto, user, chatRoom, MessageType.TEXT);
         return chatRoomMessageRepository.save(chatRoomMessage);
     }
@@ -46,12 +46,12 @@ public class ChatRoomMessageService {
     @Transactional
     public Long deleteChatMessageAll(Long msgId, Long myId){
         ChatRoomMessage chatRoomMessage = chatRoomMessageRepository.findById(msgId);
-        if (!chatRoomMessage.getUser().getId().equals(myId)) {
+        if (!chatRoomMessage.getUser().getUserIdx().equals(myId)) {
             throw new IllegalArgumentException("사용자가 작성한 메시지가 아니므로 지울 수 없습니다.");
         } else{
             chatRoomMessage.deleteMessageAll();
             chatRoomMessageRepository.update(chatRoomMessage);
-            return chatRoomMessage.getChatRoom().getId();
+            return chatRoomMessage.getChatRoom().getIdx();
         }
     }
 

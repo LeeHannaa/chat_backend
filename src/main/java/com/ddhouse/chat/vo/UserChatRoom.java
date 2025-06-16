@@ -15,29 +15,29 @@ import java.time.ZoneId;
 @NoArgsConstructor
 @AllArgsConstructor
 public class UserChatRoom {
-    private Long id;
+    private Long idx;
     private Boolean isInRoom;
     private LocalDateTime entryTime;
-    private LocalDateTime regDate;
+    private LocalDateTime cdate;
     private User user;
     private ChatRoom chatRoom;
 
     public static UserChatRoom from(ChatRoomDto dto, ChatRoom chatRoom) {
         return UserChatRoom.builder()
                 .isInRoom(Boolean.TRUE)
-                .entryTime(chatRoom.getRegDate())
+                .entryTime(chatRoom.getCdate())
                 .user(dto.getUser())
                 .chatRoom(chatRoom)
-                .regDate(chatRoom.getRegDate())
+                .cdate(chatRoom.getCdate())
                 .build();
     }
 
     public static UserChatRoom person(ChatRoomDto dto, ChatRoom chatRoom) {
         return UserChatRoom.builder()
                 .isInRoom(Boolean.TRUE)
-                .entryTime(chatRoom.getRegDate())
+                .entryTime(chatRoom.getCdate())
                 .user(dto.getUser())
-                .regDate(chatRoom.getRegDate())
+                .cdate(chatRoom.getCdate())
                 .chatRoom(chatRoom)
                 .build();
     }
@@ -45,9 +45,9 @@ public class UserChatRoom {
         // 비회원이 매물 문의했을 때 채팅 방이 생성되는 경우
         return UserChatRoom.builder()
                 .isInRoom(Boolean.TRUE)
-                .entryTime(chatRoom.getRegDate())
+                .entryTime(chatRoom.getCdate())
                 .user(chatRoomCreateDto.getUser())
-                .regDate(chatRoom.getRegDate())
+                .cdate(chatRoom.getCdate())
                 .chatRoom(chatRoom)
                 .build();
     }
@@ -57,7 +57,7 @@ public class UserChatRoom {
                 .isInRoom(Boolean.TRUE)
                 .entryTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .user(user)
-                .regDate(chatRoom.getRegDate())
+                .cdate(chatRoom.getCdate())
                 .chatRoom(chatRoom)
                 .build();
     }

@@ -3,6 +3,7 @@ package com.ddhouse.chat.controller;
 import com.ddhouse.chat.dto.AptDto;
 import com.ddhouse.chat.service.AptService;
 import com.ddhouse.chat.vo.Apt;
+import com.ddhouse.chat.vo.AptList;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,14 +20,15 @@ public class AptController {
     private final AptService aptService;
 
     @GetMapping
-    public ResponseEntity<List<Apt>> getAptList() {
-        List<Apt> response = aptService.getAptList();
-        return ResponseEntity.ok().body(response);
+    public ResponseEntity<List<AptList>> getAptList() {
+        List<AptList> apts = aptService.getAptList();
+        System.out.println("ㅇㅏㅍㅏㅌㅡ ㅁㅐㅁㅜㄹ ㅂㅜㄹㄹㅓㅇㅗㄴ ㄱㅓㅅ ㅎㅗㅏㄱㅇㅣㄴㅎㅐㅂㅗㅣㄱ : " + apts.size());
+        return ResponseEntity.ok().body(apts);
     }
 
     @GetMapping("/detail/{aptId}")
     public ResponseEntity<AptDto> getAptDetailInfo(@PathVariable("aptId") Long id) {
-        AptDto response = aptService.getAptById(id);
-        return ResponseEntity.ok().body(response);
+        AptDto aptDto = aptService.getAptByIdx(id);
+        return ResponseEntity.ok().body(aptDto);
     }
 }

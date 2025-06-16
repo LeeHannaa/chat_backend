@@ -2,22 +2,11 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="userMapper">
-    <insert id="save" parameterType="User">
-        insert into user(name, fcm_token, reg_date)
-        values(#{name}, #{fcmToken}, #{regDate})
-    </insert>
-
-    <insert id="updateFcm" parameterType="User">
-        UPDATE user
-        SET fcm_token = #{fcmToken}
-        WHERE id = #{id}
-    </insert>
-
-    <select id="findAll" resultType="User">
-        select id, name, fcm_token, reg_date from user
+    <select id="findTestUser" resultType="User">
+        select user_idx, user_id, sts, cdate from aa_dd_user WHERE user_idx = 51159 OR user_idx = 46053 OR user_idx = 60022
     </select>
 
-    <select id="findById" parameterType="Long" resultType="User">
-        select * from user WHERE id = #{id}
+    <select id="findByIdx" parameterType="Long" resultType="User">
+        select user_idx, user_id, sts, cdate from aa_dd_user WHERE user_idx = #{userIdx}
     </select>
 </mapper>

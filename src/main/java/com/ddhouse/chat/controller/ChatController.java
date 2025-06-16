@@ -67,11 +67,11 @@ public class ChatController {
         User user = userService.findByUserId(userId);
         UserChatRoom userChatRoom = userChatRoomService.findByUserAndChatRoom(chatRooms, user);
         if(userChatRoom != null) {
-            return ResponseEntity.ok().body(userChatRoom.getChatRoom().getId());
+            return ResponseEntity.ok().body(userChatRoom.getChatRoom().getIdx());
         } else {
             // 기존 채팅방이 없는 경우 방생성 후 방아이디 전달
             UserChatRoom newUserChatRoom = chatService.createChatRoomByConnecting(userId, myId);
-            return ResponseEntity.ok().body(newUserChatRoom.getChatRoom().getId());
+            return ResponseEntity.ok().body(newUserChatRoom.getChatRoom().getIdx());
         }
     }
 

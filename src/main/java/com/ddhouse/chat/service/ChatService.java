@@ -62,7 +62,7 @@ public class ChatService {
         chatRoomRepository.save(chatRoom);
 
         List<UserChatRoom> userChatRooms = groupChatRoomCreateDto.getUserIds().stream()
-                .map(userId -> UserChatRoom.group(chatRoom, userRepository.findById(userId)))
+                .map(userId -> UserChatRoom.group(chatRoom, userRepository.findByIdx(userId)))
                 .collect(Collectors.toList());
         userChatRoomRepository.saveAll(userChatRooms);
         return chatRoom;
@@ -79,17 +79,17 @@ public class ChatService {
             // 채팅방 인원 증가
             chatRoom.increaseMemberNum();
             chatRoomRepository.memberNumUpdate(chatRoom);
-            String inviteMsg = user.getName() + "님이 초대되었습니다.";
+            String inviteMsg = user.getUserId() + "님이 초대되었습니다.";
             ChatRoomMessage beforeChatRoomMessage = chatRoomMessageService.findById(inviteGroupRequestDto.getMsgId());
             beforeChatRoomMessage.updateInvite(Boolean.TRUE);
             chatRoomMessageRepository.update(beforeChatRoomMessage);
                         ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(inviteMsg, user, chatRoom, MessageType.SYSTEM);
-                        ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteInviteFrom(chatRoomMessage, inviteMsg, beforeChatRoomMessage.getId());
+                        ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteInviteFrom(chatRoomMessage, inviteMsg, beforeChatRoomMessage.getIdx());
                         Map<String, Object> inviteUser = Map.of(
                                 "type", "INVITE",
                                 "message", chatMessageResponseToChatRoomDto
                                 );
-                        template.convertAndSend("/topic/chatroom/" + chatRoom.getId(), inviteUser);
+                        template.convertAndSend("/topic/chatroom/" + chatRoom.getIdx(), inviteUser);
         }
         return userChatRoomRepository.save(UserChatRoom.group(chatRoom, user));
     }
@@ -101,7 +101,7 @@ public class ChatService {
                 .filter(UserChatRoom::getIsInRoom) // 나가기 하지 않은 채팅방만
                 .map(UserChatRoom::getChatRoom)
                 .filter(chatRoom ->
-                    chatRoomMessageRepository.existsByChatRoomId(chatRoom.getId())) // 메시지가 존재하는 경우만 필터링
+                    chatRoomMessageRepository.existsByChatRoomId(chatRoom.getIdx())) // 메시지가 존재하는 경우만 필터링
                 .map(chatRoom -> {
 //                    System.out.println("chatRoom 정보 : " + chatRoom.getId());
                     if(chatRoom.getIsGroup()){
@@ -112,11 +112,12 @@ public class ChatService {
                         return ChatRoomListResponseDto.one(chatRoom, chatRoom.getPhoneNumber());
                     } else{
                         // 개인톡 -> 상대방 이름으로
-                        UserChatRoom opponent = userChatRoomRepository.findOpponent(myId, chatRoom.getId());
+                        UserChatRoom opponent = userChatRoomRepository.findOpponent(myId, chatRoom.getIdx());
                         String chatName = "알 수 없음";
 
-                        if (opponent != null && opponent.getUser() != null) {
-                            chatName = opponent.getUser().getName();
+                        if (opponent != null && opponent.getUser() != null && "I".equals(opponent.getUser().getSts())) {
+                            // I인 상태만 쿼리에서 가져오면 마지막 조건 제거 -> 일단 sql에도 넣음
+                            chatName = opponent.getUser().getUserId();
                         }
 
                         return ChatRoomListResponseDto.one(chatRoom, chatName);
@@ -152,7 +153,7 @@ public class ChatService {
             // 전체를 빈값으로 전달, 날짜는 받아옴 (단톡아니면 메시지 없으면 리스트에서 안보임)
             return Tuples.of("채팅방에 초대되었습니다.", entryTime, 0L);
         }
-        Tuple2<String, LocalDateTime> lastMessageTuple2 = Tuples.of(lastMessage.getMsg(), lastMessage.getRegDate());
+        Tuple2<String, LocalDateTime> lastMessageTuple2 = Tuples.of(lastMessage.getMsg(), lastMessage.getCdate());
 
 
         Long unreadCount = messageUnreadService.getUnreadMessageCount(roomId.toString(), myId.toString());
@@ -165,7 +166,7 @@ public class ChatService {
     }
 
     public ChatRoom findChatRoomByRoomId(Long roomId) {
-        return chatRoomRepository.findById(roomId);
+        return chatRoomRepository.findByIdx(roomId);
     }
 
     public List<ChatRoom> findChatRoomsByPhoneNumber(String phoneNumber) {
@@ -174,7 +175,7 @@ public class ChatService {
 
     @Transactional
     public void increaseNumberInChatRoom(Long roomId){
-        ChatRoom chatRoom = chatRoomRepository.findById(roomId);
+        ChatRoom chatRoom = chatRoomRepository.findByIdx(roomId);
         chatRoom.increaseMemberNum();
         chatRoomRepository.memberNumUpdate(chatRoom);
     }
@@ -182,20 +183,20 @@ public class ChatService {
     @Transactional
     public void deleteChatRoom(Long roomId, Long myId){
         // 채팅 이용자가 0명인 경우 전체 대화 삭제
-        ChatRoom chatRoom = chatRoomRepository.findById(roomId);
+        ChatRoom chatRoom = chatRoomRepository.findByIdx(roomId);
         if(chatRoom != null) {
                 chatRoom.decreaseMemberNum(); // memberNum 감소
                 if (chatRoom.getMemberNum() == 0) {
                     // roomId를 가진 UserChatRoom 데이터 전체 삭제 & ChatRoomMessage 데이터 전체 삭제
                     userChatRoomRepository.deleteByChatRoomId(roomId);
                     chatRoomMessageRepository.deleteByChatRoomId(roomId);
-                    chatRoomRepository.deleteById(roomId);
+                    chatRoomRepository.deleteByIdx(roomId);
                 } else {
                     UserChatRoom userChatRoom = userChatRoomRepository.findByUserIdAndChatRoomId(myId, roomId);
                     if (chatRoom.getIsGroup()) {
-                        userChatRoomRepository.deleteById(userChatRoom.getId());
+                        userChatRoomRepository.deleteById(userChatRoom.getIdx());
                         User user = userService.findByUserId(myId);
-                        String deleteMsg = user.getName() + "님이 채팅방을 나갔습니다.";
+                        String deleteMsg = user.getUserId() + "님이 채팅방을 나갔습니다.";
                         ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(deleteMsg, user, chatRoom, MessageType.SYSTEM);
                         ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteFrom(chatRoomMessage, deleteMsg);
                         Map<String, Object> leaveUser = Map.of(

@@ -14,5 +14,5 @@ public class GuestMessageRequestDto {
     private Long aptId; // 상대방을 알기 위함
     private String phoneNumber;
     private String noteText;
-    private LocalDateTime regDate;
+    private LocalDateTime cdate;
 }

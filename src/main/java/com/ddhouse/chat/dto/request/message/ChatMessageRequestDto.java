@@ -18,7 +18,7 @@ public class ChatMessageRequestDto{
     private Long writerId;
     private String writerName;
     private String msg;
-    private LocalDateTime regDate;
+    private LocalDateTime cdate;
 
     public void addRoomId(Long roomId) {
         this.roomId = roomId;

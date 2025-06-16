@@ -24,7 +24,7 @@ public class ChatRoomListResponseDto {
 
     public static ChatRoomListResponseDto one(ChatRoom chatRoom, String chatName) {
         return ChatRoomListResponseDto.builder()
-                .roomId(chatRoom.getId())
+                .roomId(chatRoom.getIdx())
                 .name(chatName)
                 .memberNum(chatRoom.getMemberNum())
                 .build();
@@ -32,7 +32,7 @@ public class ChatRoomListResponseDto {
 
     public static ChatRoomListResponseDto group(ChatRoom chatRoom) {
         return ChatRoomListResponseDto.builder()
-                .roomId(chatRoom.getId())
+                .roomId(chatRoom.getIdx())
                 .name(chatRoom.getName())
                 .memberNum(chatRoom.getMemberNum())
                 .build();
@@ -58,7 +58,7 @@ public class ChatRoomListResponseDto {
 
     public static ChatRoomListResponseDto guest (GuestMessageRequestDto guestMessageRequestDto, Long count, ChatRoom chatRoom) {
         return ChatRoomListResponseDto.builder()
-                .roomId(chatRoom.getId())
+                .roomId(chatRoom.getIdx())
                 .name(guestMessageRequestDto.getPhoneNumber())
                 .lastMsg(guestMessageRequestDto.getNoteText())
                 .memberNum(chatRoom.getMemberNum())

@@ -8,6 +8,6 @@ import lombok.Setter;
 @Setter
 @Builder
 public class FcmTokenSaveRequest {
-    Long userId;
-    String fcmToken;
+    Long userIdx;
+    String appCode;
 }

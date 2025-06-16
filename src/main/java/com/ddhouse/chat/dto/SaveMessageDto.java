@@ -16,14 +16,14 @@ public class SaveMessageDto {
     private Long roomId;
     private Long writerId;
     private String msg;
-    private LocalDateTime regDate;
+    private LocalDateTime cdate;
 
     public static SaveMessageDto from (ChatMessageRequestDto chatMessageRequestDto) {
         return SaveMessageDto.builder()
                 .roomId(chatMessageRequestDto.getRoomId())
                 .writerId(chatMessageRequestDto.getWriterId())
                 .msg(chatMessageRequestDto.getMsg())
-                .regDate(chatMessageRequestDto.getRegDate())
+                .cdate(chatMessageRequestDto.getCdate())
                 .build();
     }
 
@@ -31,7 +31,7 @@ public class SaveMessageDto {
         return SaveMessageDto.builder()
                 .roomId(roomId)
                 .msg(guestMessageRequestDto.getNoteText())
-                .regDate(guestMessageRequestDto.getRegDate())
+                .cdate(guestMessageRequestDto.getCdate())
                 .build();
     }
 }

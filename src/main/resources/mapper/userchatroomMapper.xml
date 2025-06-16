@@ -3,144 +3,148 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="userchatroomMapper">
     <resultMap id="UserChatRoomMap" type="UserChatRoom">
-        <id property="id" column="ucr_id"/>
+        <id property="idx" column="ucr_idx"/>
         <result property="isInRoom" column="ucr_is_in_room"/>
         <result property="entryTime" column="ucr_entry_time"/>
-        <result property="regDate" column="ucr_reg_date"/>
+        <result property="cdate" column="ucr_cdate"/>
 
         <association property="user" javaType="User">
-            <id property="id" column="u_id"/>
-            <result property="name" column="u_name"/>
-            <result property="fcmToken" column="u_fcm_token"/>
-            <result property="regDate" column="u_reg_date"/>
+            <id property="userIdx" column="u_user_idx"/>
+            <result property="userId" column="u_user_id"/>
+            <result property="sts" column="u_sts"/>
+            <result property="cdate" column="u_cdate"/>
         </association>
 
         <association property="chatRoom" javaType="ChatRoom">
-            <id property="id" column="cr_id"/>
+            <id property="idx" column="cr_idx"/>
             <result property="name" column="cr_name"/>
             <result property="memberNum" column="cr_member_num"/>
             <result property="isGroup" column="cr_is_group"/>
             <result property="phoneNumber" column="cr_phone_number"/>
-            <result property="regDate" column="cr_reg_date"/>
+            <result property="cdate" column="cr_cdate"/>
         </association>
     </resultMap>
     <select id="findByUserId" parameterType="Long" resultMap="UserChatRoomMap">
         SELECT
-            ucr.id AS ucr_id,
+            ucr.idx AS ucr_idx,
             ucr.is_in_room AS ucr_is_in_room,
             ucr.entry_time AS ucr_entry_time,
-            ucr.reg_date AS ucr_reg_date,
+            ucr.cdate AS ucr_cdate,
 
-            cr.id AS cr_id,
+            cr.idx AS cr_idx,
             cr.name AS cr_name,
             cr.member_num AS cr_member_num,
             cr.is_group AS cr_is_group,
             cr.phone_number AS cr_phone_number,
-            cr.reg_date AS cr_reg_date,
+            cr.cdate AS cr_cdate,
 
-            u.id AS u_id,
-            u.name AS u_name
-        FROM user_chat_room ucr
-                 JOIN chat_room cr ON ucr.chat_room_id = cr.id
-                 JOIN user u ON ucr.user_id = u.id
-        WHERE ucr.user_id = #{userId}
+            u.user_idx AS u_user_idx,
+            u.user_id AS u_user_id,
+            u.sts AS u_sts
+        FROM aa_chat_room_user ucr
+                 JOIN aa_chat_room cr ON ucr.chat_room_idx = cr.idx
+                 JOIN aa_dd_user u ON ucr.user_idx = u.user_idx
+        WHERE ucr.user_idx = #{userId}
     </select>
 
     <select id="findOpponent" resultMap="UserChatRoomMap" parameterType="map">
         SELECT
-            ucr.id AS ucr_id,
+            ucr.idx AS ucr_idx,
             ucr.is_in_room AS ucr_is_in_room,
             ucr.entry_time AS ucr_entry_time,
-            ucr.reg_date AS ucr_reg_date,
+            ucr.cdate AS ucr_cdate,
 
-            u.id AS u_id,
-            u.name AS u_name
-
-        FROM user_chat_room ucr
-                 JOIN user u ON ucr.user_id = u.id
-        WHERE ucr.chat_room_id = #{chatRoomId}
-          AND ucr.user_id != #{myId}
+            u.user_idx AS u_user_idx,
+            u.user_id AS u_user_id,
+            u.sts AS u_sts
+        FROM aa_chat_room_user ucr
+                 JOIN aa_dd_user u ON ucr.user_idx = u.user_idx
+        WHERE ucr.chat_room_idx = #{chatRoomId}
+          AND ucr.user_idx != #{myId}
+          AND u.sts = 'I'
             LIMIT 1
     </select>
 
     <select id="findByUserIdAndChatRoomId" resultMap="UserChatRoomMap" parameterType="map">
         SELECT
-            ucr.id AS ucr_id,
+            ucr.idx AS ucr_idx,
             ucr.is_in_room AS ucr_is_in_room,
             ucr.entry_time AS ucr_entry_time,
-            ucr.reg_date AS ucr_reg_date,
+            ucr.cdate AS ucr_cdate,
 
-            cr.id AS cr_id,
+            cr.idx AS cr_idx,
             cr.name AS cr_name,
             cr.member_num AS cr_member_num,
             cr.is_group AS cr_is_group,
             cr.phone_number AS cr_phone_number,
-            cr.reg_date AS cr_reg_date,
+            cr.cdate AS cr_cdate,
 
-            u.id AS u_id,
-            u.name AS u_name
-        FROM user_chat_room ucr
-                 JOIN chat_room cr ON ucr.chat_room_id = cr.id
-                 JOIN user u ON ucr.user_id = u.id
-        WHERE ucr.user_id = #{userId} AND ucr.chat_room_id = #{chatRoomId}
+            u.user_idx AS u_user_idx,
+            u.user_id AS u_user_id,
+            u.sts AS u_sts
+        FROM aa_chat_room_user ucr
+                 JOIN aa_chat_room cr ON ucr.chat_room_idx = cr.idx
+                 JOIN aa_dd_user u ON ucr.user_idx = u.user_idx
+        WHERE ucr.user_idx = #{userId} AND ucr.chat_room_idx = #{chatRoomId}
     </select>
 
     <select id="findAllByChatRoomId" parameterType="Long" resultMap="UserChatRoomMap" >
         SELECT
-            ucr.id AS ucr_id,
+            ucr.idx AS ucr_idx,
             ucr.is_in_room AS ucr_is_in_room,
             ucr.entry_time AS ucr_entry_time,
-            ucr.reg_date AS ucr_reg_date,
+            ucr.cdate AS ucr_cdate,
 
-            cr.id AS cr_id,
+            cr.idx AS cr_idx,
             cr.name AS cr_name,
             cr.member_num AS cr_member_num,
             cr.is_group AS cr_is_group,
             cr.phone_number AS cr_phone_number,
-            cr.reg_date AS cr_reg_date,
+            cr.cdate AS cr_cdate,
 
-            u.id AS u_id,
-            u.name AS u_name
-        FROM user_chat_room ucr
-                 JOIN chat_room cr ON ucr.chat_room_id = cr.id
-                 JOIN user u ON ucr.user_id = u.id
-        WHERE ucr.chat_room_id = #{roomId}
+            u.user_idx AS u_user_idx,
+            u.user_id AS u_user_id,
+            u.sts AS u_sts
+        FROM aa_chat_room_user ucr
+                 JOIN aa_chat_room cr ON ucr.chat_room_idx = cr.idx
+                 JOIN aa_dd_user u ON ucr.user_idx = u.user_idx
+        WHERE ucr.chat_room_idx = #{roomId}
     </select>
 
     <delete id="deleteByChatRoomId" parameterType="Long">
-        delete from user_chat_room where chat_room_id = #{roomId}
+        delete from aa_chat_room_user where chat_room_idx = #{roomId}
     </delete>
 
     <delete id="deleteById" parameterType="Long">
-        delete from user_chat_room where id = #{id}
+        delete from aa_chat_room_user where idx = #{id}
     </delete>
 
 
     <select id="existsByUserAndChatRoom" resultType="int" parameterType="map">
         SELECT COUNT(*)
-        FROM user_chat_room
-        WHERE user_id = #{userId}
-          AND chat_room_id = #{chatRoomId}
+        FROM aa_chat_room_user
+        WHERE user_idx = #{userId}
+          AND chat_room_idx = #{chatRoomId}
     </select>
 
-    <insert id="save" parameterType="UserChatRoom" useGeneratedKeys="true" keyProperty="id">
-        insert into user_chat_room(is_in_room, entry_time, reg_date, user_id, chat_room_id)
-        values(#{isInRoom}, #{entryTime}, #{regDate}, #{user.id}, #{chatRoom.id})
+    <insert id="save" parameterType="UserChatRoom" useGeneratedKeys="true" keyProperty="idx">
+        insert into aa_chat_room_user(is_in_room, entry_time, cdate, user_idx, chat_room_idx)
+        values(#{isInRoom}, #{entryTime}, #{cdate}, #{user.userIdx}, #{chatRoom.idx})
     </insert>
 
     <update id="update" parameterType="UserChatRoom">
-        UPDATE user_chat_room
+        UPDATE aa_chat_room_user
         SET is_in_room = #{isInRoom},
             entry_time = #{entryTime},
-            reg_date = #{regDate}
-        WHERE user_id = #{user.id} AND chat_room_id = #{chatRoom.id}
+            cdate = #{cdate}
+        WHERE user_idx = #{user.userIdx} AND chat_room_idx = #{chatRoom.idx}
     </update>
 
     <insert id="saveAll" parameterType="list">
-        INSERT INTO user_chat_room (user_id, chat_room_id, is_in_room, entry_time, reg_date)
+        INSERT INTO aa_chat_room_user (user_idx, chat_room_idx, is_in_room, entry_time, cdate)
         VALUES
         <foreach collection="list" item="ucr" separator=",">
-            (#{ucr.user.id}, #{ucr.chatRoom.id}, #{ucr.isInRoom}, #{ucr.entryTime}, #{ucr.regDate})
+            (#{ucr.user.userIdx}, #{ucr.chatRoom.idx}, #{ucr.isInRoom}, #{ucr.entryTime}, #{ucr.cdate})
         </foreach>
     </insert>
 </mapper>

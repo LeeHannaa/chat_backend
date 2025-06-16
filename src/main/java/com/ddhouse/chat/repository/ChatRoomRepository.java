@@ -27,15 +27,15 @@ public class ChatRoomRepository {
     }
 
 
-    public ChatRoom findById(Long id) {
-        ChatRoom chatRoom = sql.selectOne("chatroomMapper.findById", id);
+    public ChatRoom findByIdx(Long idx) {
+        ChatRoom chatRoom = sql.selectOne("chatroomMapper.findByIdx", idx);
         if (chatRoom == null) {
-            throw new NotFoundException("해당 ID의 채팅방을 찾을 수 없습니다: " + id);
+            throw new NotFoundException("해당 ID의 채팅방을 찾을 수 없습니다: " + idx);
         }
         return chatRoom;
     }
 
-    public void deleteById(Long id) {
-        sql.delete("chatroomMapper.deleteById", id);
+    public void deleteByIdx(Long idx) {
+        sql.delete("chatroomMapper.deleteByIdx", idx);
     }
 }

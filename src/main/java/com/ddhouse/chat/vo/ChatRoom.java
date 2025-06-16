@@ -15,19 +15,19 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ChatRoom {
-    private Long id;
+    private Long idx;
     private String name; // nullble -> 1:1 채팅인 경우 서로 상대의 이름으로 채팅방 이름 보이도록 설정 | 단체 채팅 시 이름 지정
     private int memberNum;
     private Boolean isGroup;
     private String phoneNumber; // 비회원 채팅방
-    private LocalDateTime regDate;
+    private LocalDateTime cdate;
 
     public static ChatRoom from (ChatRoomDto dto) {
         // 아파트 문의하기를 통해 방이 생성된 경우 -> 1:1 채팅
         return ChatRoom.builder()
                 .name(dto.getName())
                 .memberNum(dto.getMemberNum())
-                .regDate(dto.getRegDate())
+                .cdate(dto.getCdate())
                 .isGroup(Boolean.FALSE)
                 .build();
     }
@@ -37,7 +37,7 @@ public class ChatRoom {
         return ChatRoom.builder()
                 .memberNum(chatRoomCreateDto.getMemberNum())
                 .isGroup(Boolean.FALSE)
-                .regDate(chatRoomCreateDto.getRegDate())
+                .cdate(chatRoomCreateDto.getCdate())
                 .phoneNumber(chatRoomCreateDto.getPhoneNumber())
                 .build();
     }
@@ -48,7 +48,7 @@ public class ChatRoom {
                 .name(groupChatRoomCreateDto.getChatRoomName())
                 .memberNum(groupChatRoomCreateDto.getUserIds().size())
                 .isGroup(Boolean.TRUE)
-                .regDate(groupChatRoomCreateDto.getRegDate())
+                .cdate(groupChatRoomCreateDto.getCdate())
                 .build();
     }
     public void decreaseMemberNum() {

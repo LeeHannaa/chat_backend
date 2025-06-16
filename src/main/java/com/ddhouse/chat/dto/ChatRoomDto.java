@@ -17,7 +17,7 @@ public class ChatRoomDto {
     private Long id;
     private String name;
     private int memberNum;
-    private LocalDateTime regDate; // 채팅방 생성일
+    private LocalDateTime cdate; // 채팅방 생성일
     private LocalDateTime updateLastMsgTime;
     private String lastMsg;
     private User user;
@@ -30,7 +30,7 @@ public class ChatRoomDto {
         return ChatRoomDto.builder()
                 .memberNum(2)
                 .user(user) // UserChatRoom때 사용
-                .regDate(chatMessageRequestDto.getRegDate())
+                .cdate(chatMessageRequestDto.getCdate())
                 .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .lastMsg(chatMessageRequestDto.getMsg())
                 .build();
@@ -40,7 +40,7 @@ public class ChatRoomDto {
         return ChatRoomDto.builder()
                 .memberNum(2)
                 .user(user)
-                .regDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .cdate(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .lastMsg("")
                 .build();
@@ -49,7 +49,7 @@ public class ChatRoomDto {
     public static ChatRoomDto from() {
         return ChatRoomDto.builder()
                 .memberNum(2)
-                .regDate(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
+                .cdate(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .updateLastMsgTime(LocalDateTime.now(ZoneId.of("Asia/Seoul")))
                 .lastMsg("")
                 .build();

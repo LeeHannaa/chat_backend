@@ -34,6 +34,7 @@ public class ChatMessageService {
     private final UserChatRoomRepository userChatRoomRepository;
     private final ChatService chatService;
     private final UserService userService;
+    private final UserCodeService userCodeService;
     private final AptService aptService;
     private final UserChatRoomService userChatRoomService;
     private final ChatRoomMessageRepository chatRoomMessageRepository;
@@ -59,12 +60,12 @@ public class ChatMessageService {
         }
         LocalDateTime standardTime = userChatRoom.getEntryTime();
         List<ChatMessageResponseDto> chatRoomMessagesFiltered = chatRoomMessages.stream()
-                .filter(chatRoomMessage -> !chatRoomMessage.getRegDate().isBefore(standardTime)) // standardTime 이후만
+                .filter(chatRoomMessage -> !chatRoomMessage.getCdate().isBefore(standardTime)) // standardTime 이후만
                 // 내 기기에서 삭제된 메시지는 제외하긴 하는데 그 경우 userId가 나의 id와 동일한 경우에만 제외
                 .filter(chatRoomMessage -> !chatRoomMessage.getDeleteUserList().contains(myId))
                 .map(chatRoomMessage -> {
                     if(chatRoomMessage.getType() == MessageType.TEXT){
-                        int unreadCountByMsgId = messageUnreadService.getUnreadCountByMsgId(chatRoomMessage.getChatRoom().getId().toString(), chatRoomMessage.getId().toString());
+                        int unreadCountByMsgId = messageUnreadService.getUnreadCountByMsgId(chatRoomMessage.getChatRoom().getIdx().toString(), chatRoomMessage.getIdx().toString());
                         if (chatRoomMessage.getIsDelete()) {
                             // 전체 삭제된 메시지 처리
                             return null;
@@ -76,7 +77,7 @@ public class ChatMessageService {
                     return ChatMessageResponseToFindMsgDto.deleteFrom(chatRoomMessage);
                 })
                 .filter(Objects::nonNull)
-                .sorted(Comparator.comparing(ChatMessageResponseToFindMsgDto::getCreatedDate)) // 날짜 오름차순 정렬
+                .sorted(Comparator.comparing(ChatMessageResponseToFindMsgDto::getCdate)) // 날짜 오름차순 정렬
                 .collect(Collectors.toList());
         return chatRoomMessagesFiltered;
     }
@@ -84,7 +85,7 @@ public class ChatMessageService {
     public List<Long> findReceiverId(Long chatRoomId, Long writerId){ // 소켓 통신할 때 수신자 id 찾기
         return userChatRoomRepository.findAllByChatRoomId(chatRoomId)
                 .stream()
-                .map(userChatRoom -> userChatRoom.getUser().getId())
+                .map(userChatRoom -> userChatRoom.getUser().getUserIdx())
                 .filter(userId -> !userId.equals(writerId))
                 .collect(Collectors.toList());
     }
@@ -105,8 +106,8 @@ public class ChatMessageService {
     }
 
     public ChatRoomMessage sendMessageGuest(GuestMessageRequestDto guestMessageRequestDto){
-        Apt apt = aptService.findByAptId(guestMessageRequestDto.getAptId());
-        User user = apt.getUser();
+        Apt apt = aptService.findByAptIdx(guestMessageRequestDto.getAptId());
+        User user = apt.getAgency().getUser();
         // 해당 비회원의 채팅방이 존재하는지 여부
         List<ChatRoom> chatRooms = chatService.findChatRoomsByPhoneNumber(guestMessageRequestDto.getPhoneNumber());
         if(chatRooms != null && user != null){
@@ -114,18 +115,18 @@ public class ChatMessageService {
             if(userChatRoom != null){
                 // 기존 방이 존재하는 경우
                 // 메시지 저장
-                ChatRoomMessage chatRoomMessage = saveChatMessage(SaveMessageDto.guest(guestMessageRequestDto, userChatRoom.getChatRoom().getId()));
+                ChatRoomMessage chatRoomMessage = saveChatMessage(SaveMessageDto.guest(guestMessageRequestDto, userChatRoom.getChatRoom().getIdx()));
                 // 기존의 채팅방이 존재하는 경우 현재 방에 사용자가 있는지 확인
-                int countInRoom = roomUserCountService.getUserCount(userChatRoom.getChatRoom().getId());
+                int countInRoom = roomUserCountService.getUserCount(userChatRoom.getChatRoom().getIdx());
                     if(countInRoom < 1) {
                         // 채팅방에 사용자가 없는 경우
                         sendSocketChatListAndFcmToGuest(userChatRoom, guestMessageRequestDto, chatRoomMessage);
                     } else{
                         // 채팅방에 사용자가 들어와 있는 경우
-                        template.convertAndSend("/topic/chatroom/" + userChatRoom.getChatRoom().getId(),
+                        template.convertAndSend("/topic/chatroom/" + userChatRoom.getChatRoom().getIdx(),
                                 Map.of(
                                         "type", "CHAT",
-                                        "message", ChatMessageResponseToChatRoomDto.guest(guestMessageRequestDto, userChatRoom.getChatRoom().getId(), MessageType.TEXT, chatRoomMessage)
+                                        "message", ChatMessageResponseToChatRoomDto.guest(guestMessageRequestDto, userChatRoom.getChatRoom().getIdx(), MessageType.TEXT, chatRoomMessage)
                                 )
                         );
                     }
@@ -134,7 +135,7 @@ public class ChatMessageService {
         }
         // 방을 생성해야하는 경우
         UserChatRoom createdChatRoom = chatService.createChatRoomByGuest(ChatRoomCreateDto.guest(guestMessageRequestDto, user));
-        ChatRoomMessage chatRoomMessage = saveChatMessage(SaveMessageDto.guest(guestMessageRequestDto, createdChatRoom.getChatRoom().getId()));
+        ChatRoomMessage chatRoomMessage = saveChatMessage(SaveMessageDto.guest(guestMessageRequestDto, createdChatRoom.getChatRoom().getIdx()));
         sendSocketChatListAndFcmToGuest(createdChatRoom, guestMessageRequestDto, chatRoomMessage);
         return chatRoomMessage;
 
@@ -142,21 +143,21 @@ public class ChatMessageService {
 
     public void sendSocketChatListAndFcmToGuest(UserChatRoom userChatRoom, GuestMessageRequestDto guestMessageRequestDto, ChatRoomMessage chatRoomMessage){
         // 메시지 안읽음 처리
-        messageUnreadService.addUnreadChat(userChatRoom.getChatRoom().getId().toString(), userChatRoom.getUser().getId().toString(), chatRoomMessage.getId().toString());
-        Long unreadCount = messageUnreadService.getUnreadMessageCount(userChatRoom.getChatRoom().getId().toString(),  userChatRoom.getUser().getId().toString());
+        messageUnreadService.addUnreadChat(userChatRoom.getChatRoom().getIdx().toString(), userChatRoom.getUser().getUserIdx().toString(), chatRoomMessage.getIdx().toString());
+        Long unreadCount = messageUnreadService.getUnreadMessageCount(userChatRoom.getChatRoom().getIdx().toString(),  userChatRoom.getUser().getUserIdx().toString());
         template.convertAndSend(
-                "/topic/user/" + userChatRoom.getUser().getId(),
+                "/topic/user/" + userChatRoom.getUser().getUserIdx(),
                 Map.of(
                         "type", "CHATLIST",
                         "message", ChatRoomListResponseDto.guest(guestMessageRequestDto, unreadCount, userChatRoom.getChatRoom())
                 ));
         // FCM 알림 전송
-        String fcmToken = userService.findFcmTokenByUserId(userChatRoom.getUser().getId());
+        String fcmToken = userCodeService.findFcmTokenByUserId(userChatRoom.getUser().getUserIdx());
         String body = "비회원 : " + chatRoomMessage.getMsg();
         if (fcmToken != null) {
             try {
                 fcmService.sendMessageTo(
-                        FcmDto.chat(fcmToken, body, userChatRoom.getChatRoom().getId().toString(), guestMessageRequestDto.getPhoneNumber()));
+                        FcmDto.chat(fcmToken, body, userChatRoom.getChatRoom().getIdx().toString(), guestMessageRequestDto.getPhoneNumber()));
                 System.out.println("fcm 알림 전송 완료!");
             } catch (IOException e) {
                 System.err.println("FCM 전송 실패: " + e.getMessage());
@@ -165,8 +166,8 @@ public class ChatMessageService {
     }
 
     public void messageFromInquiry(ChatMessageRequestDto chatMessageRequestDto){
-            Apt apt = aptService.findByAptId(chatMessageRequestDto.getAptId());
-            User user = apt.getUser();
+            Apt apt = aptService.findByAptIdx(chatMessageRequestDto.getAptId());
+            User user = apt.getAgency().getUser();
             User me = userService.findByUserId(chatMessageRequestDto.getWriterId());
             // 방이 존재하는 경우
             List<ChatRoom> chatRooms = userChatRoomService.findChatRoomsByUserId(chatMessageRequestDto.getWriterId());
@@ -175,13 +176,13 @@ public class ChatMessageService {
                 UserChatRoom userChatRoom = userChatRoomService.findByUserAndChatRoom(chatRooms, user);
                 if(userChatRoom != null){
                     // 방이 존재하는 경우 -> roomId 넣어주기
-                    chatMessageRequestDto.addRoomId(userChatRoom.getChatRoom().getId());
+                    chatMessageRequestDto.addRoomId(userChatRoom.getChatRoom().getIdx());
                 }
             }
             if(chatMessageRequestDto.getRoomId() == null ){
                 // 방을 생성해야하는 경우
                 UserChatRoom createdChatRoom = chatService.createChatRoom(ChatRoomDto.createChatRoomDto(chatMessageRequestDto, user), ChatRoomDto.createChatRoomDto(chatMessageRequestDto, me));
-                chatMessageRequestDto.addRoomId(createdChatRoom.getChatRoom().getId());
+                chatMessageRequestDto.addRoomId(createdChatRoom.getChatRoom().getIdx());
                 System.out.println("채팅방 생성 완료ㅕ!!  : " + chatMessageRequestDto.getRoomId());
             }
             System.out.println("채팅방으로 이동해도 된다는 메시지 전달 완료!!");
@@ -200,7 +201,7 @@ public class ChatMessageService {
         List<Long> userIdsInRoom = roomUserCountService.getUserIdsInChatRoom(chatMessageRequestDto.getRoomId(), chatMessageRequestDto.getWriterId());
         // 해당 채팅방
         ChatRoom chatRoom = chatService.findChatRoomByRoomId(chatMessageRequestDto.getRoomId());
-        String senderName = userService.findByUserId(chatMessageRequestDto.getWriterId()).getName(); // 1:1인 경우 채팅방 이름
+        String senderName = userService.findByUserId(chatMessageRequestDto.getWriterId()).getUserId(); // 1:1인 경우 채팅방 이름
 
         if(!chatRoom.getIsGroup()) { // 1:1 채팅방
             UserChatRoom userChatRoom = getUserInChatRoom(receiverIds.get(0), chatMessageRequestDto.getRoomId());
@@ -217,7 +218,7 @@ public class ChatMessageService {
         System.out.println("메시지 전달 시 읽지 않은 메시지 확인 : " + unreadCountByMsgId);
         // [ 현재 채팅방에 접속한 경우 필요한 데이터 실시간 전달 ]
         if(isInquiry.get()){
-            String userName = userService.findByUserId(receiverIds.get(0)).getName();
+            String userName = userService.findByUserId(receiverIds.get(0)).getUserId();
             template.convertAndSend("/topic/user/" + chatMessageRequestDto.getWriterId(),
                     Map.of(
                             "type", "CLEAR_ROOM",
@@ -240,7 +241,7 @@ public class ChatMessageService {
         receiverIds.removeIf(userId -> userIdsInRoom.contains(userId));
         receiverIds.forEach(userId -> {
             // Redis에 해당 메시지 중 안읽은 사람의 id 저장
-            messageUnreadService.addUnreadChat(chatMessageRequestDto.getRoomId().toString(), userId.toString(), chatRoomMessage.getId().toString());
+            messageUnreadService.addUnreadChat(chatMessageRequestDto.getRoomId().toString(), userId.toString(), chatRoomMessage.getIdx().toString());
             // 현재 채팅방에 없는 사람들을 기준으로 확인
             Long unreadCount = messageUnreadService.getUnreadMessageCount(chatMessageRequestDto.getRoomId().toString(), userId.toString());
             template.convertAndSend(
@@ -251,7 +252,7 @@ public class ChatMessageService {
                                     : ChatRoomListResponseDto.from(chatMessageRequestDto, senderName, unreadCount, chatRoom.getMemberNum())
                     ));
             // FCM 알림 전송
-            String fcmToken = userService.findFcmTokenByUserId(userId);
+            String fcmToken = userCodeService.findFcmTokenByUserId(userId);
             String body = userService.findNameByUserId(chatMessageRequestDto.getWriterId()) + " : " + chatMessageRequestDto.getMsg();
             if (roomUserCountService.getUserCount(chatMessageRequestDto.getRoomId()) < 2 && fcmToken != null) {
                 try {

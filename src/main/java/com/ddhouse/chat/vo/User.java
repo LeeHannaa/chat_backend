@@ -12,12 +12,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class User {
-    private Long id;
-    private String name;  // 비유저 전화번호 쪽지위해 임시 데이터
-    private String fcmToken;
-    private LocalDateTime regDate;
-
-    public void setUpdateFcmToken(String fcmToken) {
-        this.fcmToken = fcmToken;
-    }
+    private Long userIdx;
+    private String userId;  // 비유저 전화번호 쪽지위해 임시 데이터
+    private String sts; // I, D
+    private LocalDateTime cdate;
 }
