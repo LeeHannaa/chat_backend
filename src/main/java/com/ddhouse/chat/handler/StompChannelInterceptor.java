@@ -22,6 +22,7 @@ public class StompChannelInterceptor implements ChannelInterceptor {
 
     @Override
     public Message<?> preSend(Message<?> message, MessageChannel channel) {
+        // TODO : 소켓 연결 로직 변경하면서 해당 파트 수정 필요!
         StompHeaderAccessor accessor = StompHeaderAccessor.wrap(message);
 //        String destination = accessor.getDestination();
 //        System.out.println("destination : " + destination);

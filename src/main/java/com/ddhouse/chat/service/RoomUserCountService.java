@@ -59,4 +59,16 @@ public class RoomUserCountService {
                 .filter(userId -> !userId.equals(myId))
                 .collect(Collectors.toList());
     }
+
+    public List<Long> getUserIdsInChatRoomIncludingMe(Long roomId){
+        String key = "chat:room:usercount:" + roomId.toString();
+        Set<String> userIdStrings = redisTemplate.opsForSet().members(key);
+        if (userIdStrings == null) {
+            return Collections.emptyList();
+        }
+
+        return userIdStrings.stream()
+                .map(Long::valueOf)
+                .collect(Collectors.toList());
+    }
 }

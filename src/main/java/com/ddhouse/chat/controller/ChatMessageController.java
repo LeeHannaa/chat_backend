@@ -50,13 +50,21 @@ public class ChatMessageController {
     @DeleteMapping("/delete/all/{msgId}")
     public ResponseEntity<Void> deleteChatMessageAll(@PathVariable("msgId") Long msgId, @RequestParam("myId") Long myId){
         Long roomIdToDeleteMsg = chatRoomMessageService.deleteChatMessageAll(msgId, myId);
+
+        List<Long> receiverIds = chatMessageService.findReceiverId(roomIdToDeleteMsg, myId);
+        List<Long> userIdsInRoom = roomUserCountService.getUserIdsInChatRoom(roomIdToDeleteMsg, myId);
+        List<Long> userIds = roomUserCountService.getUserIdsInChatRoomIncludingMe(roomIdToDeleteMsg);
+
         // 전체 삭제 시 해당 메시지 실시간 채팅방에서 삭제 처리
-        Map<String, Object> deleteMessage = Map.of(
-                "type", "DELETE",
-                "messageId", msgId
-        );
-        template.convertAndSend("/topic/chatroom/" + roomIdToDeleteMsg, deleteMessage);
-        // TODO : 채팅리스트에서도 전달할 수 있도록!!!
+        // 방에 접속하고 있는 유저에게만 전달
+        userIds.forEach(userId -> {
+            template.convertAndSend("/topic/chat/" + userId,
+                    Map.of(
+                        "type", "DELETE",
+                        "roomId", roomIdToDeleteMsg, // 방 id
+                        "messageId", msgId
+                    ));
+        });
         /*
         1. roomId가 존재 -> 해당 방에 존재하는 모든 유저의 id를 받아오기
             1-2.  List<Long> receiverIds = findReceiverId(chatMessageRequestDto);
@@ -64,12 +72,10 @@ public class ChatMessageController {
         3. 채팅방 인원 중 현재 채팅방에 들어와있지 않은 유저들
         4. -> 패팅방에 없는 사람들을 기준으로 CHATLIST 전달
         */
-        List<Long> receiverIds = chatMessageService.findReceiverId(roomIdToDeleteMsg, myId);
-        List<Long> userIdsInRoom = roomUserCountService.getUserIdsInChatRoom(roomIdToDeleteMsg, myId);
         receiverIds.removeIf(userId -> userIdsInRoom.contains(userId));
         receiverIds.forEach(userId -> {
             template.convertAndSend(
-                    "/topic/user/" + userId,
+                    "/topic/chat/" + userId,
                     Map.of(
                             "type", "CHATLIST",
                             "message", ChatRoomListResponseDto.delete(roomIdToDeleteMsg)
