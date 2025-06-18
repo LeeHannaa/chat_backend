@@ -34,6 +34,7 @@ public class ChatService {
     private final UserService userService;
     private final MessageUnreadService messageUnreadService;
     private final ChatRoomMessageRepository chatRoomMessageRepository;
+    private final RoomUserCountService roomUserCountService;
     private final SimpMessageSendingOperations template;
 
 
@@ -83,13 +84,17 @@ public class ChatService {
             ChatRoomMessage beforeChatRoomMessage = chatRoomMessageService.findById(inviteGroupRequestDto.getMsgId());
             beforeChatRoomMessage.updateInvite(Boolean.TRUE);
             chatRoomMessageRepository.update(beforeChatRoomMessage);
-                        ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(inviteMsg, user, chatRoom, MessageType.SYSTEM);
-                        ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteInviteFrom(chatRoomMessage, inviteMsg, beforeChatRoomMessage.getIdx());
-                        Map<String, Object> inviteUser = Map.of(
-                                "type", "INVITE",
-                                "message", chatMessageResponseToChatRoomDto
-                                );
-                        template.convertAndSend("/topic/chatroom/" + chatRoom.getIdx(), inviteUser);
+            ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(inviteMsg, user, chatRoom, MessageType.SYSTEM);
+            ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteInviteFrom(chatRoomMessage, inviteMsg, beforeChatRoomMessage.getIdx());
+
+            List<Long> userIds = roomUserCountService.getUserIdsInChatRoomIncludingMe(chatRoom.getIdx());
+            userIds.forEach(userId -> {
+                template.convertAndSend("/topic/chat/" + chatRoom.getIdx(), Map.of(
+                        "type", "INVITE",
+                        "roomId", chatRoom.getIdx(),
+                        "message", chatMessageResponseToChatRoomDto
+                ));
+            });
         }
         return userChatRoomRepository.save(UserChatRoom.group(chatRoom, user));
     }
@@ -199,12 +204,16 @@ public class ChatService {
                         String deleteMsg = user.getUserId() + "님이 채팅방을 나갔습니다.";
                         ChatRoomMessage chatRoomMessage = ChatRoomMessage.save(deleteMsg, user, chatRoom, MessageType.SYSTEM);
                         ChatMessageResponseToChatRoomDto chatMessageResponseToChatRoomDto = ChatMessageResponseToChatRoomDto.deleteFrom(chatRoomMessage, deleteMsg);
-                        Map<String, Object> leaveUser = Map.of(
-                                "type", "LEAVE",
-                                "message", chatMessageResponseToChatRoomDto,
-                                "msgToReadCount", messageUnreadService.getUnreadMessageCount(roomId.toString(), myId.toString())
-                        );
-                        template.convertAndSend("/topic/chatroom/" + roomId, leaveUser);
+                        List<Long> userIdsInRoom = roomUserCountService.getUserIdsInChatRoom(roomId, user.getUserIdx());
+                        userIdsInRoom.forEach(userId -> {
+                            template.convertAndSend("/topic/chat/" + userId, Map.of(
+                                    "type", "LEAVE",
+                                    "message", chatMessageResponseToChatRoomDto,
+                                    "roomId", roomId,
+                                    "msgToReadCount", messageUnreadService.getUnreadMessageCount(roomId.toString(), myId.toString())
+                            ));
+                        });
+
                         System.out.println("채팅방에 유저가 나감 : " + deleteMsg);
                         messageUnreadService.removeUnread(roomId.toString(), myId.toString());
                         chatRoomMessageRepository.save(chatRoomMessage);

@@ -123,9 +123,10 @@ public class ChatMessageService {
                         sendSocketChatListAndFcmToGuest(userChatRoom, guestMessageRequestDto, chatRoomMessage);
                     } else{
                         // 채팅방에 사용자가 들어와 있는 경우
-                        template.convertAndSend("/topic/chatroom/" + userChatRoom.getChatRoom().getIdx(),
+                        template.convertAndSend("/topic/chat/" + user.getUserIdx(),
                                 Map.of(
                                         "type", "CHAT",
+                                        "roomId", userChatRoom.getChatRoom().getIdx(),
                                         "message", ChatMessageResponseToChatRoomDto.guest(guestMessageRequestDto, userChatRoom.getChatRoom().getIdx(), MessageType.TEXT, chatRoomMessage)
                                 )
                         );
@@ -145,8 +146,9 @@ public class ChatMessageService {
         // 메시지 안읽음 처리
         messageUnreadService.addUnreadChat(userChatRoom.getChatRoom().getIdx().toString(), userChatRoom.getUser().getUserIdx().toString(), chatRoomMessage.getIdx().toString());
         Long unreadCount = messageUnreadService.getUnreadMessageCount(userChatRoom.getChatRoom().getIdx().toString(),  userChatRoom.getUser().getUserIdx().toString());
+        // TODO : topic/chat/ + userId
         template.convertAndSend(
-                "/topic/user/" + userChatRoom.getUser().getUserIdx(),
+                "/topic/chat/" + userChatRoom.getUser().getUserIdx(),
                 Map.of(
                         "type", "CHATLIST",
                         "message", ChatRoomListResponseDto.guest(guestMessageRequestDto, unreadCount, userChatRoom.getChatRoom())
@@ -199,6 +201,8 @@ public class ChatMessageService {
         List<Long> receiverIds = findReceiverId(chatMessageRequestDto.getRoomId(), chatMessageRequestDto.getWriterId());
         // 현재 채팅방에 입장한 유저들 (나빼고)
         List<Long> userIdsInRoom = roomUserCountService.getUserIdsInChatRoom(chatMessageRequestDto.getRoomId(), chatMessageRequestDto.getWriterId());
+        // 현재 채팅방에 입장한 유저들
+        List<Long> userIds = roomUserCountService.getUserIdsInChatRoomIncludingMe(chatMessageRequestDto.getRoomId());
         // 해당 채팅방
         ChatRoom chatRoom = chatService.findChatRoomByRoomId(chatMessageRequestDto.getRoomId());
         String senderName = userService.findByUserId(chatMessageRequestDto.getWriterId()).getUserId(); // 1:1인 경우 채팅방 이름
@@ -219,7 +223,8 @@ public class ChatMessageService {
         // [ 현재 채팅방에 접속한 경우 필요한 데이터 실시간 전달 ]
         if(isInquiry.get()){
             String userName = userService.findByUserId(receiverIds.get(0)).getUserId();
-            template.convertAndSend("/topic/user/" + chatMessageRequestDto.getWriterId(),
+            // TODO : topic/chat/ + userId
+            template.convertAndSend("/topic/chat/" + chatMessageRequestDto.getWriterId(),
                     Map.of(
                             "type", "CLEAR_ROOM",
                             "message", CreatedChatRoomFromAptDto.from(chatMessageRequestDto.getRoomId(), userName)
@@ -227,15 +232,19 @@ public class ChatMessageService {
             );
         }
         if(countInRoom > 0){
-            template.convertAndSend("/topic/chatroom/" + chatMessageRequestDto.getRoomId(),
-                    Map.of(
-                            "type", "CHAT",
-                            "message", chatRoom.getIsGroup() ? ChatMessageResponseToChatRoomDto.from(chatRoomMessage, null, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
-                                    // 개인 매물 문의 시 채팅 방안에 사람이 있는 경우 (상대방이 있는것) -> 안읽은 메시지 표시 x
-                                    : isInquiry.get() ? ChatMessageResponseToChatRoomDto.from(chatRoomMessage, senderName, chatMessageRequestDto, unreadCountByMsgId -1 , MessageType.TEXT)
-                                    : ChatMessageResponseToChatRoomDto.from(chatRoomMessage, senderName, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
-                    )
-            );
+            userIds.forEach(userId -> {
+                System.out.println("유저들에게 채팅 메시지 전달하기 전 userId 확인하기 : " + userId);
+                template.convertAndSend("/topic/chat/" + userId,
+                        Map.of(
+                                "type", "CHAT",
+                                "roomId", chatMessageRequestDto.getRoomId(),
+                                "message", chatRoom.getIsGroup() ? ChatMessageResponseToChatRoomDto.from(chatRoomMessage, null, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
+                                        // 개인 매물 문의 시 채팅 방안에 사람이 있는 경우 (상대방이 있는것) -> 안읽은 메시지 표시 x
+                                        : isInquiry.get() ? ChatMessageResponseToChatRoomDto.from(chatRoomMessage, senderName, chatMessageRequestDto, unreadCountByMsgId -1 , MessageType.TEXT)
+                                        : ChatMessageResponseToChatRoomDto.from(chatRoomMessage, senderName, chatMessageRequestDto, unreadCountByMsgId, MessageType.TEXT)
+                        )
+                );
+            });
         }
         // 채팅방 인원 중 현재 채팅방에 들어와있지 않은 유저들
         receiverIds.removeIf(userId -> userIdsInRoom.contains(userId));
@@ -244,8 +253,9 @@ public class ChatMessageService {
             messageUnreadService.addUnreadChat(chatMessageRequestDto.getRoomId().toString(), userId.toString(), chatRoomMessage.getIdx().toString());
             // 현재 채팅방에 없는 사람들을 기준으로 확인
             Long unreadCount = messageUnreadService.getUnreadMessageCount(chatMessageRequestDto.getRoomId().toString(), userId.toString());
+            // TODO : topic/chat/ + userId
             template.convertAndSend(
-                    "/topic/user/" + userId,
+                    "/topic/chat/" + userId,
                     Map.of(
                             "type", "CHATLIST",
                             "message", chatRoom.getIsGroup() ? ChatRoomListResponseDto.from(chatMessageRequestDto, null, unreadCount, chatRoom.getMemberNum())
