@@ -233,6 +233,7 @@ public class ChatMessageService {
         }
         if(countInRoom > 0){
             userIds.forEach(userId -> {
+                System.out.println("유저들에게 채팅 메시지 전달하기 전 userId 확인하기 : " + userId);
                 template.convertAndSend("/topic/chat/" + userId,
                         Map.of(
                                 "type", "CHAT",

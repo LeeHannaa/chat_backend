@@ -1,5 +1,7 @@
 package com.ddhouse.chat.controller;
 
+import com.ddhouse.chat.dto.NotificationEvent;
+import com.ddhouse.chat.dto.request.ChatRoomEnterLeaveDto;
 import com.ddhouse.chat.dto.request.message.ChatMessageRequestDto;
 import com.ddhouse.chat.dto.request.message.GuestMessageRequestDto;
 import com.ddhouse.chat.dto.response.chatRoom.ChatRoomListResponseDto;
@@ -7,6 +9,7 @@ import com.ddhouse.chat.dto.response.message.ChatMessageResponseDto;
 import com.ddhouse.chat.service.*;
 import com.ddhouse.chat.vo.ChatRoomMessage;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.messaging.handler.annotation.MessageMapping;
@@ -23,6 +26,8 @@ public class ChatMessageController {
     private final ChatMessageService chatMessageService;
     private final ChatRoomMessageService chatRoomMessageService;
     private final RoomUserCountService roomUserCountService;
+    private final MessageUnreadService messageUnreadService;
+    private final ApplicationEventPublisher eventPublisher;
     private final SimpMessageSendingOperations template;
 
 
@@ -31,6 +36,28 @@ public class ChatMessageController {
     public void receiveMessage(@Payload ChatMessageRequestDto chatMessageRequestDto) {
         // 채팅방, 유저, 알림 소켓 메시지로 전달 및 메시지 처리 과정
         chatMessageService.sendSocketChatListAndFcmToUser(chatMessageRequestDto);
+    }
+
+    @MessageMapping("/chat/income")
+    public void incomeToRoom(@Payload ChatRoomEnterLeaveDto chatMessageRequestDto) {
+        // 채팅방 입장
+        roomUserCountService.addUserInChatRoom(chatMessageRequestDto.getRoomId().toString(), chatMessageRequestDto.getUserId().toString());
+        Long unread = messageUnreadService.getUnreadMessageCount(chatMessageRequestDto.getRoomId().toString(), chatMessageRequestDto.getUserId().toString());
+        if (roomUserCountService.getUserCount(Long.valueOf(chatMessageRequestDto.getRoomId().toString())) >= 2) {
+            // 순환 참조 문제로 인해 EventListener로 진행
+            eventPublisher.publishEvent(new NotificationEvent(chatMessageRequestDto.getRoomId().toString(), chatMessageRequestDto.getUserId().toString(), unread, NotificationEvent.NotificationType.ENTER));
+        }
+        if (unread > 0) {
+            messageUnreadService.removeUnread(chatMessageRequestDto.getRoomId().toString(), chatMessageRequestDto.getUserId().toString());
+        }
+    }
+
+    @MessageMapping("/chat/leave")
+    public void leaveToRoom(@Payload ChatRoomEnterLeaveDto chatMessageRequestDto) {
+        // 채팅방 나가기
+        roomUserCountService.outUserInChatRoom(chatMessageRequestDto.getRoomId().toString(), chatMessageRequestDto.getUserId().toString());
+        // 순환 참조 문제로 인해 EventListener로 진행
+        eventPublisher.publishEvent(new NotificationEvent(chatMessageRequestDto.getRoomId().toString(), chatMessageRequestDto.getUserId().toString(),null, NotificationEvent.NotificationType.LEAVE));
     }
 
 
